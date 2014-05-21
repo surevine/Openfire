@@ -64,6 +64,40 @@ public class LocalClientSession extends LocalSession implements ClientSession {
     private static final String ETHERX_NAMESPACE = "http://etherx.jabber.org/streams";
     private static final String FLASH_NAMESPACE = "http://www.jabber.com/streams/flash";
 
+    private static boolean alwaysOfflineFlood = false;
+    private static final String PROPERTY_ALWAYS_OFFLINE_FLOOD = "xmpp.client.alwaysOfflineFlood";
+    
+    /**
+     * Sets whether to ignore the XMPP spec for disabling offline flooding if another session has
+     * had done a http://jabber.org/protocol/offline disco request.
+     * <p>See http://xmpp.org/extensions/xep-0013.html#request-number
+     * @see LocalClientSession#canFloodOfflineMessages()
+     * 
+     * @param alwaysOfflineFlood <code>true</code> if the session should always offline flood, <code>false</code> otherwise.
+     */
+    public static void setAlwaysOfflineFlood(final boolean alwaysOfflineFlood) {
+    	LocalClientSession.alwaysOfflineFlood = alwaysOfflineFlood;
+    	
+    	if(alwaysOfflineFlood) {
+    		JiveGlobals.setProperty(PROPERTY_ALWAYS_OFFLINE_FLOOD, "true");
+        	Log.warn("Always offline flood is set which breaks XMPP standards. Consider not using this option if possible.");
+    	} else {
+    		JiveGlobals.deleteProperty(PROPERTY_ALWAYS_OFFLINE_FLOOD);
+    	}
+    }
+    
+    /**
+     * Gets whether to ignore the XMPP spec for disabling offline flooding if another session has
+     * had done a http://jabber.org/protocol/offline disco request.
+     * <p>See http://xmpp.org/extensions/xep-0013.html#request-number
+     * @see LocalClientSession#canFloodOfflineMessages()
+     * 
+     * @return <code>true</code> if the session should always offline flood, <code>false</code> otherwise.
+     */
+    public static boolean getAlwaysOfflineFlood() {
+    	return alwaysOfflineFlood;
+    }
+
     /**
      * Keep the list of IP address that are allowed to connect to the server. If the list is
      * empty then anyone is allowed to connect to the server.<p>
@@ -129,6 +163,12 @@ public class LocalClientSession extends LocalSession implements ClientSession {
             String address = tokens.nextToken().trim();
             allowedAnonymIPs.put(address, "");
 
+        }
+        String alwaysOfflineFloodStr = JiveGlobals.getProperty(PROPERTY_ALWAYS_OFFLINE_FLOOD, "false");
+        alwaysOfflineFlood = alwaysOfflineFloodStr.equalsIgnoreCase("true");
+
+        if(alwaysOfflineFlood) {
+        	Log.warn("Always offline flood is set which breaks XMPP standards. Consider not using this option if possible.");
         }
     }
 
@@ -677,11 +717,18 @@ public class LocalClientSession extends LocalSession implements ClientSession {
      */
     public boolean canFloodOfflineMessages() {
         if(offlineFloodStopped) {
+        	Log.info("Session " + this.getAddress() + " stopped offline flooding");
             return false;
         }
         String username = getAddress().getNode();
         for (ClientSession session : sessionManager.getSessions(username)) {
             if (session.isOfflineFloodStopped()) {
+            	if(alwaysOfflineFlood) {
+                	Log.info("Session " + session.getAddress() + " would have stopped session " + this.getAddress() + " from offline flooding");
+                    return true;
+            	}
+            	
+            	Log.info("Session " + session.getAddress() + " stopped session " + this.getAddress() + " from offline flooding");
                 return false;
             }
         }

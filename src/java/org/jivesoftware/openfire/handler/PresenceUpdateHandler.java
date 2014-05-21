@@ -257,12 +257,26 @@ public class PresenceUpdateHandler extends BasicModule implements ChannelHandler
                 }
             }
             if (session.canFloodOfflineMessages()) {
-                // deliver offline messages if any
-                Collection<OfflineMessage> messages = messageStore.getMessages(username, true);
-                for (Message message : messages) {
-                    session.process(message);
-                }
+            	
+            	if(Log.isDebugEnabled()) {
+            		Log.debug("Session " + session.getAddress() + " can flood offline");
+            	}
+            	
+            	if (session.getPresence().getPriority() >-1) {
+            		// deliver offline messages if any
+            		Collection<OfflineMessage> messages = messageStore.getMessages(username, true);
+                	
+               		Log.info("Delivering " + messages.size() + " offline messages to " + session.getAddress());
+
+                	for (Message message : messages) {
+            			session.process(message);
+            		}
+            	}
             }
+            else if(Log.isDebugEnabled()) {
+        		Log.debug("Session " + session.getAddress() + " cannot flood offline");
+        	}
+
         }
     }
 

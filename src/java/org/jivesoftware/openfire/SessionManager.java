@@ -696,6 +696,7 @@ public class SessionManager extends BasicModule implements ClusterEventListener 
         if (session.canFloodOfflineMessages()) {
             OfflineMessageStore messageStore = server.getOfflineMessageStore();
             Collection<OfflineMessage> messages = messageStore.getMessages(session.getAuthToken().getUsername(), true);
+       		Log.info("Delivering " + messages.size() + " offline messages to " + session.getAddress());
             for (Message message : messages) {
                 session.process(message);
             }

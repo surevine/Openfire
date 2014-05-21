@@ -19,6 +19,7 @@
 
 <%@ page import="org.jivesoftware.util.*,
                  org.jivesoftware.openfire.*,
+                 org.jivesoftware.openfire.session.*,
                  java.util.HashMap,
                  java.util.Map,
                  java.text.DecimalFormat"
@@ -59,6 +60,7 @@
     int storeStrategy = ParamUtils.getIntParameter(request,"storeStrategy",-1);
     double quota = ParamUtils.getDoubleParameter(request,"quota", manager.getQuota()/1024);
     DecimalFormat format = new DecimalFormat("#0.00");
+    boolean alwaysOfflineFlood = ParamUtils.getBooleanParameter(request, "alwaysOfflineFlood");
 
     // Update the session kick policy if requested
     Map<String, String> errors = new HashMap<String, String>();
@@ -116,6 +118,8 @@
 <c:set var="success" value="true" />
 <%
         }
+        
+        LocalClientSession.setAlwaysOfflineFlood(alwaysOfflineFlood);
     }
 
     // Update variable values
@@ -150,6 +154,8 @@
         if (quota < 0) {
             quota = 0;
         }
+        
+        alwaysOfflineFlood = LocalClientSession.getAlwaysOfflineFlood();
     }
 %>
 
@@ -283,6 +289,37 @@
 			</tr>
         </tbody>
 		</table>
+	</div>
+	<div class="jive-contentBoxHeader">
+		<fmt:message key="offline.messages.always_offline_flood_header" />
+	</div>
+	<div class="jive-contentBox">
+		<table cellpadding="3" cellspacing="0" border="0">
+		<tbody>
+			<tr>
+				<td width="1%" valign="top" nowrap>
+					<input type="radio" name="alwaysOfflineFlood" value="false" id="rb08"
+					 <%= (!alwaysOfflineFlood ? "checked" : "") %>>
+				</td>
+				<td width="99%">
+					<label for="rb08">
+					<b><fmt:message key="offline.messages.always_offline_flood_disable" /></b> - <fmt:message key="offline.messages.always_offline_flood_disable_info" />
+					</label>
+				</td>
+			</tr>
+			<tr>
+				<td width="1%" valign="top" nowrap>
+					<input type="radio" name="alwaysOfflineFlood" value="true" id="rb09"
+					 <%= (alwaysOfflineFlood ? "checked" : "") %>>
+				</td>
+				<td width="99%">
+					<label for="rb09">
+					<b><fmt:message key="offline.messages.always_offline_flood_enable" /></b> - <fmt:message key="offline.messages.always_offline_flood_enable_info" />
+					</label>
+				</td>
+			</tr>
+		</tbody>
+	</table>
 	</div>
     <input type="submit" name="update" value="<fmt:message key="global.save_settings" />">
 </form>

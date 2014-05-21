@@ -165,6 +165,41 @@
       </tr>
       <tr>
          <td width="1%">
+            <input type="radio" name="type" value="<%= SubscriptionPlugin.ACCEPT_MUTUAL %>" id="rb02"
+               <%= (type.equals(SubscriptionPlugin.ACCEPT_MUTUAL) ? "checked" : "") %>>
+         </td>
+         <td width="99%">
+            <label for="rb02"><strong>Accept Mutually</strong></label> - Subscription requests will be intercepted and accepted. The requester will also mutually be added to the requestees roster.
+         </td>
+      </tr>
+      <tr valign="top">
+	      <td width="1%" nowrap>&nbsp;</td>
+         <td width="99%">
+
+            <table cellpadding="4" cellspacing="0" border="0" width="100%">
+               <tr>
+                  <td width="1%">
+                     <input type="radio" name="<%= SubscriptionPlugin.ACCEPT_MUTUAL %>" value="<%= SubscriptionPlugin.LOCAL %>" id="rb03"
+                        <%= (level.equals(SubscriptionPlugin.LOCAL) ? "checked" : "") %>>
+                  </td>
+                  <td width="99%">
+                     <label for="rb03"><strong>Local</strong></label> - Only subscription requests sent by users <u>who have</u> an account on <i><%=XMPPServer.getInstance().getServerInfo().getXMPPDomain() %></i> will be intercepted and accepted.
+                  </td>
+               </tr>
+               <tr>
+                  <td width="1%">
+                     <input type="radio" name="<%= SubscriptionPlugin.ACCEPT_MUTUAL %>" value="<%= SubscriptionPlugin.ALL %>" id="rb04"
+                        <%= (level.equals(SubscriptionPlugin.ALL) ? "checked" : "") %>>
+                  </td>
+                  <td width="99%">
+                     <label for="rb04"><strong>All</strong></label> - All subscription requests will be intercepted and automatically accepted.
+                  </td>
+               </tr>
+             </table>
+         </td>
+      </tr>
+      <tr>
+         <td width="1%">
             <input type="radio" name="type" value="<%= SubscriptionPlugin.REJECT %>" id="rb05"
                <%= (type.equals(SubscriptionPlugin.REJECT) ? "checked" : "") %>>
          </td>

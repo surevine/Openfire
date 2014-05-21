@@ -82,6 +82,15 @@ intercepted and accepted. Selecting this level can make Openfire vulnerable to s
 </ul>
 </p>
 <p>
+<li>Accept Mutually - Like Accept, but the subscription will be mutually accepted, so the subscription goes both ways.</li>
+<ul>
+<li>Local - Only subscription requests sent by users <u>who have</u> an account on the Openfire server on which
+the plugin is installed, will be intercepted and mutually accepted.</li>
+<li>All - All subscription requests, regardless of which server the user account resides on, will be 
+intercepted and mutually accepted. Selecting this level can make Openfire vulnerable to spIM*.</li>
+</ul>
+</p>
+<p>
 <li>Reject - Subscription requests will be intercepted and rejected. NOTE: At the time of this writing the latest
 release of Spark (v1.1.4) has an <a href="http://www.igniterealtime.org/issues/browse/SPARK-300">issue</a> where 
 subscription rejection packets are not processed properly so this feature will not work correctly with Spark. To have

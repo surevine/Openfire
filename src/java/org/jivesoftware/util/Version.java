@@ -180,7 +180,7 @@ public class Version implements Comparable<Version> {
      * are indicated by type safe enum constants.
      */
     public enum ReleaseStatus {
-        Release(""), Release_Candidate("RC"), Beta("Beta"), Alpha("Alpha");
+        Release(""), Release_Candidate("RC"), Beta("Beta"), Alpha("Alpha"), Surevine("Surevine");
 
         private String status;
 

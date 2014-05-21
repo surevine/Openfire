@@ -13,7 +13,7 @@
         * jUnit in your Ant or Java classpath
 -->
 
-<project name="Openfire XMPP Server" default="openfire" basedir="..">
+<project name="Openfire XMPP Server" default="openfire" basedir=".." xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 
     <description>
         Openfire build script.
@@ -26,7 +26,7 @@
     <property name="version.major" value="3"/>
     <property name="version.minor" value="10"/>
     <property name="version.revision" value="0"/>
-    <property name="version.extra" value="alpha"/>    <!-- For 'beta' or 'alpha' -->
+    <property name="version.extra" value="surevine1"/>    <!-- For 'beta' or 'alpha' -->
 
 	<property name="javac.source" value="1.7"/>
 	<property name="javac.target" value="1.7"/>
@@ -1254,7 +1254,7 @@
         <antcall target="openfireHome"/>
 
     </target>
-    <target name="-plugins-impl" if="dirlist">
+    <target name="-plugins-impl"><!-- if="dirlist">-->
 
         <!-- For each plugin in the main src dir, call the 'buildplugin' macro -->
         <for list="${dirlist}" param="plugin" trim="true">
@@ -1885,4 +1885,16 @@
         </copy>
     </target>
 
+	 <target name="deploy-release" depends="installer.rpm" description="deploy snapshot version to Maven snapshot repository">
+	        <artifact:mvn>
+	            <arg value="org.apache.maven.plugins:maven-deploy-plugin:2.6:deploy-file" />
+	            <arg value="-Durl=https://nexus.surevine.net/content/repositories/releases" />
+	            <arg value="-DrepositoryId=surevine-release" />
+	            <arg value="-Dfile=${release.dest.dir}/${dist.prefix}-${version}-1.i386.rpm" />
+	        	<arg value="-DgroupId=com.surevine.chat.openfire" />
+	        	<arg value="-DartifactId=openfire" />
+	        	<arg value="-Dversion=${version}" />
+	        </artifact:mvn>
+	 </target>
+	
 </project>

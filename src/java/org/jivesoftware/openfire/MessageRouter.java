@@ -250,7 +250,18 @@ public class MessageRouter extends BasicModule {
         // If message was sent to an unavailable full JID of a user then retry using the bare JID
         if (serverName.equals(recipient.getDomain()) && recipient.getResource() != null &&
                 userManager.isRegisteredUser(recipient.getNode())) {
-            routingTable.routePacket(recipient.asBareJID(), packet, false);
+        	Message msg = (Message)packet;
+        	if (msg.getType().equals(Message.Type.chat)) { 
+        		routingTable.routePacket(recipient.asBareJID(), packet, false);
+        	} else if (!msg.getType().equals(Message.Type.error)) {
+        		// Bounce message, ideally - doing nothing is also OK.
+        		Message bounce = msg.createCopy();
+        		bounce.setTo(msg.getFrom());
+        		bounce.setFrom(msg.getTo());
+        		bounce.setType(Message.Type.error);
+        		bounce.setError(PacketError.Condition.service_unavailable);
+        		routingTable.routePacket(msg.getFrom(), bounce, true);
+        	}
         } else {
             // Just store the message offline
             messageStrategy.storeOffline((Message) packet);

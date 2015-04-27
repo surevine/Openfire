@@ -20,11 +20,18 @@
 
 package org.jivesoftware.openfire.auth;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+
+import javax.security.sasl.SaslException;
+import javax.xml.bind.DatatypeConverter;
 
 import org.jivesoftware.database.DbConnectionManager;
 import org.jivesoftware.openfire.XMPPServer;
@@ -49,7 +56,9 @@ public class DefaultAuthProvider implements AuthProvider {
     private static final String LOAD_PASSWORD =
             "SELECT plainPassword,encryptedPassword FROM ofUser WHERE username=?";
     private static final String UPDATE_PASSWORD =
-            "UPDATE ofUser SET plainPassword=?, encryptedPassword=? WHERE username=?";
+            "UPDATE ofUser SET plainPassword=?, encryptedPassword=?, storedKey=?, serverKey=?, salt=?, iterations=? WHERE username=?";
+    
+    private static final SecureRandom random = new SecureRandom();
 
     /**
      * Constructs a new DefaultAuthProvider.
@@ -184,6 +193,25 @@ public class DefaultAuthProvider implements AuthProvider {
                 throw new UserNotFoundException();
             }
         }
+        
+        // Store the salt and salted password so SCRAM-SHA-1 SASL auth can be used later.
+        byte[] saltShaker = new byte[32];
+        random.nextBytes(saltShaker);
+        String salt = DatatypeConverter.printBase64Binary(saltShaker);
+
+        byte[] saltedPassword = null, clientKey = null, storedKey = null, serverKey = null;
+		try {
+			saltedPassword = ScramUtils.createSaltedPassword(saltShaker, password);
+	        clientKey = ScramUtils.computeHmac(saltedPassword, "Client Key");
+	        storedKey = MessageDigest.getInstance("SHA-1").digest(clientKey);
+	        serverKey = ScramUtils.computeHmac(saltedPassword, "Server Key");
+		} catch (SaslException | NoSuchAlgorithmException | UnsupportedEncodingException e) {
+			Log.warn("Unable to persist values for SCRAM authentication.");
+		}
+		
+		int iterations = JiveGlobals.getIntProperty("sasl.scram-sha-1.iteration-count",
+				ScramUtils.DEFAULT_ITERATION_COUNT);
+        
         if (!usePlainPassword) {
             try {
                 encryptedPassword = AuthFactory.encryptPassword(password);
@@ -213,7 +241,21 @@ public class DefaultAuthProvider implements AuthProvider {
             else {
                 pstmt.setString(2, encryptedPassword);
             }
-            pstmt.setString(3, username);
+            if (storedKey == null) {
+            	pstmt.setNull(3, Types.VARCHAR);
+            }
+            else {
+            	pstmt.setString(3, DatatypeConverter.printBase64Binary(storedKey));
+            }
+            if (serverKey == null) {
+            	pstmt.setNull(4, Types.VARCHAR);
+            }
+            else {
+            	pstmt.setString(4, DatatypeConverter.printBase64Binary(serverKey));
+            }
+            pstmt.setString(5, salt);
+            pstmt.setInt(6, iterations);
+            pstmt.setString(7, username);
             pstmt.executeUpdate();
         }
         catch (SQLException sqle) {

@@ -795,10 +795,15 @@ public class SASLAuthentication {
         // Clean up not-available mechanisms
         for (Iterator<String> it=answer.iterator(); it.hasNext();) {
             String mech = it.next();
-            if (mech.equals("CRAM-MD5") || mech.equals("DIGEST-MD5") || mech.equals("SCRAM-SHA-1")) {
+            if (mech.equals("CRAM-MD5") || mech.equals("DIGEST-MD5")) {
                 // Check if the user provider in use supports passwords retrieval. Accessing
                 // to the users passwords will be required by the CallbackHandler
                 if (!AuthFactory.supportsPasswordRetrieval()) {
+                    it.remove();
+                }
+            }
+            else if (mech.equals("SCRAM-SHA-1")) {
+                if (!AuthFactory.supportsPasswordRetrieval() && !AuthFactory.supportsScram()) {
                     it.remove();
                 }
             }

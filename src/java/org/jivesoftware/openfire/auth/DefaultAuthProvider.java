@@ -346,4 +346,9 @@ public class DefaultAuthProvider implements AuthProvider {
         boolean scramOnly = JiveGlobals.getBooleanProperty("user.scramHashedPasswordOnly");
         return !scramOnly;
     }
+
+    @Override
+    public boolean isScramSupported() {
+        return true;
+    }
 }

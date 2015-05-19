@@ -43,14 +43,14 @@ public class ScramUtils {
 
 	private ScramUtils() {}
 
-    public static byte[] createSaltedPassword(byte[] salt, String password) throws SaslException {
+    public static byte[] createSaltedPassword(byte[] salt, String password, int iters) throws SaslException {
         Mac mac = createSha1Hmac(password.getBytes(StandardCharsets.US_ASCII));
         mac.update(salt);
         mac.update(new byte[]{0, 0, 0, 1});
         byte[] result = mac.doFinal();
 
         byte[] previous = null;
-        for (int i = 1; i < JiveGlobals.getIntProperty("sasl.scram-sha-1.iteration-count", DEFAULT_ITERATION_COUNT); i++) {
+        for (int i = 1; i < iters; i++) {
             mac.update(previous != null ? previous : result);
             previous = mac.doFinal();
             for (int x = 0; x < result.length; x++) {

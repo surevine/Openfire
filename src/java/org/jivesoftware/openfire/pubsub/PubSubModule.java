@@ -84,7 +84,7 @@ public class PubSubModule extends BasicModule implements ServerItemsProvider, Di
      * Nodes managed by this manager, table: key nodeID (String); value Node
      */
     private Map<String, Node> nodes = new ConcurrentHashMap<String, Node>();
-    
+
     /**
      * Keep a registry of the presence's show value of users that subscribed to a node of
      * the pubsub service and for which the node only delivers notifications for online users
@@ -94,12 +94,12 @@ public class PubSubModule extends BasicModule implements ServerItemsProvider, Di
      */
     private Map<String, Map<String, String>> barePresences =
             new ConcurrentHashMap<String, Map<String, String>>();
-    
+
     /**
      * Manager that keeps the list of ad-hoc commands and processing command requests.
      */
     private AdHocCommandManager manager;
-    
+
     /**
      * Returns the permission policy for creating nodes. A true value means that not anyone can
      * create a node, only the JIDs listed in <code>allowedToCreate</code> are allowed to create
@@ -154,7 +154,7 @@ public class PubSubModule extends BasicModule implements ServerItemsProvider, Di
 
     public PubSubModule() {
         super("Publish Subscribe Service");
-        
+
         // Initialize the ad-hoc commands manager to use for this pubsub service
         manager = new AdHocCommandManager();
         manager.addCommand(new PendingSubscriptionsCommand(this));
@@ -335,7 +335,7 @@ public class PubSubModule extends BasicModule implements ServerItemsProvider, Di
     @Override
 	public void initialize(XMPPServer server) {
         super.initialize(server);
-        
+
         JiveGlobals.migrateProperty("xmpp.pubsub.enabled");
         JiveGlobals.migrateProperty("xmpp.pubsub.service");
         JiveGlobals.migrateProperty("xmpp.pubsub.root.nodeID");
@@ -527,12 +527,18 @@ public class PubSubModule extends BasicModule implements ServerItemsProvider, Di
         ArrayList<Element> identities = new ArrayList<Element>();
         if (name == null && node == null) {
             // Answer the identity of the PubSub service
-            Element identity = DocumentHelper.createElement("identity");
-            identity.addAttribute("category", "pubsub");
-            identity.addAttribute("name", "Publish-Subscribe service");
-            identity.addAttribute("type", "service");
+            Element pubsubService = DocumentHelper.createElement("identity");
+            pubsubService.addAttribute("category", "pubsub");
+            pubsubService.addAttribute("name", "Publish-Subscribe service");
+            pubsubService.addAttribute("type", "service");
+            identities.add(pubsubService);
 
-            identities.add(identity);
+            // Advertise XEP-0346 support
+            Element pubsubFDP = DocumentHelper.createElement("identity");
+            pubsubFDP.addAttribute("category", "pubsub");
+            pubsubFDP.addAttribute("name", "Form discovery and publishing");
+            pubsubFDP.addAttribute("type", "urn:xmpp:fdp:0");
+            identities.add(pubsubFDP);
         }
         else if (name == null) {
             // Answer the identity of a given node

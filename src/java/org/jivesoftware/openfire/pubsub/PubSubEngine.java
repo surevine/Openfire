@@ -39,6 +39,7 @@ import org.jivesoftware.openfire.RoutingTable;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.XMPPServerListener;
 import org.jivesoftware.openfire.component.InternalComponentManager;
+import org.jivesoftware.openfire.fdp.FormSubmission;
 import org.jivesoftware.openfire.pep.PEPService;
 import org.jivesoftware.openfire.pubsub.cluster.RefreshNodeTask;
 import org.jivesoftware.openfire.pubsub.models.AccessModel;
@@ -342,7 +343,7 @@ public class PubSubEngine {
                     CreateNodeResponse response = createNodeHelper(service, iq, childElement, createElement);
 
                     if (response.newNode == null) {
-                        // New node creation failed. Since pep#auto-create is advertised 
+                        // New node creation failed. Since pep#auto-create is advertised
                         // in disco#info, node creation error should be sent to the client.
                         sendErrorPacket(iq, response.creationStatus, response.pubsubError);
                     } else {
@@ -390,6 +391,7 @@ public class PubSubEngine {
             sendErrorPacket(iq, PacketError.Condition.bad_request, pubsubError);
             return;
         }
+
         List<Element> items = new ArrayList<Element>();
         List entries;
         Element payload;
@@ -412,6 +414,21 @@ public class PubSubEngine {
                 sendErrorPacket(iq, PacketError.Condition.bad_request, pubsubError);
                 return;
             }
+
+            // Determine whether node is a XEP-0346 submitted form node
+            if(FormSubmission.isFDPSubmissionNode(leafNode)) {
+
+	            DataForm submittedForm = new DataForm(payload);
+            	FormSubmission formSubmission = new FormSubmission(service, leafNode, submittedForm);
+
+	        	if(!formSubmission.isValid()) {
+	        		 Element pubsubError = DocumentHelper.createElement(QName.get(
+	                         "item-forbidden", "http://jabber.org/protocol/pubsub#errors"));
+	                 sendErrorPacket(iq, PacketError.Condition.bad_request, pubsubError);
+	                 return;
+	        	}
+            }
+
             items.add(item);
         }
 
@@ -421,7 +438,7 @@ public class PubSubEngine {
         leafNode.publishItems(from, items);
     }
 
-    private void deleteItems(PubSubService service, IQ iq, Element retractElement) {
+	private void deleteItems(PubSubService service, IQ iq, Element retractElement) {
         String nodeID = retractElement.attributeValue("node");
         Node node;
         if (nodeID == null) {
@@ -671,7 +688,7 @@ public class PubSubEngine {
         }
         NodeSubscription subscription;
         JID owner = new JID(jidAttribute);
-        
+
         if (node.isMultipleSubscriptionsEnabled() && node.getSubscriptions(owner).size() > 1) {
             if (subID == null) {
                 // No subid was specified and the node supports multiple subscriptions
@@ -893,10 +910,10 @@ public class PubSubEngine {
         // TODO Assuming that owner is the bare JID (as defined in the JEP). This can be replaced with an explicit owner specified in the packet
         JID owner = iq.getFrom().asBareJID();
         Element subscriptionsElement = childElement.element("subscriptions");
-        
+
         String nodeID = subscriptionsElement.attributeValue("node");
         Collection<NodeSubscription> subscriptions = new ArrayList<NodeSubscription>();
-        
+
         if (nodeID == null)
         {
             // Collect subscriptions of owner for all nodes at the service
@@ -1763,7 +1780,7 @@ public class PubSubEngine {
     public void start(final PubSubService service) {
         // Probe presences of users that this service has subscribed to (once the server
         // has started)
-        
+
         if (XMPPServer.getInstance().isStarted()) {
             probePresences(service);
         }
@@ -1776,7 +1793,7 @@ public class PubSubEngine {
                 public void serverStopping() {
                 }
             });
-        }        
+        }
     }
 
     private void probePresences(final PubSubService service) {
@@ -1801,7 +1818,7 @@ public class PubSubEngine {
 		    	// Stop executing ad-hoc commands
 		        service.getManager().stop();
     		}
-	        
+
 	        // clear all nodes for this service, to remove circular references back to the service instance.
 			service.getNodes().clear(); // FIXME: this is an ugly hack. getNodes() is documented to return an unmodifiable collection (but does not).
     	}
@@ -1896,7 +1913,7 @@ public class PubSubEngine {
     /**
 	 * Checks to see if the jid given is a component by looking at the routing
 	 * table. Similar to {@link InternalComponentManager#hasComponent(JID)}.
-	 * 
+	 *
 	 * @param jid
 	 * @return <tt>true</tt> if the JID is a component, <tt>false<.tt> if not.
 	 */

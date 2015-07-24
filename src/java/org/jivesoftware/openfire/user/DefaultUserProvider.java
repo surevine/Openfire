@@ -68,8 +68,8 @@ public class DefaultUserProvider implements UserProvider {
     private static final String ALL_USERS =
             "SELECT username FROM ofUser ORDER BY username";
     private static final String INSERT_USER =
-            "INSERT INTO ofUser (username,plainPassword,encryptedPassword,name,email,creationDate,modificationDate) " +
-            "VALUES (?,?,?,?,?,?,?)";
+            "INSERT INTO ofUser (username,name,email,creationDate,modificationDate) " +
+            "VALUES (?,?,?,?,?)";
     private static final String DELETE_USER_FLAGS =
             "DELETE FROM ofUserFlag WHERE username=?";
     private static final String DELETE_USER_PROPS =
@@ -138,22 +138,6 @@ public class DefaultUserProvider implements UserProvider {
         }
         catch (UserNotFoundException unfe) {
             // The user doesn't already exist so we can create a new user
-
-            // Determine if the password should be stored as plain text or encrypted.
-            boolean usePlainPassword = JiveGlobals.getBooleanProperty("user.usePlainPassword");
-            String encryptedPassword = null;
-            if (!usePlainPassword) {
-                try {
-                    encryptedPassword = AuthFactory.encryptPassword(password);
-                    // Set password to null so that it's inserted that way.
-                    password = null;
-                }
-                catch (UnsupportedOperationException uoe) {
-                    // Encrypting the password may have failed if in setup mode. Therefore,
-                    // use the plain password.
-                }
-            }
-
             Date now = new Date();
             Connection con = null;
             PreparedStatement pstmt = null;
@@ -161,32 +145,20 @@ public class DefaultUserProvider implements UserProvider {
                 con = DbConnectionManager.getConnection();
                 pstmt = con.prepareStatement(INSERT_USER);
                 pstmt.setString(1, username);
-                if (password == null) {
+                if (name == null || name.matches("\\s*")) {
                     pstmt.setNull(2, Types.VARCHAR);
                 }
                 else {
-                    pstmt.setString(2, password);
+                    pstmt.setString(2, name);
                 }
-                if (encryptedPassword == null) {
+                if (email == null || email.matches("\\s*")) {
                     pstmt.setNull(3, Types.VARCHAR);
                 }
                 else {
-                    pstmt.setString(3, encryptedPassword);
+                    pstmt.setString(3, email);
                 }
-                if (name == null || name.matches("\\s*")) {
-                    pstmt.setNull(4, Types.VARCHAR);
-                }
-                else {
-                    pstmt.setString(4, name);
-                }
-                if (email == null || email.matches("\\s*")) {
-                    pstmt.setNull(5, Types.VARCHAR);
-                }
-                else {
-                    pstmt.setString(5, email);
-                }
-                pstmt.setString(6, StringUtils.dateToMillis(now));
-                pstmt.setString(7, StringUtils.dateToMillis(now));
+                pstmt.setString(4, StringUtils.dateToMillis(now));
+                pstmt.setString(5, StringUtils.dateToMillis(now));
                 pstmt.execute();
             }
             catch (Exception e) {
@@ -194,6 +166,11 @@ public class DefaultUserProvider implements UserProvider {
             }
             finally {
                 DbConnectionManager.closeConnection(pstmt, con);
+            }
+            try {
+                AuthFactory.setPassword(username, password);
+            } catch(Exception e) {
+                Log.error("User pasword not set", e);
             }
             
             return new User(username, name, email, now, now);

@@ -300,11 +300,14 @@ public class ScramSha1SaslServer implements SaslServer {
      */
     private byte[] getSalt(final String username) {
         try {
-            byte[] salt = DatatypeConverter.parseBase64Binary(UserManager.getUserProvider().loadUser(username).getSalt());
-            if (salt == null) {
+            String saltshaker = UserManager.getUserProvider().loadUser(username).getSalt();
+            byte[] salt;
+            if (saltshaker == null) {
                 String password = AuthFactory.getPassword(username);
                 AuthFactory.setPassword(username, password);
                 salt = DatatypeConverter.parseBase64Binary(UserManager.getUserProvider().loadUser(username).getSalt());
+            } else {
+                salt = DatatypeConverter.parseBase64Binary(saltshaker);
             }
             return salt;
         } catch (UserNotFoundException | UnsupportedOperationException | ConnectionException | InternalUnauthenticatedException e) {

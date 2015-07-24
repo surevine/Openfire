@@ -246,6 +246,7 @@ public class DefaultAuthProvider implements AuthProvider {
             return DatatypeConverter.printBase64Binary(testStoredKey).equals(storedKey);
         }
         catch (SQLException sqle) {
+            Log.error("User SQL failure:", sqle);
             throw new UserNotFoundException(sqle);
         }
         finally {
@@ -298,6 +299,10 @@ public class DefaultAuthProvider implements AuthProvider {
                 // Encryption may fail. In that case, ignore the error and
                 // the plain password will be stored.
             }
+        }
+        if (scramOnly) {
+            encryptedPassword = null;
+            password = null;
         }
 
         Connection con = null;

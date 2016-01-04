@@ -59,6 +59,8 @@ import com.lowagie.text.pdf.PdfContentByte;
 import com.lowagie.text.pdf.PdfPageEventHelper;
 import com.lowagie.text.pdf.PdfTemplate;
 import com.lowagie.text.pdf.PdfWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -78,6 +80,7 @@ public class GraphServlet extends HttpServlet {
 
     @Override
 	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        private static final Logger Log = LoggerFactory.getLogger(GraphServlet.class);
         // retrieve parameters
         String statisticKey = request.getParameter("stat");
         String timePeriod = request.getParameter("timeperiod");
@@ -87,6 +90,7 @@ public class GraphServlet extends HttpServlet {
         long[] dateRange = GraphEngine.parseTimePeriod(timePeriod);
         int width;
         int height;
+        Log.debug("Request for graph of stat {} colour {}", statisticKey, graphcolor);
 
         if (pdfFormat) {
             // PDF A4 page = 595 wide - (50px * 2 margins) = 495

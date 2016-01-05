@@ -72,11 +72,17 @@ public class GraphServlet extends HttpServlet {
 
     @Override
 	public void init() throws ServletException {
-        // load dependencies
-        MonitoringPlugin plugin =
-                (MonitoringPlugin) XMPPServer.getInstance().getPluginManager().getPlugin(MonitoringConstants.NAME);
-        this.graphEngine = (GraphEngine) plugin.getModule(GraphEngine.class);
-        this.statsViewer = (StatsViewer)plugin.getModule(StatsViewer.class);
+        Log.debug("init() called");
+        try {
+            // load dependencies
+            MonitoringPlugin plugin =
+                    (MonitoringPlugin) XMPPServer.getInstance().getPluginManager().getPlugin(MonitoringConstants.NAME);
+            this.graphEngine = (GraphEngine) plugin.getModule(GraphEngine.class);
+            this.statsViewer = (StatsViewer) plugin.getModule(StatsViewer.class);
+        } catch (Exception e) {
+            Log.debug("Exception during init():", e);
+        }
+        Log.debug("init(): Exit");
     }
 
     @Override

@@ -68,6 +68,7 @@ import org.slf4j.LoggerFactory;
 public class GraphServlet extends HttpServlet {
     private GraphEngine graphEngine;
     private StatsViewer statsViewer;
+    private static final Logger Log = LoggerFactory.getLogger(GraphServlet.class);
 
     @Override
 	public void init() throws ServletException {
@@ -80,7 +81,6 @@ public class GraphServlet extends HttpServlet {
 
     @Override
 	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        private static final Logger Log = LoggerFactory.getLogger(GraphServlet.class);
         // retrieve parameters
         String statisticKey = request.getParameter("stat");
         String timePeriod = request.getParameter("timeperiod");

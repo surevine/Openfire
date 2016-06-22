@@ -576,7 +576,11 @@ public class RoutingTableImpl extends BasicModule implements RoutingTable, Clust
                 session.process(packet);
             }
         }
-        
+
+        if (packet.getType() == Message.Type.headline) {
+            return true;
+        }
+
         if (JiveGlobals.getBooleanProperty("route.really-all-resources", false))
         	return true;
 

@@ -69,7 +69,7 @@ public class MUCPersistenceManager {
     private static final String LOAD_MEMBERS =
         "SELECT jid, nickname FROM ofMucMember WHERE roomID=?";
     private static final String LOAD_HISTORY =
-        "SELECT sender, nickname, logTime, subject, body FROM ofMucConversationLog " +
+        "SELECT sender, nickname, logTime, subject, body, stanza FROM ofMucConversationLog " +
         "WHERE logTime>? AND roomID=? AND (nickname IS NOT NULL OR subject IS NOT NULL) ORDER BY logTime";
     private static final String LOAD_ALL_ROOMS =
         "SELECT roomID, creationDate, modificationDate, name, naturalName, description, " +
@@ -249,8 +249,9 @@ public class MUCPersistenceManager {
                     Date sentDate = new Date(Long.parseLong(rs.getString(3).trim()));
                     String subject = rs.getString(4);
                     String body = rs.getString(5);
+                    String stanza = rs.getString(6);
                     room.getRoomHistory().addOldMessage(senderJID, nickname, sentDate, subject,
-                            body);
+                            body, stanza);
                 }
             }
             DbConnectionManager.fastcloseStmt(rs, pstmt);
@@ -260,7 +261,7 @@ public class MUCPersistenceManager {
             if (!room.getRoomHistory().hasChangedSubject() && room.getSubject() != null &&
                     room.getSubject().length() > 0) {
                 room.getRoomHistory().addOldMessage(room.getRole().getRoleAddress().toString(),
-                        null, room.getModificationDate(), room.getSubject(), null);
+                        null, room.getModificationDate(), room.getSubject(), null, null);
             }
 
             pstmt = con.prepareStatement(LOAD_AFFILIATIONS);
@@ -621,6 +622,7 @@ public class MUCPersistenceManager {
                                                             null,
                                                             loadedRoom.getModificationDate(),
                                                             loadedRoom.getSubject(),
+                                                            null,
                                                             null);
             }
         }

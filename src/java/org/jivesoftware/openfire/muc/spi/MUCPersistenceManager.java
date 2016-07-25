@@ -85,7 +85,7 @@ public class MUCPersistenceManager {
         "WHERE ofMucMember.roomID = ofMucRoom.roomID AND ofMucRoom.serviceID=?";
     private static final String LOAD_ALL_HISTORY =
         "SELECT ofMucConversationLog.roomID, ofMucConversationLog.sender, ofMucConversationLog.nickname, " +
-        "ofMucConversationLog.logTime, ofMucConversationLog.subject, ofMucConversationLog.body FROM " +
+        "ofMucConversationLog.logTime, ofMucConversationLog.subject, ofMucConversationLog.body, ofMucConversationLog.stanza FROM " +
         "ofMucConversationLog, ofMucRoom WHERE ofMucConversationLog.roomID = ofMucRoom.roomID AND " +
         "ofMucRoom.serviceID=? AND ofMucConversationLog.logTime>? AND (ofMucConversationLog.nickname IS NOT NULL " +
         "OR ofMucConversationLog.subject IS NOT NULL) ORDER BY ofMucConversationLog.logTime";
@@ -129,8 +129,8 @@ public class MUCPersistenceManager {
     private static final String DELETE_USER_MUCAFFILIATION =
         "DELETE FROM ofMucAffiliation WHERE jid=?";
     private static final String ADD_CONVERSATION_LOG =
-        "INSERT INTO ofMucConversationLog (roomID,sender,nickname,logTime,subject,body) " +
-        "VALUES (?,?,?,?,?,?)";
+        "INSERT INTO ofMucConversationLog (roomID,sender,nickname,logTime,subject,body,stanza) " +
+        "VALUES (?,?,?,?,?,?,?)";
 
     /* Map of subdomains to their associated properties */
     private static ConcurrentHashMap<String,MUCServiceProperties> propertyMaps = new ConcurrentHashMap<>();
@@ -599,7 +599,8 @@ public class MUCPersistenceManager {
                     Date sentDate    = new Date(Long.parseLong(resultSet.getString(4).trim()));
                     String subject   = resultSet.getString(5);
                     String body      = resultSet.getString(6);
-                    room.getRoomHistory().addOldMessage(senderJID, nickname, sentDate, subject, body);
+                    String stanza = resultSet.getString(7);
+                    room.getRoomHistory().addOldMessage(senderJID, nickname, sentDate, subject, body, stanza);
                 } catch (SQLException e) {
                     Log.warn("A database exception prevented the history for one particular MUC room to be loaded from the database.", e);
                 }
@@ -1063,6 +1064,7 @@ public class MUCPersistenceManager {
             pstmt.setString(4, StringUtils.dateToMillis(entry.getDate()));
             pstmt.setString(5, entry.getSubject());
             pstmt.setString(6, entry.getBody());
+            pstmt.setString(7, entry.getStanza());
             pstmt.executeUpdate();
             return true;
         }

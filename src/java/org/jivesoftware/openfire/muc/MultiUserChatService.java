@@ -20,6 +20,7 @@
 
 package org.jivesoftware.openfire.muc;
 
+import org.jivesoftware.openfire.handler.IQHandler;
 import org.xmpp.component.Component;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
@@ -398,4 +399,11 @@ public interface MultiUserChatService extends Component {
      * @return true if the MUC service is hidden and externally managed.
      */
     boolean isHidden();
+
+    /**
+     * Add a IQHandler to MUC rooms and services. If the IQHandler only supports one or
+     * other, it should quietly ignore it.
+     */
+    void addIQHandler(IQHandler handler);
+    void removeIQHandler(IQHandler handler);
 }

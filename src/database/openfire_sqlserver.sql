@@ -256,6 +256,7 @@ CREATE TABLE ofMucMember (
 
 CREATE TABLE ofMucConversationLog (
   roomID              INT            NOT NULL,
+  messageID         INT           NOT NULL,
   sender              NVARCHAR(1024) NOT NULL,
   nickname            NVARCHAR(255)  NULL,
   logTime             CHAR(15)       NOT NULL,
@@ -264,6 +265,7 @@ CREATE TABLE ofMucConversationLog (
   stanza                NTEXT          NULL
 );
 CREATE INDEX ofMucConversationLog_time_idx ON ofMucConversationLog (logTime);
+CREATE INDEX ofMucConversationLog_msg_id ON ofMucConversationLog (messageID);
 
 /* PubSub Tables */
 

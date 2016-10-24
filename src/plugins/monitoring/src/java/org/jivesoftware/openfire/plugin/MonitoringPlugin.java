@@ -22,6 +22,7 @@ package org.jivesoftware.openfire.plugin;
 import java.io.File;
 import java.io.FileFilter;
 
+import com.reucon.openfire.plugin.archive.impl.MucMamPersistenceManager;
 import com.reucon.openfire.plugin.archive.xep0313.Xep0313Support1;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.archive.ArchiveIndexer;
@@ -52,6 +53,7 @@ import com.reucon.openfire.plugin.archive.impl.ArchiveManagerImpl;
 import com.reucon.openfire.plugin.archive.impl.JdbcPersistenceManager;
 import com.reucon.openfire.plugin.archive.xep0136.Xep0136Support;
 import com.reucon.openfire.plugin.archive.xep0313.Xep0313Support;
+import org.xmpp.packet.JID;
 
 /**
  * Openfire Monitoring plugin.
@@ -70,6 +72,7 @@ public class MonitoringPlugin implements Plugin {
 	private static MonitoringPlugin instance;
 	private boolean enabled = true;
 	private PersistenceManager persistenceManager;
+	private PersistenceManager mucPersistenceManager;
 	private ArchiveManager archiveManager;
 	private IndexManager indexManager;
 	private Xep0136Support xep0136Support;
@@ -129,7 +132,10 @@ public class MonitoringPlugin implements Plugin {
 		return indexManager;
 	}
 
-	public PersistenceManager getPersistenceManager() {
+	public PersistenceManager getPersistenceManager(JID jid) {
+		if (XMPPServer.getInstance().getMultiUserChatManager().getMultiUserChatServiceID(jid.getDomain()) != null) {
+			return mucPersistenceManager;
+		}
 		return persistenceManager;
 	}
 
@@ -154,6 +160,7 @@ public class MonitoringPlugin implements Plugin {
 				false);
 
 		persistenceManager = new JdbcPersistenceManager();
+		mucPersistenceManager = new MucMamPersistenceManager();
 
 		archiveManager = new ArchiveManagerImpl(persistenceManager,
 				indexManager, conversationTimeout);

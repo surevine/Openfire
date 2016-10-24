@@ -41,8 +41,6 @@ public class MucMamPersistenceManager implements PersistenceManager {
     private static final String LOAD_HISTORY =
             "SELECT sender, nickname, logTime, subject, body, stanza FROM ofMucConversationLog " +
                     "WHERE logTime>? AND logTime <= ? AND roomID=? AND (nickname IS NOT NULL OR subject IS NOT NULL) ORDER BY logTime";
-    MucMamPersistenceManager() throws NotAllowedException {
-    }
     @Override
     public boolean createMessage(ArchivedMessage message) {
         return false;
@@ -92,16 +90,17 @@ public class MucMamPersistenceManager implements PersistenceManager {
         if (!room.isLogEnabled()) return null;
         // Check to see if the owner could join.
         if (room.getOutcasts().contains(requestor)) {
-            return null; // TODO Forbidden, really.
+            return null;
         }
         if (room.isMembersOnly()) {
             if (!(room.getMembers().contains(requestor)
                     || room.getAdmins().contains(requestor)
                     || room.getOwners().contains(requestor))) {
-                return null; // TODO Forbidden
+                return null;
             }
         }
         List<ArchivedMessage>msgs = new LinkedList<>();
+        int a = xmppResultSet.getCount()
         try {
             connection = DbConnectionManager.getConnection();
             pstmt = connection.prepareStatement(LOAD_HISTORY);

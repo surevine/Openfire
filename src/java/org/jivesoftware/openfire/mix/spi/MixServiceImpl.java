@@ -1,0 +1,319 @@
+package org.jivesoftware.openfire.mix.spi;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
+import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
+import org.jivesoftware.openfire.PacketRouter;
+import org.jivesoftware.openfire.XMPPServer;
+import org.jivesoftware.openfire.XMPPServerListener;
+import org.jivesoftware.openfire.disco.DiscoInfoProvider;
+import org.jivesoftware.openfire.disco.DiscoItem;
+import org.jivesoftware.openfire.disco.DiscoItemsProvider;
+import org.jivesoftware.openfire.disco.DiscoServerItem;
+import org.jivesoftware.openfire.disco.ServerItemsProvider;
+import org.jivesoftware.openfire.mix.MixChannel;
+import org.jivesoftware.openfire.mix.MixService;
+import org.jivesoftware.util.JiveProperties;
+import org.jivesoftware.util.LocaleUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xmpp.component.Component;
+import org.xmpp.component.ComponentException;
+import org.xmpp.component.ComponentManager;
+import org.xmpp.forms.DataForm;
+import org.xmpp.packet.IQ;
+import org.xmpp.packet.JID;
+import org.xmpp.packet.Packet;
+import org.xmpp.packet.PacketError;
+
+public class MixServiceImpl implements Component, MixService, ServerItemsProvider, DiscoInfoProvider,
+		DiscoItemsProvider, XMPPServerListener {
+	
+	private static final Logger Log = LoggerFactory.getLogger(MixServiceImpl.class);
+	
+	private final XMPPServer xmppServer;
+	
+	/**
+	 * The ID of the service in the database
+	 */
+	private Long id;
+	
+	/**
+	 * the chat service's hostname (subdomain)
+	 */
+	private final String serviceName;
+
+	/**
+	 * the chat service's description
+	 */
+	private String serviceDescription = null;
+
+    /**
+     * Flag that indicates if MIX service is enabled.
+     */
+    private boolean serviceEnabled = true;
+
+    /**
+     * The packet router for the server.
+     */
+    private PacketRouter router = null;
+    
+    private Map<String, MixChannel> channels;
+
+	/**
+	 * Create a new group chat server.
+	 *
+	 * @param subdomain
+	 *            Subdomain portion of the conference services (for example,
+	 *            conference for conference.example.org)
+	 * @param description
+	 *            Short description of service for disco and such. If
+	 *            <tt>null</tt> or empty, a default value will be used.
+	 * @param isHidden
+	 *            True if this service should be hidden from services views.
+	 * @throws IllegalArgumentException
+	 *             if the provided subdomain is an invalid, according to the JID
+	 *             domain definition.
+	 */
+	public MixServiceImpl(XMPPServer xmppServer, String subdomain, String description, Boolean isHidden) {
+		this.xmppServer = xmppServer;
+		
+		// Check subdomain and throw an IllegalArgumentException if its invalid
+		new JID(null, subdomain + "." + xmppServer.getServerInfo().getXMPPDomain(), null);
+
+		this.serviceName = subdomain;
+		if (description != null && description.trim().length() > 0) {
+			this.serviceDescription = description;
+		} else {
+			this.serviceDescription = LocaleUtils.getLocalizedString("mix.service-name");
+		}
+	}
+
+	public String getDescription() {
+		return serviceDescription;
+	}
+
+	public String getName() {
+		return serviceName;
+	}
+
+	public void initialize(JID jid, ComponentManager componentManager) throws ComponentException {
+        initializeSettings();
+        
+        router = xmppServer.getPacketRouter();
+ 	}
+
+    public void initializeSettings() {
+        serviceEnabled = JiveProperties.getInstance().getBooleanProperty("xmpp.mix.enabled", true);
+    }
+    
+	public void processPacket(Packet packet) {
+        if (!isServiceEnabled()) {
+            return;
+        }
+        // The MUC service will receive all the packets whose domain matches the domain of the MUC
+        // service. This means that, for instance, a disco request should be responded by the
+        // service itself instead of relying on the server to handle the request.
+        try {
+            // Check if the packet is a disco request or a packet with namespace iq:register
+            if (packet instanceof IQ) {
+                if (process((IQ)packet)) {
+                    return;
+                }
+            }
+
+            if ( packet.getTo().getNode() == null )
+            {
+                // This was addressed at the service itself, which by now should have been handled.
+                if ( packet instanceof IQ && ((IQ) packet).isRequest() )
+                {
+                    final IQ reply = IQ.createResultIQ( (IQ) packet );
+                    reply.setChildElement( ((IQ) packet).getChildElement().createCopy() );
+                    reply.setError( PacketError.Condition.feature_not_implemented );
+                    router.route( reply );
+                }
+                Log.debug( "Ignoring stanza addressed at conference service: {}", packet.toXML() );
+            }
+            else
+            {
+                // The packet is a normal packet that should possibly be sent to the room
+                JID recipient = packet.getTo();
+                // TODO: Handle this
+            }
+        }
+        catch (Exception e) {
+            Log.error(LocaleUtils.getLocalizedString("admin.error"), e);
+        }
+	}
+
+    /**
+     * Returns true if the IQ packet was processed.
+     *
+     * @param iq the IQ packet to process.
+     * @return true if the IQ packet was processed.
+     */
+    private boolean process(IQ iq) {
+        Element childElement = iq.getChildElement();
+        String namespace = null;
+        // Ignore IQs of type ERROR
+        if (IQ.Type.error == iq.getType()) {
+            return false;
+        }
+        if (childElement != null) {
+            namespace = childElement.getNamespaceURI();
+        }
+        if ("http://jabber.org/protocol/disco#info".equals(namespace)) {
+            IQ reply = xmppServer.getIQDiscoInfoHandler().handleIQ(iq);
+            router.route(reply);
+        }
+        else if ("http://jabber.org/protocol/disco#items".equals(namespace)) {
+            IQ reply = xmppServer.getIQDiscoItemsHandler().handleIQ(iq);
+            router.route(reply);
+        }
+        else if ("urn:xmpp:ping".equals(namespace)) {
+            router.route( IQ.createResultIQ(iq) );
+        }
+        else {
+            return false;
+        }
+        return true;
+    }
+
+	public void shutdown() {
+		// TODO Auto-generated method stub
+
+	}
+
+    public void start() {
+        xmppServer.addServerListener( this );
+
+        // Set us up to answer disco item requests
+        xmppServer.getIQDiscoItemsHandler().addServerItemsProvider(this);
+        xmppServer.getIQDiscoInfoHandler().setServerNodeInfoProvider(this.getServiceDomain(), this);
+        xmppServer.getServerItemsProviders().add(this);
+	}
+
+	public String getServiceDomain() {
+        return serviceName + "." + xmppServer.getServerInfo().getXMPPDomain();
+	}
+
+	public String getServiceName() {
+		return serviceName;
+	}
+
+	public void serverStarted() {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void serverStopping() {
+		// TODO Auto-generated method stub
+
+	}
+
+    @Override
+    public boolean isServiceEnabled() {
+        return serviceEnabled;
+    }
+
+	public Iterator<DiscoItem> getItems(String name, String node, JID senderJID) {
+        // Check if the service is disabled. Info is not available when disabled.
+        if (!isServiceEnabled()) {
+            return null;
+        }
+        Set<DiscoItem> answer = new HashSet<>();
+		if (name == null && node == null)
+		{
+			// Answer all the public rooms as items
+		}
+        else if (name != null && node == null) {
+            // Answer the room occupants as items if that info is publicly available
+        }
+        return answer.iterator();
+	}
+
+	public Iterator<Element> getIdentities(String name, String node, JID senderJID) {
+        ArrayList<Element> identities = new ArrayList<>();
+        if (name == null && node == null) {
+            // Answer the identity of the MUC service
+            Element identity = DocumentHelper.createElement("identity");
+            identity.addAttribute("category", "conference");
+            identity.addAttribute("name", getDescription());
+            identity.addAttribute("type", "text");
+            identities.add(identity);
+        }
+        else if (name != null && node == null) {
+            // Answer the identity of a given room
+        }
+        else if (name != null && "x-roomuser-item".equals(node)) {
+            // Answer reserved nickname for the sender of the disco request in the requested room
+        }
+        return identities.iterator();
+	}
+
+	public Iterator<String> getFeatures(String name, String node, JID senderJID) {
+        ArrayList<String> features = new ArrayList<>();
+        if (name == null && node == null) {
+            // Answer the features of the MIX service
+            features.add("urn:xmpp:mix:0");
+            
+            // "searchable"
+            // "create-channel"
+        }
+        return features.iterator();
+	}
+
+	public DataForm getExtendedInfo(String name, String node, JID senderJID) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public boolean hasInfo(String name, String node, JID senderJID) {
+        // Check if the service is disabled. Info is not available when disabled.
+        if (!isServiceEnabled()) {
+            return false;
+        }
+        if (name == null && node == null) {
+            // We always have info about the MIX service
+            return true;
+        }
+        return false;
+	}
+
+	public Iterator<DiscoServerItem> getItems() {
+        // Check if the service is disabled. Info is not available when
+		// disabled.
+		if (!isServiceEnabled())
+		{
+			return null;
+		}
+
+		final ArrayList<DiscoServerItem> items = new ArrayList<>();
+		final DiscoServerItem item = new DiscoServerItem(new JID(
+			getServiceDomain()), getDescription(), null, null, this, this);
+		items.add(item);
+		return items.iterator();
+	}
+
+	@Override
+	public Collection<MixChannel> getChannels() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+}

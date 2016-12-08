@@ -516,7 +516,7 @@
               message="Can't find openfire, run 'ant openfire' or specify with -Dtarget.openfireHome."/>
 
         <condition property="run.debug"
-                   value="-Xdebug -Xint -server -Xnoagent -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8000">
+                   value="-Xdebug -Xint -server -Xnoagent -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000">
             <isset property="debug"/>
         </condition>
 

@@ -40,6 +40,7 @@ import org.jivesoftware.openfire.keystore.CertificateStoreManager;
 import org.jivesoftware.openfire.keystore.IdentityStore;
 import org.jivesoftware.openfire.lockout.LockOutManager;
 import org.jivesoftware.openfire.mediaproxy.MediaProxyService;
+import org.jivesoftware.openfire.mix.MixManager;
 import org.jivesoftware.openfire.muc.MultiUserChatManager;
 import org.jivesoftware.openfire.net.MulticastDNSService;
 import org.jivesoftware.openfire.net.ServerTrafficCounter;
@@ -533,6 +534,7 @@ public class XMPPServer {
         loadModule(MultiUserChatManager.class.getName());
         loadModule(IQMessageCarbonsHandler.class.getName());
         loadModule(CertificateStoreManager.class.getName());
+        loadModule(MixManager.class.getName());
 
         // Load this module always last since we don't want to start listening for clients
         // before the rest of the modules have been started

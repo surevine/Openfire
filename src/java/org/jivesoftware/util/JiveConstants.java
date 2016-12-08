@@ -31,6 +31,8 @@ public class JiveConstants {
     public static final int MUC_ROOM = 23;
     public static final int SECURITY_AUDIT = 25;
     public static final int MUC_SERVICE = 26;
+    public static final int MIX_SERVICE = 27;
+    public static final int MIX_CHANNEL = 28;
 
     public static final long SECOND = 1000;
     public static final long MINUTE = 60 * SECOND;

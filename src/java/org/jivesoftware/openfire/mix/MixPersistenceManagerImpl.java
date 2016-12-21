@@ -16,6 +16,7 @@ import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.mix.spi.LocalMixChannel;
 import org.jivesoftware.openfire.mix.spi.MixServiceImpl;
 import org.jivesoftware.openfire.muc.spi.LocalMUCRoom;
+import org.jivesoftware.util.JiveProperties;
 import org.jivesoftware.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,12 +24,18 @@ import org.slf4j.LoggerFactory;
 public class MixPersistenceManagerImpl implements MixPersistenceManager {
 	private static final Logger Log = LoggerFactory.getLogger(MixPersistenceManager.class);
 	
-	private static final String LOAD_SERVICES = "SELECT subdomain,description,isHidden FROM ofMixService";
+	private static final String LOAD_SERVICES = "SELECT subdomain,description FROM ofMixService";
 
     private static final String LOAD_ALL_CHANNELS =
             "SELECT channelID, creationDate, modificationDate, name, jidVisibility " +
             "FROM ofMixChannel WHERE serviceID=?";
 
+    private JiveProperties jiveProperties;
+    
+    public MixPersistenceManagerImpl(JiveProperties jiveProperties) {
+		this.jiveProperties = jiveProperties;
+	}
+    
     @Override
     public Collection<MixService> loadServices(XMPPServer xmppServer) {
     	List<MixService> mixServices = new ArrayList<>();
@@ -43,8 +50,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
             while (rs.next()) {
                 String subdomain = rs.getString(1);
                 String description = rs.getString(2);
-                Boolean isHidden = Boolean.valueOf(rs.getString(3));
-                MixServiceImpl mixService = new MixServiceImpl(xmppServer, subdomain, description, isHidden);
+                MixServiceImpl mixService = new MixServiceImpl(xmppServer, jiveProperties, subdomain, description);
                 mixServices.add(mixService);
             }
         }

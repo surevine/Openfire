@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.container.BasicModule;
+import org.jivesoftware.util.JiveProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmpp.component.ComponentException;
@@ -26,11 +27,15 @@ public class MixManager extends BasicModule {
      * Creates a new MultiUserChatManager instance.
      */
     public MixManager() {
+    	this(XMPPServer.getInstance(), new MixPersistenceManagerImpl(JiveProperties.getInstance()));
+    }
+    
+    public MixManager(XMPPServer xmppServer, MixPersistenceManager persistenceManager) {
         super("Mediated Information eXchange (MIX) manager");
-        
-        xmppServer = XMPPServer.getInstance();
-        
-        persistenceManager = new MixPersistenceManagerImpl();
+
+        this.xmppServer = xmppServer;
+    	this.persistenceManager = persistenceManager;
+    	
     }
 
 	/**

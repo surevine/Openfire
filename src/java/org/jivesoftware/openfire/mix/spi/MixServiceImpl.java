@@ -39,6 +39,8 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 	
 	private final XMPPServer xmppServer;
 	
+	private JiveProperties jiveProperties;
+	
 	/**
 	 * The ID of the service in the database
 	 */
@@ -81,8 +83,9 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 	 *             if the provided subdomain is an invalid, according to the JID
 	 *             domain definition.
 	 */
-	public MixServiceImpl(XMPPServer xmppServer, String subdomain, String description, Boolean isHidden) {
+	public MixServiceImpl(XMPPServer xmppServer, JiveProperties jiveProperties, String subdomain, String description) {
 		this.xmppServer = xmppServer;
+		this.jiveProperties = jiveProperties;
 		
 		// Check subdomain and throw an IllegalArgumentException if its invalid
 		new JID(null, subdomain + "." + xmppServer.getServerInfo().getXMPPDomain(), null);
@@ -110,7 +113,7 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
  	}
 
     public void initializeSettings() {
-        serviceEnabled = JiveProperties.getInstance().getBooleanProperty("xmpp.mix.enabled", true);
+        serviceEnabled = jiveProperties.getBooleanProperty("xmpp.mix.enabled", true);
     }
     
 	public void processPacket(Packet packet) {

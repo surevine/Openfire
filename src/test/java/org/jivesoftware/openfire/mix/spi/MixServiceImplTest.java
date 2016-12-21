@@ -16,6 +16,7 @@ import org.jmock.internal.ExpectationCollector;
 import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.xmpp.packet.JID;
 
@@ -138,6 +139,7 @@ public class MixServiceImplTest {
 	}
 
 	@Test
+	@Ignore
 	public void testGetItems() {
 		fail("Not yet implemented");
 	}

@@ -243,6 +243,11 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 
 	public Iterator<Element> getIdentities(String name, String node, JID senderJID) {
         ArrayList<Element> identities = new ArrayList<>();
+        
+        if(!serviceEnabled) {
+        	return identities.iterator();
+        }
+        
         if (name == null && node == null) {
             // Answer the identity of the MUC service
             Element identity = DocumentHelper.createElement("identity");

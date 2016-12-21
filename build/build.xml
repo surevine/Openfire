@@ -13,7 +13,7 @@
         * jUnit in your Ant or Java classpath
 -->
 
-<project name="Openfire XMPP Server" default="openfire" basedir="..">
+<project name="Openfire XMPP Server" default="openfire" basedir=".." xmlns:jacoco="antlib:org.jacoco.ant">
 
     <description>
         Openfire build script.
@@ -161,6 +161,9 @@
     <taskdef name="junit" classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask">
         <classpath refid="ant.dependencies" />
     </taskdef>
+	<taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
+	    <classpath refid="ant.dependencies"/>
+	</taskdef>
 
     <!-- ======================================================================================= -->
     <!-- PATHs / PATTERNSETs / FILTERSETs                                                        -->
@@ -712,25 +715,27 @@
 
         <!-- Run jUnit -->
         <mkdir dir="${test.results.dest.dir}"/>
-        <junit printsummary="yes" haltonfailure="yes" fork="yes" dir="${test.dest.dir}" includeantruntime="false">
-	    <sysproperty key="openfireHome" value="${target.openfireHome}"/>
-
-            <!-- We must add our own classes to the classpath for testing -->
-            <classpath>
-                <path refid="test.dependencies"/>
-                <pathelement path="${test.dest.dir}"/>
-                <pathelement path="${test.classes.dest.dir}"/>
-                <pathelement path="${test.resources.dest.dir}"/>
-            </classpath>
-
-            <formatter type="xml"/>
-
-            <batchtest todir="${test.results.dest.dir}">
-                <fileset dir="${src.test.java.dir}">
-                    <patternset refid="test.sources"/>
-                </fileset>
-            </batchtest>
-        </junit>
+    	<jacoco:coverage destfile="${test.results.dest.dir}/jacoco.exec">
+	        <junit printsummary="yes" haltonfailure="yes" fork="yes" forkmode="once" dir="${test.dest.dir}" includeantruntime="false">
+		    	<sysproperty key="openfireHome" value="${target.openfireHome}"/>
+	
+	            <!-- We must add our own classes to the classpath for testing -->
+	            <classpath>
+	                <path refid="test.dependencies"/>
+	                <pathelement path="${test.dest.dir}"/>
+	                <pathelement path="${test.classes.dest.dir}"/>
+	                <pathelement path="${test.resources.dest.dir}"/>
+	            </classpath>
+	
+	            <formatter type="xml"/>
+	
+	            <batchtest todir="${test.results.dest.dir}">
+	                <fileset dir="${src.test.java.dir}">
+	                    <patternset refid="test.sources"/>
+	                </fileset>
+	            </batchtest>
+	        </junit>
+    	</jacoco:coverage>
     </target>
 
     <!-- openfireHome ========================================================================== -->

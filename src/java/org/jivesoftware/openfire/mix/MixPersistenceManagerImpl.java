@@ -7,24 +7,20 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.jivesoftware.database.DbConnectionManager;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.mix.spi.LocalMixChannel;
 import org.jivesoftware.openfire.mix.spi.MixServiceImpl;
-import org.jivesoftware.openfire.muc.spi.LocalMUCRoom;
 import org.jivesoftware.util.JiveProperties;
-import org.jivesoftware.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MixPersistenceManagerImpl implements MixPersistenceManager {
 	private static final Logger Log = LoggerFactory.getLogger(MixPersistenceManager.class);
 	
-	private static final String LOAD_SERVICES = "SELECT subdomain,description FROM ofMixService";
+	private static final String LOAD_SERVICES = "SELECT serviceID, subdomain, description FROM ofMixService";
 
     private static final String LOAD_ALL_CHANNELS =
             "SELECT channelID, creationDate, modificationDate, name, jidVisibility " +
@@ -48,9 +44,11 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
             pstmt = con.prepareStatement(LOAD_SERVICES);
             rs = pstmt.executeQuery();
             while (rs.next()) {
-                String subdomain = rs.getString(1);
-                String description = rs.getString(2);
-                MixServiceImpl mixService = new MixServiceImpl(xmppServer, jiveProperties, subdomain, description);
+            	Long id = rs.getLong(1);
+                String subdomain = rs.getString(2);
+                String description = rs.getString(3);
+                MixServiceImpl mixService = new MixServiceImpl(xmppServer, jiveProperties, this, subdomain, description);
+                mixService.setId(id);
                 mixServices.add(mixService);
             }
         }
@@ -84,7 +82,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
                     channel.setCreationDate(new Date(Long.parseLong(resultSet.getString(2).trim()))); // creation date
                     channels.add(channel);
                 } catch (SQLException e) {
-                    Log.error("A database exception prevented one particular MUC room to be loaded from the database.", e);
+                    Log.error("A database exception prevented one particular MIX channel loaded from the database.", e);
                 }
             }
         } catch (SQLException e) {

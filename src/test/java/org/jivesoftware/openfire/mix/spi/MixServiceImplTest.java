@@ -2,11 +2,18 @@ package org.jivesoftware.openfire.mix.spi;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 import org.dom4j.Element;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.XMPPServerInfo;
+import org.jivesoftware.openfire.XMPPServerListener;
+import org.jivesoftware.openfire.disco.DiscoItem;
+import org.jivesoftware.openfire.mix.MixChannel;
+import org.jivesoftware.openfire.mix.MixPersistenceException;
+import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.util.JiveProperties;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -42,6 +49,8 @@ public class MixServiceImplTest {
 	
 	private JiveProperties jiveProperties;
 	
+	private MixPersistenceManager mixPersistenceManager;
+	
 	@Before
 	public void setUp() throws Exception {
 		xmppServer = mockery.mock(XMPPServer.class);
@@ -50,12 +59,15 @@ public class MixServiceImplTest {
 		
 		jiveProperties = mockery.mock(JiveProperties.class);
 		
+		mixPersistenceManager = mockery.mock(MixPersistenceManager.class);
+		
 		mockery.checking(new Expectations() {{
 			allowing(xmppServerInfo).getXMPPDomain(); will(returnValue(TEST_DOMAIN));
 			allowing(xmppServer).getServerInfo(); will(returnValue(xmppServerInfo));
+			allowing(xmppServer).addServerListener(with(any(XMPPServerListener.class)));
 		}});
 
-		mixServiceImpl = new MixServiceImpl(xmppServer, jiveProperties, TEST_SUBDOMAIN, TEST_DESCRIPTION);
+		mixServiceImpl = new MixServiceImpl(xmppServer, jiveProperties, mixPersistenceManager, TEST_SUBDOMAIN, TEST_DESCRIPTION);
 	}
 
 	@Test
@@ -92,7 +104,7 @@ public class MixServiceImplTest {
 		
 		Iterator<Element> result = mixServiceImpl.getIdentities(null, null, senderJid);
 		
-		assertFalse("Nothing is expected", result.hasNext());
+		assertNull("Nothing is expected", result);
 	}
 
 	@Test
@@ -139,9 +151,24 @@ public class MixServiceImplTest {
 	}
 
 	@Test
-	@Ignore
-	public void testGetItems() {
-		fail("Not yet implemented");
+	public void testGetItems() throws MixPersistenceException {
+		List<MixChannel> channels = Arrays.asList(new LocalMixChannel(mixServiceImpl, "channel1"), new LocalMixChannel(mixServiceImpl, "channel2"));
+		
+		mockery.checking(new Expectations() {{
+			allowing(mixPersistenceManager).loadChannels(mixServiceImpl); will(returnValue(channels));
+		}});
+		
+		// Loads the channels
+		mixServiceImpl.start();
+		
+		Iterator<DiscoItem> result = mixServiceImpl.getItems(null, null, null);
+		
+		DiscoItem el = result.next();		
+		assertEquals("Element is of type 'identity'", "channel1@" + TEST_SUBDOMAIN + "." + TEST_DOMAIN, el.getJID());
+		
+		el = result.next();		
+		assertEquals("Element is of type 'identity'", "channel2@" + TEST_SUBDOMAIN + "." + TEST_DOMAIN, el.getJID());
+		
 	}
 
 }

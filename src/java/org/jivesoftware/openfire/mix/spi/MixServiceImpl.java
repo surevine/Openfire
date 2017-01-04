@@ -2,6 +2,7 @@ package org.jivesoftware.openfire.mix.spi;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -18,7 +19,12 @@ import org.jivesoftware.openfire.disco.DiscoItemsProvider;
 import org.jivesoftware.openfire.disco.DiscoServerItem;
 import org.jivesoftware.openfire.disco.ServerItemsProvider;
 import org.jivesoftware.openfire.mix.MixChannel;
+import org.jivesoftware.openfire.mix.MixPersistenceException;
+import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
+import org.jivesoftware.openfire.muc.MUCRoom;
+import org.jivesoftware.openfire.muc.spi.LocalMUCRoom;
+import org.jivesoftware.openfire.muc.spi.MUCPersistenceManager;
 import org.jivesoftware.util.JiveProperties;
 import org.jivesoftware.util.LocaleUtils;
 import org.slf4j.Logger;
@@ -40,6 +46,8 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 	private final XMPPServer xmppServer;
 	
 	private JiveProperties jiveProperties;
+	
+	private MixPersistenceManager persistenceManager;
 	
 	/**
 	 * The ID of the service in the database
@@ -83,9 +91,12 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 	 *             if the provided subdomain is an invalid, according to the JID
 	 *             domain definition.
 	 */
-	public MixServiceImpl(XMPPServer xmppServer, JiveProperties jiveProperties, String subdomain, String description) {
+	public MixServiceImpl(XMPPServer xmppServer, JiveProperties jiveProperties, MixPersistenceManager persistenceManager, String subdomain, String description) {
 		this.xmppServer = xmppServer;
 		this.jiveProperties = jiveProperties;
+		this.persistenceManager = persistenceManager;
+		
+		channels = new HashMap<>();
 		
 		// Check subdomain and throw an IllegalArgumentException if its invalid
 		new JID(null, subdomain + "." + xmppServer.getServerInfo().getXMPPDomain(), null);
@@ -200,6 +211,15 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
         xmppServer.getIQDiscoItemsHandler().addServerItemsProvider(this);
         xmppServer.getIQDiscoInfoHandler().setServerNodeInfoProvider(this.getServiceDomain(), this);
         xmppServer.getServerItemsProviders().add(this);
+        
+        // Load all the persistent rooms to memory
+        try {
+			for (MixChannel channel : persistenceManager.loadChannels(this)) {
+			    channels.put(channel.getName().toLowerCase(), channel);
+			}
+		} catch (MixPersistenceException e) {
+			Log.error("Could not load MIX Channels for service " + getServiceDomain(), e);
+		}
 	}
 
 	public String getServiceDomain() {
@@ -234,6 +254,11 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 		if (name == null && node == null)
 		{
 			// Answer all the public rooms as items
+			for (MixChannel channel : channels.values())
+			{
+				answer.add(new DiscoItem(channel.getJID(),
+					channel.getName(), null, null));
+			}
 		}
         else if (name != null && node == null) {
             // Answer the room occupants as items if that info is publicly available
@@ -242,11 +267,11 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 	}
 
 	public Iterator<Element> getIdentities(String name, String node, JID senderJID) {
-        ArrayList<Element> identities = new ArrayList<>();
-        
         if(!serviceEnabled) {
-        	return identities.iterator();
+        	return null;
         }
+
+        ArrayList<Element> identities = new ArrayList<>();
         
         if (name == null && node == null) {
             // Answer the identity of the MUC service

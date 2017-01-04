@@ -45,8 +45,7 @@ public class LocalMixChannel implements MixChannel {
 
 	@Override
 	public JID getJID() {
-		// TODO Auto-generated method stub
-		return null;
+		return new JID(getName(), mixService.getServiceDomain(), null);
 	}
 
 	@Override

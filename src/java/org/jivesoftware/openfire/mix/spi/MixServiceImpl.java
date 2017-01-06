@@ -210,7 +210,7 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
         // Set us up to answer disco item requests
         xmppServer.getIQDiscoItemsHandler().addServerItemsProvider(this);
         xmppServer.getIQDiscoInfoHandler().setServerNodeInfoProvider(this.getServiceDomain(), this);
-        xmppServer.getServerItemsProviders().add(this);
+//        xmppServer.getServerItemsProviders().add(this);
         
         // Load all the persistent rooms to memory
         try {
@@ -282,10 +282,23 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
             identities.add(identity);
         }
         else if (name != null && node == null) {
-            // Answer the identity of a given room
-        }
-        else if (name != null && "x-roomuser-item".equals(node)) {
-            // Answer reserved nickname for the sender of the disco request in the requested room
+            // Answer the identity of a given channel
+        	/* <identity
+        category='conference'
+        name='A Dark Cave'
+        type='mix'/>
+        */
+        	MixChannel channel = channels.get(name);
+        	
+        	if(channel == null) {
+        		return null;
+        	}
+        	
+        	Element identity = DocumentHelper.createElement("identity");
+            identity.addAttribute("category", "conference");
+            identity.addAttribute("name", channel.getName());
+            identity.addAttribute("type", "mix");
+            identities.add(identity);
         }
         return identities.iterator();
 	}
@@ -298,6 +311,11 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
             
             // "searchable"
             // "create-channel"
+        } else if (name != null && node == null) {
+        	// TODO Maybe move this into MixChannel ?
+        	features.add("urn:xmpp:mix:0");
+            // TODO The spec states that a MIX channel MUST support MAM, so send a MAM identity too once that's implemented.
+        	// features.add("urn:xmpp:mam:1");
         }
         return features.iterator();
 	}
@@ -315,6 +333,9 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
         if (name == null && node == null) {
             // We always have info about the MIX service
             return true;
+        } else if (name != null && node == null) {
+        	// If we have a channel then we have info
+        	return(channels.containsKey(name));
         }
         return false;
 	}

@@ -158,7 +158,7 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
             {
                 // The packet is a normal packet that should possibly be sent to the room
                 JID recipient = packet.getTo();
-                // TODO: Handle this
+                // TODO: Push the packet to the channel with the JID if available.
             }
         }
         catch (Exception e) {

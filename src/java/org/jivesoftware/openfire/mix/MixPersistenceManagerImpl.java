@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.jivesoftware.database.DbConnectionManager;
+import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.mix.spi.LocalMixChannel;
 import org.jivesoftware.openfire.mix.spi.MixServiceImpl;
@@ -28,9 +29,15 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 
     private JiveProperties jiveProperties;
     
+    private PacketRouter router;
+    
     public MixPersistenceManagerImpl(JiveProperties jiveProperties) {
 		this.jiveProperties = jiveProperties;
 	}
+    
+    public void initialize(XMPPServer server) {
+    	router = server.getPacketRouter();
+    }
     
     @Override
     public Collection<MixService> loadServices(XMPPServer xmppServer) {
@@ -77,7 +84,8 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 
             while (resultSet.next()) {
                 try {
-                    LocalMixChannel channel = new LocalMixChannel(mixService, resultSet.getString(4));
+                	// TODO: initialisation of the nodes that the channel supports
+                    LocalMixChannel channel = new LocalMixChannel(mixService, resultSet.getString(4), router);
                     channel.setID(resultSet.getLong(1));
                     channel.setCreationDate(new Date(Long.parseLong(resultSet.getString(2).trim()))); // creation date
                     channels.add(channel);

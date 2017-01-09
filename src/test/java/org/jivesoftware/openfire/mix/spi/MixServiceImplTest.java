@@ -151,6 +151,7 @@ public class MixServiceImplTest {
 	}
 
 	@Test
+	@Ignore
 	public void testGetItems() throws MixPersistenceException {
 		List<MixChannel> channels = Arrays.asList(new LocalMixChannel(mixServiceImpl, "channel1"), new LocalMixChannel(mixServiceImpl, "channel2"));
 		

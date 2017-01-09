@@ -1,13 +1,12 @@
 package org.jivesoftware.openfire.mix;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.jivesoftware.database.JiveID;
 import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityMode;
 import org.jivesoftware.util.JiveConstants;
 import org.xmpp.packet.JID;
+import org.xmpp.packet.Packet;
 import org.xmpp.resultsetmanagement.Result;
 
 @JiveID(JiveConstants.MIX_CHANNEL)
@@ -34,4 +33,6 @@ public interface MixChannel extends Result {
 	ChannelJidVisibilityMode getJidVisibilityMode();
 
 	Date getCreationDate();
+			
+	void process(Packet packet) throws IllegalArgumentException;
 }

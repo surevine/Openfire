@@ -1,6 +1,9 @@
 package org.jivesoftware.openfire.mix.model;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,6 +46,10 @@ public class LocalMixChannel implements MixChannel {
 	private ChannelJidVisibilityMode jidVisibilityMode;
 
 	public LocalMixChannel(PacketRouter packetRouter, MixService service, String name) {
+		this.participantsListeners = new ArrayList<>();
+		this.participants = new HashMap<>();		
+		this.nodes = new HashSet<>();
+		
 		this.mixService = service;
 		this.name = name;
 		nodes.add(new MixChannelNodeImpl(packetRouter, this, "urn:xmpp:mix:nodes:participants",
@@ -84,6 +91,12 @@ public class LocalMixChannel implements MixChannel {
 		MixChannelParticipant participant = new LocalMixChannelParticipant(jid, this, subscribeNodes);
 
 		this.participants.put(jid, participant);
+		
+		for(MixChannelNode node : nodes) {
+			if(subscribeNodes.contains(node.getName())) {
+				node.addSubscriber(jid);
+			}
+		}
 
 		for (MixChannelParticipantsListener listener : participantsListeners) {
 			listener.onParticipantAdded(participant);

@@ -52,8 +52,8 @@ public class MixChannelNodeImpl implements MixChannelNode {
 	}
 		
 	private Element addItemElement(Element parent, MixChannelNodeItem item) {
-		return parent.addElement("item")
-				.addAttribute("id", item.getId());
+		return item.appendPayload(parent.addElement("item")
+				.addAttribute("id", item.getId()));
 	}
 	
 	private Element addItemsElement(Element parent) {

@@ -163,7 +163,11 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
                 MixChannelJoinPacketHandler joinPacketHandler = new MixChannelJoinPacketHandler();
                 if (packet instanceof IQ) {
                 		IQ iq  = (IQ) packet;
-                		joinPacketHandler.processIQ(channels.get(channelName), iq);
+                		IQ result = joinPacketHandler.processIQ(channels.get(channelName), iq);
+                		
+                		if(result != null) {
+                			router.route(result);
+                		}
                 }
                  
                 

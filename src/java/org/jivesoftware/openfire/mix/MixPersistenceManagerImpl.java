@@ -32,8 +32,9 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
     
     private PacketRouter router;
     
-    public MixPersistenceManagerImpl(JiveProperties jiveProperties) {
+    public MixPersistenceManagerImpl(JiveProperties jiveProperties, PacketRouter router) {
 		this.jiveProperties = jiveProperties;
+		this.router = router;
 	}
     
     public void initialize(XMPPServer server) {

@@ -27,7 +27,7 @@ public class MixManager extends BasicModule {
      * Creates a new MultiUserChatManager instance.
      */
     public MixManager() {
-    	this(XMPPServer.getInstance(), new MixPersistenceManagerImpl(JiveProperties.getInstance()));
+    	this(XMPPServer.getInstance(), new MixPersistenceManagerImpl(JiveProperties.getInstance(), XMPPServer.getInstance().getPacketRouter()));
     }
     
     public MixManager(XMPPServer xmppServer, MixPersistenceManager persistenceManager) {

@@ -21,7 +21,7 @@ public class MixChannelJoinPacketHandler implements MixChannelPacketHandler {
 		Element joinNode = iq.getChildElement();
 
 		@SuppressWarnings("unchecked")
-		List<Node> selectedSubscriptions = joinNode.selectNodes("./subscribe");
+		List<Element> selectedSubscriptions = joinNode.elements("subscribe");
 
 		Set<String> subscriptionRequests = new HashSet<>();
 

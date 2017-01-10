@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.mix.MixChannelNode;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityMode;
@@ -14,7 +15,7 @@ import org.xmpp.packet.JID;
 
 public class LocalMixChannel implements MixChannel {
 
-	private static final Logger Log = LoggerFactory.getLogger(LocalMixChannel.class);
+	private static final Logger LOG = LoggerFactory.getLogger(LocalMixChannel.class);
 
 	private Map<JID, MixChannelParticipant> participants;
 
@@ -41,10 +42,10 @@ public class LocalMixChannel implements MixChannel {
 
 	private ChannelJidVisibilityMode jidVisibilityMode;
 
-	public LocalMixChannel(MixService service, String name) {
+	public LocalMixChannel(PacketRouter packetRouter, MixService service, String name) {
 		this.mixService = service;
 		this.name = name;
-		nodes.add(new MixChannelNodeImpl("urn:xmpp:mix:nodes:participants",
+		nodes.add(new MixChannelNodeImpl(packetRouter, this, "urn:xmpp:mix:nodes:participants",
 				new MixChannelParticipantsNodeItemsProvider(this)));
 	}
 

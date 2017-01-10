@@ -18,9 +18,8 @@ public class MixChannelParticipantNodeItem implements MixChannelNodeItem {
 	}
 
 	@Override
-	public Element getPayload() {
-		// Should we send back the <item> or the <participant>?
-		return DocumentHelper.createElement(QName.get("participant", "urn:xmpp:mix:0"));
+	public Element appendPayload(Element container) {
+		return container.addElement("participant", "urn:xmpp:mix:0");
 	}
 	
 }

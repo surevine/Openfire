@@ -5,5 +5,5 @@ import org.xmpp.packet.JID;
 public interface MixChannelNode {
 	String getName();
 	
-	void subscribe(JID jid);
+	void addSubscriber(JID jid);
 }

@@ -210,7 +210,6 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
         // Set us up to answer disco item requests
         xmppServer.getIQDiscoItemsHandler().addServerItemsProvider(this);
         xmppServer.getIQDiscoInfoHandler().setServerNodeInfoProvider(this.getServiceDomain(), this);
-//        xmppServer.getServerItemsProviders().add(this);
         
         // Load all the persistent rooms to memory
         try {

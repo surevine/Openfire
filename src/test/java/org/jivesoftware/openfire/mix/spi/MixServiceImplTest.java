@@ -42,6 +42,10 @@ public class MixServiceImplTest {
 	
 	private static final String TEST_DESCRIPTION = "Some kind of MIX service";
 	
+	private static final JID TEST_SENDER = new JID("name@server.com");
+	
+
+	
 	/**
 	 * The class under test
 	 */
@@ -94,9 +98,7 @@ public class MixServiceImplTest {
 		
 		mixServiceImpl.initializeSettings();
 		
-		JID senderJid = new JID("name@server.com");
-		
-		Iterator<Element> result = mixServiceImpl.getIdentities(null, null, senderJid);
+		Iterator<Element> result = mixServiceImpl.getIdentities(null, null, TEST_SENDER);
 		
 		Element el = result.next();
 		
@@ -116,18 +118,14 @@ public class MixServiceImplTest {
 		
 		mixServiceImpl.initializeSettings();
 		
-		JID senderJid = new JID("name@server.com");
-		
-		Iterator<Element> result = mixServiceImpl.getIdentities(null, null, senderJid);
+		Iterator<Element> result = mixServiceImpl.getIdentities(null, null, TEST_SENDER);
 		
 		assertNull("Nothing is expected", result);
 	}
 
 	@Test
 	public void testGetFeaturesForService() {
-		JID senderJid = new JID("name@server.com");
-		
-		Iterator<String> result = mixServiceImpl.getFeatures(null, null, senderJid);
+		Iterator<String> result = mixServiceImpl.getFeatures(null, null, TEST_SENDER);
 		
 		String feature = result.next();
 		
@@ -144,9 +142,7 @@ public class MixServiceImplTest {
 		
 		mixServiceImpl.initializeSettings();
 		
-		JID senderJid = new JID("name@server.com");
-		
-		boolean result = mixServiceImpl.hasInfo(null, null, senderJid);
+		boolean result = mixServiceImpl.hasInfo(null, null, TEST_SENDER);
 		
 		assertTrue("We always have info on the service", result);
 	}
@@ -159,9 +155,7 @@ public class MixServiceImplTest {
 		
 		mixServiceImpl.initializeSettings();
 		
-		JID senderJid = new JID("name@server.com");
-		
-		boolean result = mixServiceImpl.hasInfo(null, null, senderJid);
+		boolean result = mixServiceImpl.hasInfo(null, null, TEST_SENDER);
 		
 		assertFalse("Expect no info if the service is disabled", result);
 	}
@@ -177,7 +171,7 @@ public class MixServiceImplTest {
 		// Loads the channels
 		mixServiceImpl.start();
 		
-		Iterator<DiscoItem> result = mixServiceImpl.getItems(null, null, null);
+		Iterator<DiscoItem> result = mixServiceImpl.getItems(null, null, TEST_SENDER);
 		
 		DiscoItem el = result.next();		
 		assertEquals("Element is of type 'identity'", new JID("channel1@" + TEST_SUBDOMAIN + "." + TEST_DOMAIN), el.getJID());
@@ -187,4 +181,55 @@ public class MixServiceImplTest {
 		
 	}
 
+	@Test
+	public void testHasInfoForChannel() throws MixPersistenceException {
+		final List<? extends MixChannel> channels = Arrays.asList(new LocalMixChannel(mixServiceImpl, "channel1"), new LocalMixChannel(mixServiceImpl, "channel2"));
+		
+		mockery.checking(new Expectations() {{
+			allowing(mixPersistenceManager).loadChannels(mixServiceImpl); will(returnValue(channels));
+		}});
+		
+		// Loads the channels
+		mixServiceImpl.start();
+		
+		boolean result = mixServiceImpl.hasInfo("channel1", null, TEST_SENDER);
+		
+		assertTrue("We have info on the channel", result);
+	}
+	
+	@Test
+	public void testNoInfoInfoForNonExistantChannel() throws MixPersistenceException {
+		final List<? extends MixChannel> channels = Arrays.asList(new LocalMixChannel(mixServiceImpl, "channel1"), new LocalMixChannel(mixServiceImpl, "channel2"));
+		
+		mockery.checking(new Expectations() {{
+			allowing(mixPersistenceManager).loadChannels(mixServiceImpl); will(returnValue(channels));
+		}});
+		
+		// Loads the channels
+		mixServiceImpl.start();
+		
+		boolean result = mixServiceImpl.hasInfo("nonexistant", null, TEST_SENDER);
+		
+		assertFalse("We have no info on the channel", result);
+	}
+	
+	@Test
+	public void testGetFeaturesForChannel() throws MixPersistenceException {
+		final List<? extends MixChannel> channels = Arrays.asList(new LocalMixChannel(mixServiceImpl, "channel1"), new LocalMixChannel(mixServiceImpl, "channel2"));
+		
+		mockery.checking(new Expectations() {{
+			allowing(mixPersistenceManager).loadChannels(mixServiceImpl); will(returnValue(channels));
+		}});
+		
+		// Loads the channels
+		mixServiceImpl.start();
+		
+		Iterator<String> result = mixServiceImpl.getFeatures("channel1", null, TEST_SENDER);
+		
+		String feature = result.next();
+		
+		assertEquals("Feature is 'urn:xmpp:mix:0'", "urn:xmpp:mix:0", feature);
+		
+		assertFalse("A single feature is expected", result.hasNext());
+	}
 }

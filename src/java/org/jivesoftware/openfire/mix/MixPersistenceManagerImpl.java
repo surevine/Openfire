@@ -12,7 +12,8 @@ import java.util.List;
 import org.jivesoftware.database.DbConnectionManager;
 import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.XMPPServer;
-import org.jivesoftware.openfire.mix.spi.LocalMixChannel;
+import org.jivesoftware.openfire.mix.model.MixChannel;
+import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.spi.MixServiceImpl;
 import org.jivesoftware.util.JiveProperties;
 import org.slf4j.Logger;
@@ -85,7 +86,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
             while (resultSet.next()) {
                 try {
                 	// TODO: initialisation of the nodes that the channel supports
-                    LocalMixChannel channel = new LocalMixChannel(mixService, resultSet.getString(4), router);
+                    LocalMixChannel channel = new LocalMixChannel(mixService, resultSet.getString(4));
                     channel.setID(resultSet.getLong(1));
                     channel.setCreationDate(new Date(Long.parseLong(resultSet.getString(2).trim()))); // creation date
                     channels.add(channel);

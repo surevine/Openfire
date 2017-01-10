@@ -18,10 +18,11 @@ import org.jivesoftware.openfire.disco.DiscoItem;
 import org.jivesoftware.openfire.disco.DiscoItemsProvider;
 import org.jivesoftware.openfire.disco.DiscoServerItem;
 import org.jivesoftware.openfire.disco.ServerItemsProvider;
-import org.jivesoftware.openfire.mix.MixChannel;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
+import org.jivesoftware.openfire.mix.handler.MixChannelJoinPacketHandler;
+import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.openfire.muc.MUCRoom;
 import org.jivesoftware.openfire.muc.spi.LocalMUCRoom;
 import org.jivesoftware.openfire.muc.spi.MUCPersistenceManager;
@@ -156,9 +157,16 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
             }
             else
             {
-                // The packet is a normal packet that should possibly be sent to the room
-                JID recipient = packet.getTo();
-                // TODO: Push the packet to the channel with the JID if available.
+                // The packet is a normal packet that should possibly be sent to the node
+                String channelName = packet.getTo().getNode();
+                
+                MixChannelJoinPacketHandler joinPacketHandler = new MixChannelJoinPacketHandler();
+                if (packet instanceof IQ) {
+                		IQ iq  = (IQ) packet;
+                		joinPacketHandler.processIQ(channels.get(channelName), iq);
+                }
+                 
+                
             }
         }
         catch (Exception e) {

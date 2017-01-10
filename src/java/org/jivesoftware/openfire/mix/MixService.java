@@ -5,6 +5,7 @@ import java.util.Collection;
 import org.jivesoftware.database.JiveID;
 import org.jivesoftware.util.JiveConstants;
 import org.xmpp.component.Component;
+import org.jivesoftware.openfire.mix.model.MixChannel;
 
 @JiveID(JiveConstants.MIX_SERVICE)
 public interface MixService extends Component {

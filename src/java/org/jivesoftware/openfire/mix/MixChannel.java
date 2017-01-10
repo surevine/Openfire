@@ -1,8 +1,6 @@
 package org.jivesoftware.openfire.mix;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.jivesoftware.database.JiveID;
 import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityMode;

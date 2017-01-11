@@ -18,6 +18,7 @@ import org.jivesoftware.openfire.disco.DiscoItem;
 import org.jivesoftware.openfire.disco.DiscoItemsProvider;
 import org.jivesoftware.openfire.disco.DiscoServerItem;
 import org.jivesoftware.openfire.disco.ServerItemsProvider;
+import org.jivesoftware.openfire.mix.MixChannelNode;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
@@ -272,7 +273,16 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 			}
 		}
         else if (name != null && node == null) {
-            // Answer the room occupants as items if that info is publicly available
+            MixChannel channel = channels.get(name);
+            
+            if(channel == null) {
+            	return null;
+            }
+            
+            for(MixChannelNode channelNode : channel.getNodes()) {
+            	answer.add(new DiscoItem(channel.getJID(),
+    					null, channelNode.getName(), null));
+            }
         }
         return answer.iterator();
 	}

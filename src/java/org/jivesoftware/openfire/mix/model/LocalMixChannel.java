@@ -1,6 +1,7 @@
 package org.jivesoftware.openfire.mix.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -111,6 +112,11 @@ public class LocalMixChannel implements MixChannel {
 
 	public void setCreationDate(Date date) {
 		this.creationDate = new Date(date.getTime());
+	}
+	
+	@Override
+	public Set<MixChannelNode> getNodes() {
+		return Collections.unmodifiableSet(nodes);
 	}
 
 }

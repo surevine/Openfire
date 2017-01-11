@@ -1,7 +1,8 @@
 package org.jivesoftware.openfire.mix;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
+import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.util.JiveProperties;
 import org.jmock.Mockery;
 import org.jmock.lib.legacy.ClassImposteriser;
@@ -19,11 +20,13 @@ public class MixPersistenceManagerImplTest {
 	
 	JiveProperties jiveProperties;
 	
+	final PacketRouter mockPacketRouter = mockery.mock(PacketRouter.class);
+	
 	@Before
 	public void setUp() throws Exception {
 		jiveProperties = mockery.mock(JiveProperties.class);
 		
-		mixPersistenceManager = new MixPersistenceManagerImpl(jiveProperties);
+		mixPersistenceManager = new MixPersistenceManagerImpl(jiveProperties, mockPacketRouter);
 	}
 
 	@After

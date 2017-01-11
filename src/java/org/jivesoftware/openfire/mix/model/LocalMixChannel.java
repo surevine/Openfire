@@ -46,11 +46,11 @@ public class LocalMixChannel implements MixChannel {
 
 	private ChannelJidVisibilityMode jidVisibilityMode;
 
-	public LocalMixChannel(PacketRouter packetRouter, MixService service, String name) {
+	public LocalMixChannel(MixService service, String name, PacketRouter packetRouter) {
 		this.participantsListeners = new ArrayList<>();
-		this.participants = new HashMap<>();		
+		this.participants = new HashMap<>();
 		this.nodes = new HashSet<>();
-		
+
 		this.mixService = service;
 		this.name = name;
 		nodes.add(new MixChannelNodeImpl(packetRouter, this, "urn:xmpp:mix:nodes:participants",
@@ -89,21 +89,28 @@ public class LocalMixChannel implements MixChannel {
 
 	@Override
 	public MixChannelParticipant addParticipant(JID jid, Set<String> subscribeNodes) {
-		MixChannelParticipant participant = new LocalMixChannelParticipant(jid, this, subscribeNodes);
+		JID proxyJid = this.getNewProxyJID();
+		MixChannelParticipant participant = new LocalMixChannelParticipant(proxyJid, jid, this, subscribeNodes);
 
 		this.participants.put(jid, participant);
 		
-		for(MixChannelNode node : nodes) {
-			if(subscribeNodes.contains(node.getName())) {
+		// Add the subscriber to each of the nodes they have requested
+		for (MixChannelNode node : nodes) {
+			if (subscribeNodes.contains(node.getName())) {
 				node.addSubscriber(jid);
 			}
 		}
-
+		
+		// Trigger the participant added event.
 		for (MixChannelParticipantsListener listener : participantsListeners) {
 			listener.onParticipantAdded(participant);
 		}
 
 		return participant;
+	}
+
+	private JID getNewProxyJID() {
+		return new JID(this.name + "+" + this.getNextProxyNodePart(), this.getJID().getDomain(), "", false);
 	}
 
 	public void setID(long newID) {
@@ -117,6 +124,12 @@ public class LocalMixChannel implements MixChannel {
 	@Override
 	public Set<MixChannelNode> getNodes() {
 		return Collections.unmodifiableSet(nodes);
+	}
+
+	private int proxyNodeNamePart = 0;
+
+	private String getNextProxyNodePart() {
+		return Integer.toString(proxyNodeNamePart++);
 	}
 
 }

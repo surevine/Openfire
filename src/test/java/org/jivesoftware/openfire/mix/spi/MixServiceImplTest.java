@@ -10,8 +10,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.dom4j.Element;
-import org.jivesoftware.openfire.PacketDeliverer;
-import org.jivesoftware.openfire.SessionManager;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.XMPPServerInfo;
 import org.jivesoftware.openfire.XMPPServerListener;
@@ -20,14 +18,16 @@ import org.jivesoftware.openfire.disco.DiscoItem;
 import org.jivesoftware.openfire.disco.IQDiscoInfoHandler;
 import org.jivesoftware.openfire.disco.IQDiscoItemsHandler;
 import org.jivesoftware.openfire.disco.ServerItemsProvider;
-import org.jivesoftware.openfire.mix.MixChannel;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
+import org.jivesoftware.openfire.mix.model.LocalMixChannel;
+import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.util.JiveProperties;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.xmpp.packet.JID;
 
@@ -43,8 +43,6 @@ public class MixServiceImplTest {
 	private static final String TEST_DESCRIPTION = "Some kind of MIX service";
 	
 	private static final JID TEST_SENDER = new JID("name@server.com");
-	
-
 	
 	/**
 	 * The class under test
@@ -62,6 +60,10 @@ public class MixServiceImplTest {
 	private IQDiscoItemsHandler iqDiscoItemsHandler;
 	
 	private IQDiscoInfoHandler iqDiscoInfoHandler;
+	
+	private LocalMixChannel testChannelOne;
+	
+	private LocalMixChannel testChannelTwo;
 	
 	@Before
 	public void setUp() throws Exception {
@@ -88,6 +90,9 @@ public class MixServiceImplTest {
 		}});
 
 		mixServiceImpl = new MixServiceImpl(xmppServer, jiveProperties, mixPersistenceManager, TEST_SUBDOMAIN, TEST_DESCRIPTION);
+		
+		testChannelOne = new LocalMixChannel(mixServiceImpl, "channel1", null); 
+		testChannelTwo = new LocalMixChannel(mixServiceImpl, "channel2", null);
 	}
 
 	@Test
@@ -163,7 +168,7 @@ public class MixServiceImplTest {
 	@Test
 	@Ignore
 	public void testGetItems() throws MixPersistenceException {
-		final List<? extends MixChannel> channels = Arrays.asList(new LocalMixChannel(mixServiceImpl, "channel1"), new LocalMixChannel(mixServiceImpl, "channel2"));
+		final List<? extends MixChannel> channels = Arrays.asList();
 		
 		mockery.checking(new Expectations() {{
 			allowing(mixPersistenceManager).loadChannels(mixServiceImpl); will(returnValue(channels));
@@ -184,7 +189,7 @@ public class MixServiceImplTest {
 
 	@Test
 	public void testHasInfoForChannel() throws MixPersistenceException {
-		final List<? extends MixChannel> channels = Arrays.asList(new LocalMixChannel(mixServiceImpl, "channel1"), new LocalMixChannel(mixServiceImpl, "channel2"));
+		final List<? extends MixChannel> channels = Arrays.asList(testChannelOne, testChannelTwo);
 		
 		mockery.checking(new Expectations() {{
 			allowing(mixPersistenceManager).loadChannels(mixServiceImpl); will(returnValue(channels));
@@ -200,7 +205,7 @@ public class MixServiceImplTest {
 	
 	@Test
 	public void testNoInfoInfoForNonExistantChannel() throws MixPersistenceException {
-		final List<? extends MixChannel> channels = Arrays.asList(new LocalMixChannel(mixServiceImpl, "channel1"), new LocalMixChannel(mixServiceImpl, "channel2"));
+		final List<? extends MixChannel> channels = Arrays.asList(testChannelOne, testChannelTwo);
 		
 		mockery.checking(new Expectations() {{
 			allowing(mixPersistenceManager).loadChannels(mixServiceImpl); will(returnValue(channels));
@@ -216,7 +221,7 @@ public class MixServiceImplTest {
 	
 	@Test
 	public void testGetFeaturesForChannel() throws MixPersistenceException {
-		final List<? extends MixChannel> channels = Arrays.asList(new LocalMixChannel(mixServiceImpl, "channel1"), new LocalMixChannel(mixServiceImpl, "channel2"));
+		final List<? extends MixChannel> channels = Arrays.asList(testChannelOne, testChannelTwo);
 		
 		mockery.checking(new Expectations() {{
 			allowing(mixPersistenceManager).loadChannels(mixServiceImpl); will(returnValue(channels));

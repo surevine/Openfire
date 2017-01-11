@@ -40,4 +40,6 @@ public interface MixChannel {
 	void addParticipantsListener(MixChannelParticipantsListener listener);
 	
 	MixChannelParticipant addParticipant(JID jid, Set<String> subscribeNodes);
+	
+	Set<MixChannelParticipant> getNodeSubscribers(String node);
 }

@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
+import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 
 public class LocalMixChannelTest {
@@ -35,12 +36,13 @@ public class LocalMixChannelTest {
 	
 	private final static String TEST_MIX_DOMAIN = "mix." + TEST_SERVICE_DOMAIN;
 
-	private static final JID TEST_USERS_JID = new JID(TEST_USER, TEST_SERVICE_DOMAIN, null);
-    private static final JID MIX_CHANNEL_JID = new JID(TEST_MIX_CHANNEL_NAME, TEST_MIX_DOMAIN, null);
+	private static final JID TEST_USER1_JID = new JID(TEST_USER, TEST_SERVICE_DOMAIN, null);
+    private static final JID TEST_USER2_JID = new JID(TEST_USER + 6, TEST_MIX_DOMAIN, null);
     
 	private static final String []PARTIAL_NODE_SET = {"urn:xmpp:mix:nodes:messages", "urn:xmpp:mix:nodes:participants", "urn:xmpp:mix:nodes:subject", "urn:xmpp:mix:nodes:config"};
 	
 	private static final DocumentFactory docFactory = DocumentFactory.getInstance();
+
 	
 	Mockery context = new Mockery() {{
         setImposteriser(ClassImposteriser.INSTANCE);
@@ -70,46 +72,22 @@ public class LocalMixChannelTest {
 	    	one(mockRouter);
 	    }});
 		
-		MixChannelParticipant mcp = fixture.addParticipant(TEST_USERS_JID, new HashSet<String>(Arrays.asList(PARTIAL_NODE_SET)));
+		MixChannelParticipant mcp = fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(PARTIAL_NODE_SET)));
 		
-		assertNotSame(mcp.getJid(), TEST_USERS_JID);
+		assertNotSame(mcp.getJid(), TEST_USER1_JID);
 
 	}
-
-	static class IQMatcher extends TypeSafeMatcher<IQ> {
-
-		private IQ expectation;
+	
+	@Test
+	public void thatSecondUserJoiningTriggersTwoParticipantUpdates() {
 		
-		public IQMatcher(IQ expectation) {
-			this.expectation = expectation;
-		}
+		context.checking(new Expectations() {{
+			// One for the first participant, and two for the second participant
+	    	exactly(3).of(mockRouter).route(with(any(Message.class)));
+	    }});
 		
-		@Override
-		public void describeTo(Description arg0) {
-			// TODO Implement
-		}
-
-		@Override
-		protected boolean matchesSafely(IQ result) {
-			// First check the types
-			if (expectation.getType().equals(result.getType())) {
-				Element expectedElement = expectation.getChildElement();
-				Element resultElement = result.getChildElement();
-				
-				// Then check the child XML.
-				if (expectedElement.asXML().equals(resultElement.asXML())) {
-					return true;					
-				}
-			}
-			
-			return false;
-
-		}
+		fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(PARTIAL_NODE_SET)));
+		fixture.addParticipant(TEST_USER2_JID, new HashSet<String>(Arrays.asList(PARTIAL_NODE_SET)));
 		
-		@Factory
-		public static Matcher<IQ> iqMatcher(IQ expection) {
-		    return new IQMatcher(expection);
-		}
-
 	}
 }

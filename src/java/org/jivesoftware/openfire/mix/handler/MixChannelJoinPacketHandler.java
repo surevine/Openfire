@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.dom4j.Element;
 import org.dom4j.Node;
 import org.jivesoftware.openfire.mix.model.MixChannel;
@@ -51,14 +52,12 @@ public class MixChannelJoinPacketHandler implements MixChannelPacketHandler {
 
 	@Override
 	public void processPresence(MixChannel channel, Presence presence) {
-		// TODO Auto-generated method stub
-
+		throw new NotImplementedException();
 	}
 
 	@Override
 	public void processMessage(MixChannel channel, Message message) {
-		// TODO Auto-generated method stub
-
+		throw new NotImplementedException();
 	}
 
 }

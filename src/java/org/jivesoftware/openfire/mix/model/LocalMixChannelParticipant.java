@@ -34,10 +34,6 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 	public JID getJid() {
 		
 		switch (jvp) {
-		case PREFER_HIDDEN:
-			return this.proxyJid;
-		case ENFORCE_HIDDEN:
-			return this.proxyJid;
 		case ENFORCE_VISIBLE:
 			return this.jid;
 		default:
@@ -67,5 +63,14 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 
 	public void setJidVisibilityPreference(ChannelJidVisibilityPreference jvp) {
 		this.jvp = jvp;
+	}
+
+	@Override
+	public boolean subscribesTo(String nodeName) {
+		if (subscriptions.contains(nodeName)) {
+			return true;
+		} 
+		
+		return false;
 	}
 }

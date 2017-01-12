@@ -27,6 +27,8 @@ public class LocalMixChannel implements MixChannel {
 
 	private List<MixChannelParticipantsListener> participantsListeners;
 
+	private List<MixChannelMessageListener> messageListeners;
+
 	private Long id;
 
 	/**
@@ -48,6 +50,7 @@ public class LocalMixChannel implements MixChannel {
 
 	public LocalMixChannel(MixService service, String name, PacketRouter packetRouter) {
 		this.participantsListeners = new ArrayList<>();
+		this.messageListeners = new ArrayList<>();
 		this.participants = new HashMap<>();
 		this.nodes = new HashSet<>();
 
@@ -130,6 +133,23 @@ public class LocalMixChannel implements MixChannel {
 
 	private String getNextProxyNodePart() {
 		return Integer.toString(proxyNodeNamePart++);
+	}
+
+	@Override
+	public MixChannelParticipant getParticipantByJID(JID from) {
+		return participants.get(from);
+	}
+
+	@Override
+	public void receiveMessage(MixChannelMessage mcMessage) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void addMessageListener(MixChannelMessageListener listener) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

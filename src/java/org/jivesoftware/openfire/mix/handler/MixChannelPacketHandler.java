@@ -8,7 +8,7 @@ import org.xmpp.packet.Presence;
 public interface MixChannelPacketHandler {
 	IQ processIQ(MixChannel channel, IQ iq);
 	
-	void processPresence(MixChannel channel, Presence presence);
+	boolean processPresence(MixChannel channel, Presence presence);
 	
-	void processMessage(MixChannel channel, Message message);
+	boolean processMessage(MixChannel channel, Message message);
 }

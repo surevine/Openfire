@@ -50,15 +50,13 @@ public class MixChannelJoinPacketHandler implements MixChannelPacketHandler {
 	}
 
 	@Override
-	public void processPresence(MixChannel channel, Presence presence) {
-		// TODO Auto-generated method stub
-
+	public boolean processPresence(MixChannel channel, Presence presence) {
+		return false;
 	}
 
 	@Override
-	public void processMessage(MixChannel channel, Message message) {
-		// TODO Auto-generated method stub
-
+	public boolean processMessage(MixChannel channel, Message message) {
+		return false;
 	}
 
 }

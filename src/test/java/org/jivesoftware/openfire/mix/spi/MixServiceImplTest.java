@@ -238,4 +238,27 @@ public class MixServiceImplTest {
 		
 		assertFalse("A single feature is expected", result.hasNext());
 	}
+	
+	@Test
+	public void testGetDiscoItems() throws MixPersistenceException {
+		final List<? extends MixChannel> channels = Arrays.asList(testChannelOne, testChannelTwo);
+		
+		mockery.checking(new Expectations() {{
+			allowing(mixPersistenceManager).loadChannels(mixServiceImpl); will(returnValue(channels));
+		}});
+		
+		// Loads the channels
+		mixServiceImpl.start();
+		
+		Iterator<DiscoItem> discoItems = mixServiceImpl.getItems(null, null, null);
+		
+		// Clunky as its an iterator
+		int i = 0;
+		while(discoItems.hasNext()) {
+		    i++;
+		    discoItems.next();
+		}
+		
+		assertEquals(2, i);
+	}
 }

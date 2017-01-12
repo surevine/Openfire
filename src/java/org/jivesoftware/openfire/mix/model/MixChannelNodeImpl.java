@@ -14,21 +14,17 @@ public class MixChannelNodeImpl implements MixChannelNode {
 
 	private MixChannel mixChannel;
 	
-	private String name;
+	private final String name;
 	
 	private MixChannelNodeItemsProvider itemsProvider;
-	
-	private Set<JID> subscribers;	// Get rid of this!
 
 	private PacketRouter packetRouter;
 	
-	public MixChannelNodeImpl(final PacketRouter packetRouter, final MixChannel mixChannel, String name, MixChannelNodeItemsProvider itemsProvider) {
+	public MixChannelNodeImpl(final PacketRouter packetRouter, final MixChannel mixChannel, final String name, MixChannelNodeItemsProvider itemsProvider) {
 		this.mixChannel = mixChannel;
 		this.name = name;
 		this.itemsProvider = itemsProvider;
 		this.packetRouter = packetRouter;
-		
-		subscribers = new HashSet<>();
 		
 		itemsProvider.addItemsListener(new ItemsListener() {
 			
@@ -39,11 +35,13 @@ public class MixChannelNodeImpl implements MixChannelNode {
 				baseMessage.setFrom(mixChannel.getJID());
 				
 				addItemElement(addItemsElement(addEventElement(baseMessage)), item);
+				
+				Set<MixChannelParticipant> subscribers = mixChannel.getNodeSubscribers(name);
 
-				for(JID subscriber : subscribers) {
+				for(MixChannelParticipant subscriber : subscribers) {
 					Message message = baseMessage.createCopy();
 					
-					message.setTo(subscriber);
+					message.setTo(subscriber.getJid());
 					
 					packetRouter.route(message);
 				}
@@ -68,10 +66,6 @@ public class MixChannelNodeImpl implements MixChannelNode {
 	@Override
 	public String getName() {
 		return name;
-	}
-
-	public void addSubscriber(JID jid) {
-		subscribers.add(jid);
 	}
 
 }

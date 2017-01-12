@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.dom4j.Element;
 import org.dom4j.Node;
 import org.jivesoftware.openfire.mix.model.MixChannel;
@@ -58,5 +59,4 @@ public class MixChannelJoinPacketHandler implements MixChannelPacketHandler {
 	public boolean processMessage(MixChannel channel, Message message) {
 		return false;
 	}
-
 }

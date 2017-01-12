@@ -1,6 +1,7 @@
 package org.jivesoftware.openfire.mix.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -97,13 +98,6 @@ public class LocalMixChannel implements MixChannel {
 
 		this.participants.put(jid, participant);
 		
-		// Add the subscriber to each of the nodes they have requested
-		for (MixChannelNode node : nodes) {
-			if (subscribeNodes.contains(node.getName())) {
-				node.addSubscriber(jid);
-			}
-		}
-		
 		// Trigger the participant added event.
 		for (MixChannelParticipantsListener listener : participantsListeners) {
 			listener.onParticipantAdded(participant);
@@ -132,6 +126,7 @@ public class LocalMixChannel implements MixChannel {
 	private int proxyNodeNamePart = 0;
 
 	private String getNextProxyNodePart() {
+		// TODO - temporary implementation
 		return Integer.toString(proxyNodeNamePart++);
 	}
 
@@ -149,7 +144,23 @@ public class LocalMixChannel implements MixChannel {
 	@Override
 	public void addMessageListener(MixChannelMessageListener listener) {
 		// TODO Auto-generated method stub
+	}
+	
+	public Set<MixChannelParticipant> getNodeSubscribers(String node) {
+		Collection<MixChannelParticipant> allParticipants = participants.values();
 		
+		if (!nodes.contains(node)) {
+			return Collections.emptySet();
+		} else {
+			Set<MixChannelParticipant> subscribers = new HashSet<>();
+			
+			for (MixChannelParticipant mcp : allParticipants) {
+				if (mcp.subscribesTo(node)) {
+					subscribers.add(mcp);
+				}
+			}
+			return subscribers;
+		}
 	}
 
 }

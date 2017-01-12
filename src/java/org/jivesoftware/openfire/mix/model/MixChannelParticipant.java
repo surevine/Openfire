@@ -14,5 +14,7 @@ public interface MixChannelParticipant {
 	
 	Set<String> getSubscriptions();
 	
+	boolean subscribesTo(String nodeName);
+	
 	ChannelJidVisibilityPreference getJidVisibilityPreference();
 }

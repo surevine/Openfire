@@ -57,4 +57,6 @@ public interface MixChannel {
 	MixChannelParticipant getParticipantByJID(JID from);
 
 	void receiveMessage(MixChannelMessage mcMessage);
+	
+	Set<MixChannelParticipant> getNodeSubscribers(String node);
 }

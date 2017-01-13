@@ -12,16 +12,22 @@ import java.util.Set;
 
 import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.mix.MixChannelNode;
+import org.jivesoftware.openfire.mix.MixManager;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmpp.packet.JID;
+import org.xmpp.packet.Message;
 
 public class LocalMixChannel implements MixChannel {
 
+	public static final String NODE_MESSAGES = "urn:xmpp:mix:nodes:messages";
+	
 	private static final Logger LOG = LoggerFactory.getLogger(LocalMixChannel.class);
 
+	private PacketRouter packetRouter;
+	
 	private Map<JID, MixChannelParticipant> participants;
 
 	private Set<MixChannelNode> nodes;
@@ -50,15 +56,19 @@ public class LocalMixChannel implements MixChannel {
 	private ChannelJidVisibilityMode jidVisibilityMode;
 
 	public LocalMixChannel(MixService service, String name, PacketRouter packetRouter) {
+		this.packetRouter = packetRouter;
+		this.mixService = service;
+		
 		this.participantsListeners = new ArrayList<>();
 		this.messageListeners = new ArrayList<>();
 		this.participants = new HashMap<>();
 		this.nodes = new HashSet<>();
-
-		this.mixService = service;
 		this.name = name;
+		
 		nodes.add(new MixChannelNodeImpl(packetRouter, this, "urn:xmpp:mix:nodes:participants",
 				new MixChannelParticipantsNodeItemsProvider(this)));
+		nodes.add(new MixChannelNodeImpl(packetRouter, this, NODE_MESSAGES,
+				new MixChannelMessagesNodeItemsProvider(this)));
 	}
 
 	@Override
@@ -137,8 +147,26 @@ public class LocalMixChannel implements MixChannel {
 
 	@Override
 	public void receiveMessage(MixChannelMessage mcMessage) {
-		// TODO Auto-generated method stub
+		Set<MixChannelParticipant> subscribers = getNodeSubscribers(NODE_MESSAGES);
 		
+		MixChannelParticipant sender = mcMessage.getSender();
+		
+		Message templateMessage = mcMessage.getMessage().createCopy();
+		templateMessage.setFrom(getJID()); // Message is from the channel
+		templateMessage.setID(mcMessage.getId());
+		templateMessage.addChildElement("nick", MixManager.MIX_NAMESPACE).addText(sender.getNick());
+		templateMessage.addChildElement("jid", MixManager.MIX_NAMESPACE).addText(sender.getJid().toBareJID());
+		
+		for(MixChannelParticipant subscriber : subscribers) {
+			Message thisMessage = templateMessage.createCopy();
+			thisMessage.setTo(subscriber.getRealJid());
+			
+			if(subscriber.equals(sender)) {
+				thisMessage.addChildElement("submission-id", MixManager.MIX_NAMESPACE).addText(mcMessage.getMessage().getID());
+			}
+			
+			packetRouter.route(thisMessage);
+		}
 	}
 
 	@Override
@@ -148,10 +176,12 @@ public class LocalMixChannel implements MixChannel {
 	
 	public Set<MixChannelParticipant> getNodeSubscribers(String node) {
 		Collection<MixChannelParticipant> allParticipants = participants.values();
-		
+
+		/*
 		if (!nodes.contains(node)) {
 			return Collections.emptySet();
 		} else {
+		*/
 			Set<MixChannelParticipant> subscribers = new HashSet<>();
 			
 			for (MixChannelParticipant mcp : allParticipants) {
@@ -160,7 +190,7 @@ public class LocalMixChannel implements MixChannel {
 				}
 			}
 			return subscribers;
-		}
+//		}
 	}
 
 }

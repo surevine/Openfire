@@ -41,7 +41,7 @@ public class MixChannelNodeImpl implements MixChannelNode {
 				for(MixChannelParticipant subscriber : subscribers) {
 					Message message = baseMessage.createCopy();
 					
-					message.setTo(subscriber.getJid());
+					message.setTo(subscriber.getRealJid());
 					
 					packetRouter.route(message);
 				}

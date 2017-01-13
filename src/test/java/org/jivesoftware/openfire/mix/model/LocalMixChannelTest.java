@@ -1,27 +1,18 @@
 package org.jivesoftware.openfire.mix.model;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotSame;
 
 import java.util.Arrays;
 import java.util.HashSet;
 
 import org.dom4j.DocumentFactory;
-import org.dom4j.Element;
-import org.hamcrest.Description;
-import org.hamcrest.Factory;
-import org.hamcrest.Matcher;
-import org.hamcrest.TypeSafeMatcher;
 import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.mix.MixService;
-import org.jivesoftware.openfire.mix.spi.MixChannelNode;
-import org.jivesoftware.openfire.mix.spi.MixChannelNodeImpl;
-import org.jivesoftware.openfire.mix.spi.MixChannelNode.NodeType;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
 import org.junit.Test;
-import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
@@ -74,7 +65,7 @@ public class LocalMixChannelTest {
 		
 		MixChannelParticipant mcp = fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(PARTIAL_NODE_SET)));
 		
-		assertNotSame(mcp.getJid(), TEST_USER1_JID);
+		assertNotSame(mcp.getRealJid(), TEST_USER1_JID);
 
 	}
 	

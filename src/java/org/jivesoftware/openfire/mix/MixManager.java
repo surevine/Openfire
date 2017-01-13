@@ -16,6 +16,8 @@ public class MixManager extends BasicModule {
 
 	public static final String MIX_VERSION = "0.6.1";
 	
+	public static final String MIX_NAMESPACE = "urn:xmpp:mix:0";
+	
 	private XMPPServer xmppServer;
 	
 	private MixPersistenceManager persistenceManager;

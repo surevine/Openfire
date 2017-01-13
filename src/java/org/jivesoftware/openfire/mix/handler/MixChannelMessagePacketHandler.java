@@ -27,7 +27,7 @@ public class MixChannelMessagePacketHandler implements MixChannelPacketHandler {
 			return false;
 		}
 		
-		MixChannelParticipant participant = channel.getParticipantByJID(message.getFrom());
+		MixChannelParticipant participant = channel.getParticipantByJID(message.getFrom().asBareJID());
 		
 		if(participant == null) {
 			// Silently drop the message - Is this right?

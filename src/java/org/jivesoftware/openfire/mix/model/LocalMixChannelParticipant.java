@@ -31,14 +31,17 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 	}
 
 	@Override
-	public JID getJid() {
-		
+	public JID getRealJid() {
+/*		
 		switch (jvp) {
 		case ENFORCE_VISIBLE:
+*/
 			return this.jid;
-		default:
+/*
+	default:
 			return this.proxyJid;
 		}
+*/
 	}
 
 	@Override
@@ -72,5 +75,35 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 		} 
 		
 		return false;
+	}
+
+	@Override
+	public JID getJid() {
+		return proxyJid;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((proxyJid == null) ? 0 : proxyJid.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		LocalMixChannelParticipant other = (LocalMixChannelParticipant) obj;
+		if (proxyJid == null) {
+			if (other.proxyJid != null)
+				return false;
+		} else if (!proxyJid.equals(other.proxyJid))
+			return false;
+		return true;
 	}
 }

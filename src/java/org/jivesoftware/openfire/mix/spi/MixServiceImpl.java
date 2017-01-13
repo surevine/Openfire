@@ -1,10 +1,12 @@
 package org.jivesoftware.openfire.mix.spi;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -23,6 +25,8 @@ import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.handler.MixChannelJoinPacketHandler;
+import org.jivesoftware.openfire.mix.handler.MixChannelMessagePacketHandler;
+import org.jivesoftware.openfire.mix.handler.MixChannelPacketHandler;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.openfire.muc.MUCRoom;
 import org.jivesoftware.openfire.muc.spi.LocalMUCRoom;
@@ -37,6 +41,7 @@ import org.xmpp.component.ComponentManager;
 import org.xmpp.forms.DataForm;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
+import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 
@@ -50,6 +55,8 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 	private JiveProperties jiveProperties;
 
 	private MixPersistenceManager persistenceManager;
+	
+	private List<MixChannelPacketHandler> packetHandlers;
 
 	/**
 	 * The ID of the service in the database
@@ -100,6 +107,11 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 		this.persistenceManager = persistenceManager;
 
 		channels = new HashMap<>();
+		
+		packetHandlers = Arrays.asList(
+				new MixChannelJoinPacketHandler(),
+				new MixChannelMessagePacketHandler()
+			);
 
 		// Check subdomain and throw an IllegalArgumentException if its invalid
 		new JID(null, subdomain + "." + xmppServer.getServerInfo().getXMPPDomain(), null);
@@ -158,15 +170,34 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 				// The packet is a normal packet that should possibly be sent to
 				// the node
 				String channelName = packet.getTo().getNode();
-
+				MixChannel channel = channels.get(channelName);
+				
 				MixChannelJoinPacketHandler joinPacketHandler = new MixChannelJoinPacketHandler();
 				if (packet instanceof IQ) {
-					IQ iq = (IQ) packet;
-					IQ result = joinPacketHandler.processIQ(channels.get(channelName), iq);
-
-					if (result != null) {
-						router.route(result);
+					if(channel == null) {
+						final IQ reply = IQ.createResultIQ((IQ) packet);
+						reply.setChildElement(((IQ) packet).getChildElement().createCopy());
+						reply.setError(PacketError.Condition.service_unavailable);
+						router.route(reply);
+						return;
 					}
+
+					for(MixChannelPacketHandler handler : packetHandlers) {
+						IQ result = handler.processIQ(channels.get(channelName), (IQ) packet);
+
+						if (result != null) {
+							router.route(result);
+						}
+						
+						break;
+					}
+				} else if (packet instanceof Message) {
+					if(channel == null) {
+						return;
+					}
+					for(MixChannelPacketHandler handler : packetHandlers) {
+						if(handler.processMessage(channels.get(channelName), (Message) packet));
+					}					
 				}
 
 			}

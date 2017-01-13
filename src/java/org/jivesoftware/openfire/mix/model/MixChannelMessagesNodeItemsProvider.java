@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.jivesoftware.openfire.mix.model.MixChannel.MixChannelMessageListener;
 import org.jivesoftware.openfire.mix.model.MixChannel.MixChannelParticipantsListener;
 import org.jivesoftware.openfire.mix.model.MixChannelNodeItemsProvider.ItemsListener;
 
@@ -14,12 +15,12 @@ public class MixChannelMessagesNodeItemsProvider implements MixChannelNodeItemsP
 	public MixChannelMessagesNodeItemsProvider(MixChannel channel) {
 		itemsListeners = new ArrayList<>();
 		
-		channel.addMessagesListener(new MixChannelMessagesListener() {
+		channel.addMessageListener(new MixChannelMessageListener() {
 			
 			@Override
-			public void onMessage(MixChannelMessage message) {
+			public void onMessageReceived(MixChannelMessage message) {
 				for(ItemsListener listener : itemsListeners) {
-					listener.publishItem(new MixChannelParticipantNodeItem(participant));
+					listener.publishItem(new MixChannelMessageNodeItem());
 				}
 			}
 		});

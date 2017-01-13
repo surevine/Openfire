@@ -6,7 +6,7 @@ import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityPreference;
 import org.xmpp.packet.JID;
 
 public interface MixChannelParticipant {
-	JID getJid();
+	JID getRealJid();
 	
 	String getNick();
 	
@@ -17,4 +17,6 @@ public interface MixChannelParticipant {
 	boolean subscribesTo(String nodeName);
 	
 	ChannelJidVisibilityPreference getJidVisibilityPreference();
+
+	JID getJid();
 }

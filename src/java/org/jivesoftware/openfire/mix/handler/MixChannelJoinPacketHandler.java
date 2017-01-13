@@ -52,11 +52,13 @@ public class MixChannelJoinPacketHandler implements MixChannelPacketHandler {
 
 	@Override
 	public boolean processPresence(MixChannel channel, Presence presence) {
-		return false;
+		// No implementation as yet
+		throw new NotImplementedException();
 	}
 
 	@Override
 	public boolean processMessage(MixChannel channel, Message message) {
-		return false;
+		// No implementation as yet
+		throw new NotImplementedException();
 	}
 }

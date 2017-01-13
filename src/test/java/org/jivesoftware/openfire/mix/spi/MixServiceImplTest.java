@@ -10,6 +10,11 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.dom4j.Element;
+import org.hamcrest.Description;
+import org.hamcrest.Factory;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeMatcher;
+import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.XMPPServerInfo;
 import org.jivesoftware.openfire.XMPPServerListener;
@@ -29,6 +34,7 @@ import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 
 public class MixServiceImplTest {
@@ -65,6 +71,8 @@ public class MixServiceImplTest {
 	
 	private LocalMixChannel testChannelTwo;
 	
+	private PacketRouter mockPacketRouter;
+	
 	@Before
 	public void setUp() throws Exception {
 		xmppServer = mockery.mock(XMPPServer.class);
@@ -74,6 +82,8 @@ public class MixServiceImplTest {
 		jiveProperties = mockery.mock(JiveProperties.class);
 		
 		mixPersistenceManager = mockery.mock(MixPersistenceManager.class);
+		
+		mockPacketRouter = mockery.mock(PacketRouter.class);
 		
 		iqDiscoItemsHandler = mockery.mock(IQDiscoItemsHandler.class);
 		iqDiscoInfoHandler = mockery.mock(IQDiscoInfoHandler.class);
@@ -260,5 +270,69 @@ public class MixServiceImplTest {
 		}
 		
 		assertEquals(2, i);
+	}
+	
+	@Test
+	public void testCreateChannel() throws MixPersistenceException {
+		// Create a create IQ
+		final IQ createRequest = new IQ(IQ.Type.set);
+		createRequest.setFrom(TEST_SENDER);
+		createRequest.setTo(TEST_DOMAIN + "." + TEST_SUBDOMAIN);
+		
+		Element createElement = createRequest.setChildElement("create", "urn:xmpp:mix:0");
+		createElement.addAttribute("channel", "coven");
+		
+		mockery.checking(new Expectations() {{
+			
+			IQ createResult = IQ.createResultIQ(createRequest);
+			createResult.setChildElement(createRequest.getChildElement().createCopy());
+			
+			one(mixPersistenceManager).save(with(any(LocalMixChannel.class)));
+			will(returnValue(true));
+			
+			one(mockPacketRouter).route(with(IQMatcher.iqMatcher(createResult)));
+		}});
+		
+		mixServiceImpl.processPacket(createRequest);
+		
+		mockery.assertIsSatisfied();
+		
+	}
+	
+	static class IQMatcher extends TypeSafeMatcher<IQ> {
+
+		private IQ expectation;
+		
+		public IQMatcher(IQ expectation) {
+			this.expectation = expectation;
+		}
+		
+		@Override
+		public void describeTo(Description arg0) {
+			// TODO Implement
+		}
+
+		@Override
+		protected boolean matchesSafely(IQ result) {
+			// First check the types
+			if (expectation.getType().equals(result.getType())) {
+				Element expectedElement = expectation.getChildElement();
+				Element resultElement = result.getChildElement();
+				
+				// Then check the child XML.
+				if (expectedElement.asXML().equals(resultElement.asXML())) {
+					return true;					
+				}
+			}
+			
+			return false;
+
+		}
+		
+		@Factory
+		public static Matcher<IQ> iqMatcher(IQ expection) {
+		    return new IQMatcher(expection);
+		}
+
 	}
 }

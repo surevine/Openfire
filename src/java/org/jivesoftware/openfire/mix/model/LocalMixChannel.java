@@ -30,7 +30,7 @@ public class LocalMixChannel implements MixChannel {
 	
 	private Map<JID, MixChannelParticipant> participants;
 
-	private Set<MixChannelNode> nodes;
+	private Map<String, MixChannelNode> nodes;
 
 	private List<MixChannelParticipantsListener> participantsListeners;
 
@@ -62,12 +62,12 @@ public class LocalMixChannel implements MixChannel {
 		this.participantsListeners = new ArrayList<>();
 		this.messageListeners = new ArrayList<>();
 		this.participants = new HashMap<>();
-		this.nodes = new HashSet<>();
+		this.nodes = new HashMap<>();
 		this.name = name;
 		
-		nodes.add(new MixChannelNodeImpl(packetRouter, this, "urn:xmpp:mix:nodes:participants",
+		nodes.put("urn:xmpp:mix:nodes:participants", new MixChannelNodeImpl(packetRouter, this, "urn:xmpp:mix:nodes:participants",
 				new MixChannelParticipantsNodeItemsProvider(this)));
-		nodes.add(new MixChannelNodeImpl(packetRouter, this, NODE_MESSAGES,
+		nodes.put(NODE_MESSAGES, new MixChannelNodeImpl(packetRouter, this, NODE_MESSAGES,
 				new MixChannelMessagesNodeItemsProvider(this)));
 	}
 
@@ -129,8 +129,8 @@ public class LocalMixChannel implements MixChannel {
 	}
 	
 	@Override
-	public Set<MixChannelNode> getNodes() {
-		return Collections.unmodifiableSet(nodes);
+	public Collection<MixChannelNode> getNodes() {
+		return Collections.unmodifiableCollection(nodes.values());
 	}
 
 	private int proxyNodeNamePart = 0;
@@ -177,11 +177,9 @@ public class LocalMixChannel implements MixChannel {
 	public Set<MixChannelParticipant> getNodeSubscribers(String node) {
 		Collection<MixChannelParticipant> allParticipants = participants.values();
 
-		/*
-		if (!nodes.contains(node)) {
+		if (!nodes.containsKey(node)) {
 			return Collections.emptySet();
 		} else {
-		*/
 			Set<MixChannelParticipant> subscribers = new HashSet<>();
 			
 			for (MixChannelParticipant mcp : allParticipants) {
@@ -190,7 +188,15 @@ public class LocalMixChannel implements MixChannel {
 				}
 			}
 			return subscribers;
-//		}
+		}
+	}
+
+	public void setName(String string) {
+		this.name = string;
+	}
+
+	public void setJidVisibilityMode(ChannelJidVisibilityMode jidVisibilityMode) {
+		this.jidVisibilityMode = jidVisibilityMode;
 	}
 
 }

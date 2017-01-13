@@ -34,8 +34,6 @@ public class LocalMixChannel implements MixChannel {
 
 	private List<MixChannelParticipantsListener> participantsListeners;
 
-	private List<MixChannelMessageListener> messageListeners;
-
 	private Long id;
 
 	/**
@@ -60,7 +58,6 @@ public class LocalMixChannel implements MixChannel {
 		this.mixService = service;
 		
 		this.participantsListeners = new ArrayList<>();
-		this.messageListeners = new ArrayList<>();
 		this.participants = new HashMap<>();
 		this.nodes = new HashSet<>();
 		this.name = name;
@@ -68,7 +65,7 @@ public class LocalMixChannel implements MixChannel {
 		nodes.add(new MixChannelNodeImpl(packetRouter, this, "urn:xmpp:mix:nodes:participants",
 				new MixChannelParticipantsNodeItemsProvider(this)));
 		nodes.add(new MixChannelNodeImpl(packetRouter, this, NODE_MESSAGES,
-				new MixChannelMessagesNodeItemsProvider(this)));
+				null));
 	}
 
 	@Override
@@ -167,11 +164,6 @@ public class LocalMixChannel implements MixChannel {
 			
 			packetRouter.route(thisMessage);
 		}
-	}
-
-	@Override
-	public void addMessageListener(MixChannelMessageListener listener) {
-		// TODO Auto-generated method stub
 	}
 	
 	public Set<MixChannelParticipant> getNodeSubscribers(String node) {

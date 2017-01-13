@@ -32,16 +32,7 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 
 	@Override
 	public JID getRealJid() {
-/*		
-		switch (jvp) {
-		case ENFORCE_VISIBLE:
-*/
-			return this.jid;
-/*
-	default:
-			return this.proxyJid;
-		}
-*/
+		return this.jid;
 	}
 
 	@Override

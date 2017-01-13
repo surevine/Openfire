@@ -26,27 +26,29 @@ public class MixChannelNodeImpl implements MixChannelNode {
 		this.itemsProvider = itemsProvider;
 		this.packetRouter = packetRouter;
 		
-		itemsProvider.addItemsListener(new ItemsListener() {
-			
-			@Override
-			public void publishItem(MixChannelNodeItem item) {
-				// Create a base message which we then clone for each subscriber
-				Message baseMessage = new Message();
-				baseMessage.setFrom(mixChannel.getJID());
+		if(itemsProvider != null) {
+			itemsProvider.addItemsListener(new ItemsListener() {
 				
-				addItemElement(addItemsElement(addEventElement(baseMessage)), item);
-				
-				Set<MixChannelParticipant> subscribers = mixChannel.getNodeSubscribers(name);
-
-				for(MixChannelParticipant subscriber : subscribers) {
-					Message message = baseMessage.createCopy();
+				@Override
+				public void publishItem(MixChannelNodeItem item) {
+					// Create a base message which we then clone for each subscriber
+					Message baseMessage = new Message();
+					baseMessage.setFrom(mixChannel.getJID());
 					
-					message.setTo(subscriber.getRealJid());
+					addItemElement(addItemsElement(addEventElement(baseMessage)), item);
 					
-					packetRouter.route(message);
+					Set<MixChannelParticipant> subscribers = mixChannel.getNodeSubscribers(name);
+	
+					for(MixChannelParticipant subscriber : subscribers) {
+						Message message = baseMessage.createCopy();
+						
+						message.setTo(subscriber.getRealJid());
+						
+						packetRouter.route(message);
+					}
 				}
-			}
-		});
+			});
+		}
 	}
 		
 	private Element addItemElement(Element parent, MixChannelNodeItem item) {

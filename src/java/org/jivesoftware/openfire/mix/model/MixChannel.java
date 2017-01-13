@@ -16,14 +16,6 @@ public interface MixChannel {
 		void onParticipantAdded(MixChannelParticipant participant);
 	}
 
-	public interface MixChannelMessageListener {
-		/**
-		 * Triggered when a message is received by the channel
-		 * @param message The received message
-		 */
-		void onMessageReceived(MixChannelMessage message);
-	}
-
 	/**
 	 * Get the full JID of this channel.
 	 *
@@ -48,8 +40,6 @@ public interface MixChannel {
 	Date getCreationDate();
 
 	void addParticipantsListener(MixChannelParticipantsListener listener);
-
-	void addMessageListener(MixChannelMessageListener listener);
 	
 	MixChannelParticipant addParticipant(JID jid, Set<String> subscribeNodes);
 

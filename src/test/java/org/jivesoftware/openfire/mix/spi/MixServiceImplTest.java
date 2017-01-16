@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -270,6 +271,33 @@ public class MixServiceImplTest {
 		}
 		
 		assertEquals(2, i);
+	}
+	
+	@Test
+	public void testGetDiscoItemsOnChannelReturnsExpectedNodes() throws MixPersistenceException {
+		final List<? extends MixChannel> channels = Arrays.asList(testChannelOne);
+		
+		mockery.checking(new Expectations() {{
+			allowing(mixPersistenceManager).loadChannels(mixServiceImpl); will(returnValue(channels));
+		}});
+		
+		// Loads the channels
+		mixServiceImpl.start();
+		
+		Iterator<DiscoItem> discoItems = mixServiceImpl.getItems(testChannelOne.getName(), null, null);
+		
+		List<String> expectedNodes = new ArrayList<>(Arrays.asList("urn:xmpp:mix:nodes:participants", "urn:xmpp:mix:nodes:messages"));
+		
+		while(discoItems.hasNext()) {
+			DiscoItem item = discoItems.next();
+			
+			assertTrue(item.getNode() + " is expected", expectedNodes.contains(item.getNode()));
+			assertEquals("JID is for the MIX service", testChannelOne.getJID(), item.getJID());
+			
+			expectedNodes.remove(item.getNode());
+		}
+		
+		assertTrue("All nodes are accounted for", expectedNodes.isEmpty());
 	}
 	
 	@Test

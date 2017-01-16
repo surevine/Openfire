@@ -1,5 +1,6 @@
 package org.jivesoftware.openfire.mix.model;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.Set;
 
@@ -42,11 +43,13 @@ public interface MixChannel {
 	
 	MixChannelParticipant addParticipant(JID jid, Set<String> subscribeNodes);
 
-	Set<MixChannelNode> getNodes();
+	Collection<MixChannelNode> getNodes();
 
 	MixChannelParticipant getParticipantByJID(JID from);
 
 	void receiveMessage(MixChannelMessage mcMessage);
 	
 	Set<MixChannelParticipant> getNodeSubscribers(String node);
+
+	void setID(long ID);
 }

@@ -9,4 +9,12 @@ public interface MixPersistenceManager {
 	Collection<MixChannel> loadChannels(MixService mixService) throws MixPersistenceException;
 
 	Collection<MixService> loadServices(XMPPServer xmppServer) throws MixPersistenceException;
+	
+	boolean save(MixChannel toPersist) throws MixPersistenceException;
+	
+	boolean update(MixChannel toUpdate) throws MixPersistenceException;
+	
+	MixChannel findByID(long ID) throws MixPersistenceException;
+	
+	boolean delete(MixChannel toDelete) throws MixPersistenceException;
 }

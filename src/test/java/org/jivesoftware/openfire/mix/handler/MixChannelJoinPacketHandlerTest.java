@@ -41,7 +41,7 @@ public class MixChannelJoinPacketHandlerTest {
     
     private static final DocumentFactory docFactory = DocumentFactory.getInstance();
 	
-	Mockery context = new Mockery();
+	private Mockery context = new Mockery();
     
     private MixChannel mockMixChannel; 
 	
@@ -50,13 +50,7 @@ public class MixChannelJoinPacketHandlerTest {
 	public MixChannelJoinPacketHandlerTest() {
 		mockMixChannel = context.mock(MixChannel.class);
 	}
-	
-	@Before
-	public void setUp() {
-        context.checking(new Expectations() {{
-            allowing(mockMixChannel);
-        }});
-	}
+
 	
 	@Test
 	public void testSuccessfulJoinRequest() {
@@ -69,6 +63,7 @@ public class MixChannelJoinPacketHandlerTest {
         IQ join = createJoinRequest(PARTIAL_NODE_SET);
 		
         context.checking(new Expectations() {{
+        	allowing(mockMixChannel).getJID();
             one(mockMixChannel).addParticipant(with(equal(TEST_USERS_JID)), with(equal(subscriptions)));
             will(returnValue(mcp));
         }});
@@ -107,42 +102,5 @@ public class MixChannelJoinPacketHandlerTest {
         
         return joinRequest;
     }
-	
-	static class IQMatcher extends TypeSafeMatcher<IQ> {
-
-		private IQ expectation;
-		
-		public IQMatcher(IQ expectation) {
-			this.expectation = expectation;
-		}
-		
-		@Override
-		public void describeTo(Description arg0) {
-			// TODO Implement
-		}
-
-		@Override
-		protected boolean matchesSafely(IQ result) {
-			// First check the types
-			if (expectation.getType().equals(result.getType())) {
-				Element expectedElement = expectation.getChildElement();
-				Element resultElement = result.getChildElement();
-				
-				// Then check the child XML.
-				if (expectedElement.asXML().equals(resultElement.asXML())) {
-					return true;					
-				}
-			}
-			
-			return false;
-
-		}
-		
-		@Factory
-		public static Matcher<IQ> iqMatcher(IQ expection) {
-		    return new IQMatcher(expection);
-		}
-
-	}
 
 }

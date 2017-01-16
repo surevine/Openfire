@@ -27,10 +27,8 @@ import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.handler.MixChannelJoinPacketHandler;
 import org.jivesoftware.openfire.mix.handler.MixChannelMessagePacketHandler;
 import org.jivesoftware.openfire.mix.handler.MixChannelPacketHandler;
+import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannel;
-import org.jivesoftware.openfire.muc.MUCRoom;
-import org.jivesoftware.openfire.muc.spi.LocalMUCRoom;
-import org.jivesoftware.openfire.muc.spi.MUCPersistenceManager;
 import org.jivesoftware.util.JiveProperties;
 import org.jivesoftware.util.LocaleUtils;
 import org.slf4j.Logger;
@@ -101,10 +99,11 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 	 *             domain definition.
 	 */
 	public MixServiceImpl(XMPPServer xmppServer, JiveProperties jiveProperties,
-			MixPersistenceManager persistenceManager, String subdomain, String description) {
+			MixPersistenceManager persistenceManager, String subdomain, String description, PacketRouter router) {
 		this.xmppServer = xmppServer;
 		this.jiveProperties = jiveProperties;
 		this.persistenceManager = persistenceManager;
+		this.router = router;
 
 		channels = new HashMap<>();
 		
@@ -159,10 +158,15 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 			if (packet.getTo().getNode() == null) {
 				// This was addressed at the service itself, which by now should
 				// have been handled.
-				if (packet instanceof IQ && ((IQ) packet).isRequest()) {
-					final IQ reply = IQ.createResultIQ((IQ) packet);
-					reply.setChildElement(((IQ) packet).getChildElement().createCopy());
-					reply.setError(PacketError.Condition.feature_not_implemented);
+				IQ request = (IQ) packet;
+				if (packet instanceof IQ && request.isRequest()) {
+
+					final IQ reply = IQ.createResultIQ(request);
+					reply.setChildElement(request.getChildElement().createCopy());
+					
+					MixChannel newChannel = new LocalMixChannel(this, request.getChildElement().attributeValue("channel"), router);
+					persistenceManager.save(newChannel);
+					
 					router.route(reply);
 				}
 				Log.debug("Ignoring stanza addressed at conference service: {}", packet.toXML());
@@ -172,7 +176,6 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 				String channelName = packet.getTo().getNode();
 				MixChannel channel = channels.get(channelName);
 				
-				MixChannelJoinPacketHandler joinPacketHandler = new MixChannelJoinPacketHandler();
 				if (packet instanceof IQ) {
 					if(channel == null) {
 						final IQ reply = IQ.createResultIQ((IQ) packet);
@@ -182,7 +185,7 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 						return;
 					}
 
-					for(MixChannelPacketHandler handler : packetHandlers) {
+					for (MixChannelPacketHandler handler : packetHandlers) {
 						IQ result = handler.processIQ(channels.get(channelName), (IQ) packet);
 
 						if (result != null) {

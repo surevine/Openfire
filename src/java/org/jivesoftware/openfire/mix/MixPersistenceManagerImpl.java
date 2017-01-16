@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 public class MixPersistenceManagerImpl implements MixPersistenceManager {
 	private static final Logger Log = LoggerFactory.getLogger(MixPersistenceManager.class);
 
-	private final static String CHANNEL_TABLE_NAME = "ofMixChannel";
+	public final static String CHANNEL_TABLE_NAME = "ofMixChannel";
 
 	private static final String LOAD_SERVICES = "SELECT serviceID, subdomain, description FROM ofMixService";
 

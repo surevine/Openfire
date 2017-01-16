@@ -1,6 +1,6 @@
 package org.jivesoftware.openfire.mix.model;
 
-import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -65,7 +65,7 @@ public class LocalMixChannelTest {
 		
 		MixChannelParticipant mcp = fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(PARTIAL_NODE_SET)));
 		
-		assertNotSame(mcp.getRealJid(), TEST_USER1_JID);
+		assertEquals(mcp.getRealJid(), TEST_USER1_JID);
 
 	}
 	

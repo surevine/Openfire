@@ -99,10 +99,11 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 	 *             domain definition.
 	 */
 	public MixServiceImpl(XMPPServer xmppServer, JiveProperties jiveProperties,
-			MixPersistenceManager persistenceManager, String subdomain, String description) {
+			MixPersistenceManager persistenceManager, String subdomain, String description, PacketRouter router) {
 		this.xmppServer = xmppServer;
 		this.jiveProperties = jiveProperties;
 		this.persistenceManager = persistenceManager;
+		this.router = router;
 
 		channels = new HashMap<>();
 		

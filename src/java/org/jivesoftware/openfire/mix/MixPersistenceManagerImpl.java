@@ -62,7 +62,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 				Long id = rs.getLong(1);
 				String subdomain = rs.getString(2);
 				String description = rs.getString(3);
-				this.mixService = new MixServiceImpl(xmppServer, jiveProperties, this, subdomain, description);
+				this.mixService = new MixServiceImpl(xmppServer, jiveProperties, this, subdomain, description, this.router);
 				mixService.setId(id);
 				mixServices.add(mixService);
 			}

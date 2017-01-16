@@ -10,15 +10,20 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Date;
+import java.util.Random;
 
 import org.jivesoftware.database.DbConnectionManager;
 import org.jivesoftware.database.EmbeddedConnectionProvider;
 import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.util.JiveGlobals;
 import org.jivesoftware.util.JiveProperties;
+import org.jivesoftware.util.StringUtils;
+import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.After;
@@ -41,9 +46,10 @@ public class MixPersistenceManagerImplTest {
 	JiveProperties jiveProperties;
 
 	final PacketRouter mockPacketRouter = mockery.mock(PacketRouter.class);
+	final MixService mockMixService = mockery.mock(MixService.class);
 
 	public MixPersistenceManagerImplTest() {
-
+		
 	}
 
 	@BeforeClass
@@ -111,10 +117,36 @@ public class MixPersistenceManagerImplTest {
 
 	}
 
+	private static final String INSERT_SINGLE_CHANNEL = "INSERT INTO " + MixPersistenceManagerImpl.CHANNEL_TABLE_NAME + "(channelid, serviceid, creationDate, modificationDate, name, jidVisibility)" 
+			+ " VALUES (?,?,?,?,?,?);";
+	
 	@Test
-	@Ignore
-	public void testLoadServices() {
-		fail("Not yet implemented");
+	public void testLoadChannels() throws SQLException, MixPersistenceException {
+		Connection conn = DbConnectionManager.getConnection();
+		
+		String dateStr = new Date().getTime() + "";
+		PreparedStatement stmt = conn.prepareStatement(INSERT_SINGLE_CHANNEL);
+		stmt.setLong(1, 1L);
+		stmt.setLong(2,  1L);
+		stmt.setString(3, dateStr);
+		stmt.setString(4, dateStr);
+		stmt.setString(5, "CHANNEL_NAME");
+		stmt.setInt(6, 0);
+		
+		stmt.execute();
+		
+		stmt.close();
+		conn.close();
+		
+		mockery.checking(new Expectations() {{
+			allowing(mockMixService).getId();
+			will(returnValue(1L));
+		}});
+		
+		assertEquals(1, mixPersistenceManager.loadChannels(mockMixService).size());
+		
+		
+		
 	}
 
 }

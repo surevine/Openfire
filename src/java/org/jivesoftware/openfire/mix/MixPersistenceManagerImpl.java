@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 public class MixPersistenceManagerImpl implements MixPersistenceManager {
 	private static final Logger Log = LoggerFactory.getLogger(MixPersistenceManager.class);
 
-	public final static String CHANNEL_TABLE_NAME = "ofMixChannel";
+	public final static String CHANNEL_TABLE_NAME = "OFMIXCHANNEL";
 
 	private static final String LOAD_SERVICES = "SELECT serviceID, subdomain, description FROM ofMixService";
 
@@ -114,7 +114,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 			+ " SET creationDate=?, name=?, jidVisibility=? WHERE channelID=?";
 
 	private static final String ADD_CHANNEL = "INSERT INTO " + CHANNEL_TABLE_NAME
-			+ " (creationDate, name, jidVisibility)" + "VALUES (?,?,?)";
+			+ " (creationDate, name, jidVisibility)" + " VALUES (?,?,?)";
 
 	@Override
 	public boolean save(MixChannel toPersist) throws MixPersistenceException {

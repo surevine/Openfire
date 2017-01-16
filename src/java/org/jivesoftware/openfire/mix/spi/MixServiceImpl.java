@@ -294,9 +294,6 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 			for (MixChannel channel : channels.values()) {
 				answer.add(new DiscoItem(channel.getJID(), channel.getName(), null, null));
 			}
-		} else if (name != null && node == null) {
-			// Answer the room occupants as items if that info is publicly
-			// available
 		}
         else if (name != null && node == null) {
             MixChannel channel = channels.get(name);

@@ -8,6 +8,8 @@ import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityPreference;
 import org.xmpp.packet.JID;
 
 public class LocalMixChannelParticipant implements MixChannelParticipant {
+	
+	private long id;
 
 	private JID proxyJid;
 	
@@ -30,6 +32,15 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 		this.nick = Md5Crypt.md5Crypt(jid.toBareJID().getBytes()); // Not sure what this should be yet
 	}
 
+
+	public long getID() {
+		return id;
+	}
+
+	public void setID(long id) {
+		this.id = id;
+	}
+	
 	@Override
 	public JID getRealJid() {
 		return this.jid;
@@ -97,4 +108,5 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 			return false;
 		return true;
 	}
+
 }

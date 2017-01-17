@@ -1,15 +1,23 @@
 package org.jivesoftware.openfire.mix.handler;
 
+import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannelMessage;
 import org.jivesoftware.openfire.mix.model.MixChannelMessageImpl;
 import org.jivesoftware.openfire.mix.model.MixChannelParticipant;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Message;
+import org.xmpp.packet.PacketError.Condition;
 import org.xmpp.packet.Presence;
 
 public class MixChannelMessagePacketHandler implements MixChannelPacketHandler {
 
+	private PacketRouter router;
+
+	public MixChannelMessagePacketHandler(PacketRouter router) {
+		this.router = router;
+	}
+	
 	@Override
 	public IQ processIQ(MixChannel channel, IQ iq) {
 		return null;
@@ -30,7 +38,13 @@ public class MixChannelMessagePacketHandler implements MixChannelPacketHandler {
 		MixChannelParticipant participant = channel.getParticipantByJID(message.getFrom().asBareJID());
 		
 		if(participant == null) {
-			// Silently drop the message - Is this right?
+			Message error = new Message();
+			error.setFrom(channel.getJID());
+			error.setTo(message.getFrom());
+			error.setError(Condition.not_acceptable);
+			
+			router.route(error);
+			
 			return true;
 		}
 		

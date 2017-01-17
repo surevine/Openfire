@@ -109,7 +109,7 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 		
 		packetHandlers = Arrays.asList(
 				new MixChannelJoinPacketHandler(),
-				new MixChannelMessagePacketHandler()
+				new MixChannelMessagePacketHandler(router)
 			);
 
 		// Check subdomain and throw an IllegalArgumentException if its invalid

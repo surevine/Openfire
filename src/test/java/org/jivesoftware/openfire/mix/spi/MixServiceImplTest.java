@@ -37,6 +37,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
+import org.xmpp.packet.Message;
 
 public class MixServiceImplTest {
 	Mockery mockery = new Mockery() {{
@@ -325,6 +326,17 @@ public class MixServiceImplTest {
 		
 		mockery.assertIsSatisfied();
 		
+	}
+	
+	@Test
+	public void testProcessDoesNothingIfServiceDisabled() {
+		mockery.checking(new Expectations() {{
+			allowing(jiveProperties).getBooleanProperty("xmpp.mix.enabled", true); will(returnValue(false));
+		}});
+		
+		Message message = new Message();
+		
+		mixServiceImpl.processPacket(message);
 	}
 	
 	static class IQMatcher extends TypeSafeMatcher<IQ> {

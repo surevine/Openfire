@@ -38,7 +38,7 @@ public class MixChannelMessagePacketHandler implements MixChannelPacketHandler {
 		MixChannelParticipant participant = channel.getParticipantByJID(message.getFrom().asBareJID());
 		
 		if(participant == null) {
-			Message error = new Message();
+			Message error = message.createCopy();
 			error.setFrom(channel.getJID());
 			error.setTo(message.getFrom());
 			error.setError(Condition.not_acceptable);

@@ -180,7 +180,7 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 					if(channel == null) {
 						final IQ reply = IQ.createResultIQ((IQ) packet);
 						reply.setChildElement(((IQ) packet).getChildElement().createCopy());
-						reply.setError(PacketError.Condition.service_unavailable);
+						reply.setError(PacketError.Condition.item_not_found);
 						router.route(reply);
 						return;
 					}
@@ -196,11 +196,17 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 					}
 				} else if (packet instanceof Message) {
 					if(channel == null) {
+						final Message reply = (Message) packet.createCopy();
+						reply.setFrom(new JID(getServiceDomain()));
+						reply.setTo(packet.getFrom());
+						reply.setError(PacketError.Condition.item_not_found);
+						router.route(reply);
 						return;
 					}
+					
 					for(MixChannelPacketHandler handler : packetHandlers) {
 						if(handler.processMessage(channels.get(channelName), (Message) packet));
-					}					
+					}
 				}
 
 			}

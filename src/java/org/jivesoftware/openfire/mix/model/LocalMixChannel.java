@@ -13,6 +13,7 @@ import java.util.Set;
 import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.mix.MixChannelNode;
 import org.jivesoftware.openfire.mix.MixManager;
+import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityMode;
 import org.slf4j.Logger;
@@ -40,6 +41,8 @@ public class LocalMixChannel implements MixChannel {
 	 * This {@link MixService} to which this channel is attached.
 	 */
 	private MixService mixService;
+	
+	private MixPersistenceManager channelRepository;
 
 	/**
 	 * The name of the channel.
@@ -51,11 +54,13 @@ public class LocalMixChannel implements MixChannel {
 	 */
 	private Date creationDate;
 
-	private ChannelJidVisibilityMode jidVisibilityMode;
+	// Default to visible
+	private ChannelJidVisibilityMode jidVisibilityMode = ChannelJidVisibilityMode.VISIBLE;
 
-	public LocalMixChannel(MixService service, String name, PacketRouter packetRouter) {
+	public LocalMixChannel(MixService service, String name, PacketRouter packetRouter, MixPersistenceManager mpm) {
 		this.packetRouter = packetRouter;
 		this.mixService = service;
+		this.channelRepository = mpm;
 		
 		this.participantsListeners = new ArrayList<>();
 		this.participants = new HashMap<>();
@@ -67,6 +72,8 @@ public class LocalMixChannel implements MixChannel {
 
 		nodes.put(NODE_MESSAGES, new MixChannelNodeImpl(packetRouter, this, NODE_MESSAGES,
 				null));
+		
+		this.setCreationDate(new Date());
 	}
 
 	@Override
@@ -91,7 +98,7 @@ public class LocalMixChannel implements MixChannel {
 
 	@Override
 	public Date getCreationDate() {
-		return creationDate;
+		return new Date(creationDate.getTime());
 	}
 
 	@Override

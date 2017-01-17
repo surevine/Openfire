@@ -102,8 +102,8 @@ public class MixServiceImplTest {
 
 		mixServiceImpl = new MixServiceImpl(xmppServer, jiveProperties, mixPersistenceManager, TEST_SUBDOMAIN, TEST_DESCRIPTION, mockPacketRouter);
 		
-		testChannelOne = new LocalMixChannel(mixServiceImpl, "channel1", null); 
-		testChannelTwo = new LocalMixChannel(mixServiceImpl, "channel2", null);
+		testChannelOne = new LocalMixChannel(mixServiceImpl, "channel1", null, mixPersistenceManager); 
+		testChannelTwo = new LocalMixChannel(mixServiceImpl, "channel2", null, mixPersistenceManager);
 	}
 
 	@Test

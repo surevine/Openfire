@@ -1,10 +1,9 @@
-package org.jivesoftware.openfire.mix;
+package org.jivesoftware.openfire.mix.repository;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -13,9 +12,13 @@ import java.util.List;
 import org.jivesoftware.database.DbConnectionManager;
 import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.XMPPServer;
-import org.jivesoftware.openfire.mix.model.MixChannel;
+import org.jivesoftware.openfire.mix.MixPersistenceException;
+import org.jivesoftware.openfire.mix.MixPersistenceManager;
+import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityMode;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
+import org.jivesoftware.openfire.mix.model.MixChannel;
+import org.jivesoftware.openfire.mix.model.MixChannelParticipant;
 import org.jivesoftware.openfire.mix.spi.MixServiceImpl;
 import org.jivesoftware.util.JiveProperties;
 import org.jivesoftware.util.StringUtils;
@@ -30,17 +33,31 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 	private static final String LOAD_SERVICES = "SELECT serviceID, subdomain, description FROM ofMixService";
 
 	private static final String LOAD_ALL_CHANNELS = "SELECT channelID, creationDate, modificationDate, name, jidVisibility "
-			+ "FROM ofMixChannel WHERE serviceID=?";
+			+ "FROM ofMixChannel";
 
 	private JiveProperties jiveProperties;
 
 	private PacketRouter router;
 
 	private MixServiceImpl mixService;
+	
+	private static final int CHANNEL_SEQ_TYPE = 500;
 
+	private IdentityManager channelKeys = new MixIdentityManager(CHANNEL_SEQ_TYPE, 5);
+	
+	private static final int MCP_SEQ_TYPE = 501;
+	
+	private IdentityManager mcpKeys = new MixIdentityManager(MCP_SEQ_TYPE, 5);
+	
+	private static final int MCP_SUBS_SEQ_TYPE = 502;
+	
+	private IdentityManager mcpSubsKeys = new MixIdentityManager(MCP_SUBS_SEQ_TYPE, 5);
+	
+	
 	public MixPersistenceManagerImpl(JiveProperties jiveProperties, PacketRouter router) {
 		this.jiveProperties = jiveProperties;
 		this.router = router;
+		
 	}
 
 	public void initialize(XMPPServer server) {
@@ -85,14 +102,13 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 		try {
 			connection = DbConnectionManager.getConnection();
 			statement = connection.prepareStatement(LOAD_ALL_CHANNELS);
-			statement.setLong(1, mixService.getId());
 			resultSet = statement.executeQuery();
 
 			while (resultSet.next()) {
 				try {
 					// TODO: initialisation of the nodes that the channel
 					// supports
-					LocalMixChannel channel = new LocalMixChannel(mixService, resultSet.getString(4), router);
+					LocalMixChannel channel = new LocalMixChannel(mixService, resultSet.getString(4), router, this);
 					channel.setID(resultSet.getLong(1));
 					channel.setCreationDate(new Date(Long.parseLong(resultSet.getString(2).trim()))); // creation
 																										// date
@@ -114,7 +130,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 			+ " SET creationDate=?, name=?, jidVisibility=? WHERE channelID=?";
 
 	private static final String ADD_CHANNEL = "INSERT INTO " + CHANNEL_TABLE_NAME
-			+ " (creationDate, name, jidVisibility)" + " VALUES (?,?,?)";
+			+ " (channelID, creationDate, name, jidVisibility, modificationDate)" + " VALUES (?,?,?,?,?)";
 
 	@Override
 	public boolean save(MixChannel toPersist) throws MixPersistenceException {
@@ -125,19 +141,16 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 
 			con = DbConnectionManager.getConnection();
 
-			// its a new channel
-			pstmt = con.prepareStatement(ADD_CHANNEL, Statement.RETURN_GENERATED_KEYS);
-
-			pstmt.setString(1, StringUtils.dateToMillis(toPersist.getCreationDate()));
-			pstmt.setString(2, toPersist.getName());
-			pstmt.setInt(3, convertToInt(toPersist.getJidVisibilityMode()));
+			pstmt = con.prepareStatement(ADD_CHANNEL);
+			
+			// Get PK for the channel
+			pstmt.setLong(1, this.channelKeys.nextUniqueID());
+			pstmt.setString(2, StringUtils.dateToMillis(toPersist.getCreationDate()));
+			pstmt.setString(3, toPersist.getName());
+			pstmt.setInt(4, toPersist.getJidVisibilityMode().getId());
+			pstmt.setString(5, StringUtils.dateToMillis(toPersist.getCreationDate()));
 
 			pstmt.executeUpdate();
-
-			ResultSet rs = pstmt.getGeneratedKeys();
-			if (rs.next()) {
-				toPersist.setID(rs.getInt(1));
-			}
 
 		} catch (SQLException sqle) {
 			Log.error(sqle.getMessage(), sqle);
@@ -164,7 +177,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 			pstmt = con.prepareStatement(UPDATE_CHANNEL);
 			pstmt.setString(1, StringUtils.dateToMillis(toUpdate.getCreationDate()));
 			pstmt.setString(2, toUpdate.getName());
-			pstmt.setInt(3, convertToInt(toUpdate.getJidVisibilityMode()));
+			pstmt.setInt(3, toUpdate.getJidVisibilityMode().getId());
 
 			pstmt.executeUpdate();
 		} catch (SQLException sqle) {
@@ -199,11 +212,11 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 			if (rs.first()) {
 
 				try {
-					channel = new LocalMixChannel(this.mixService, rs.getString(3), router);
+					channel = new LocalMixChannel(this.mixService, rs.getString(3), router, this);
 					channel.setID(rs.getLong(1));
 					channel.setCreationDate(new Date(Long.parseLong(rs.getString(2).trim())));
 					channel.setName(rs.getString(3));
-					channel.setJidVisibilityMode(convertFromInt(rs.getInt(4)));
+					channel.setJidVisibilityMode(ChannelJidVisibilityMode.fromId(rs.getInt(4)));
 				} catch (SQLException e) {
 					Log.error("A database exception prevented one particular MIX channel loaded from the database.", e);
 				}
@@ -219,6 +232,8 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 	}
 
 	private static final String DELETE_CHANNEL = "DELETE FROM " + CHANNEL_TABLE_NAME + " WHERE channelID=?";
+
+	private static final String CHANNEL_PARTICIPANT_TABLE_NAME = null;
 
 	@Override
 	public boolean delete(MixChannel toDelete) throws MixPersistenceException {
@@ -245,26 +260,60 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 		return true;
 	}
 
-	private static int convertToInt(ChannelJidVisibilityMode jidVisibilityMode) {
+	private static final String ADD_CHANNEL_PARTICIPANT = "INSERT INTO " + CHANNEL_PARTICIPANT_TABLE_NAME
+			+ " (mcpID, realJID, proxyJID, nickName, channelJidVisibilityPreference, channelID_FK)" 
+			+ " VALUES (?, ?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
-		int retVal = 0;
-		switch (jidVisibilityMode) {
-		case VISIBLE:
-			retVal = 0;
-		case HIDDEN:
-			retVal = 1;
+	private static final String CHANNEL_PARTICIPANT_SUBSCRIPTIONS_TABLE = null;
+	
+	private static final String ADD_NODE_SUBSCRIPTIONS = "INSERT INTO " + CHANNEL_PARTICIPANT_SUBSCRIPTIONS_TABLE 
+			+ "(cpsID, participantID_FK, nodeName)"
+			+ " VALUES (?,?,?);";
+	
+	@Override
+	public boolean save(MixChannelParticipant mcp) {
+		Connection con = null;
+		PreparedStatement pstmt = null;
+
+		try {
+
+			con = DbConnectionManager.getConnection();
+
+			pstmt = con.prepareStatement(ADD_CHANNEL_PARTICIPANT);
+			
+			// Set the PK for the MCP
+			pstmt.setLong(1, this.mcpKeys.nextUniqueID());
+			pstmt.setString(2, mcp.getRealJid().toFullJID());
+			pstmt.setString(3, mcp.getJid().toFullJID());
+			pstmt.setString(4, mcp.getNick());
+			pstmt.setInt(5, mcp.getJidVisibilityPreference().getId());
+			pstmt.setLong(6, mcp.getChannel().getID());
+			
+			pstmt.executeUpdate();
+			
+			pstmt.close();
+			
+			// Now deal with the subscriptions
+			for (String sub : mcp.getSubscriptions()) {
+				pstmt = con.prepareStatement(ADD_NODE_SUBSCRIPTIONS);
+				
+				pstmt.setLong(1, this.mcpSubsKeys.nextUniqueID());
+				pstmt.setLong(2, mcp.getID());
+				pstmt.setString(3, sub);
+				
+				pstmt.executeUpdate();
+				pstmt.close();
+			}
+
+		} catch (SQLException sqle) {
+			Log.error(sqle.getMessage(), sqle);
+			return false;
+		} finally {
+			DbConnectionManager.closeConnection(pstmt, con);
+
 		}
 
-		return retVal;
-
-	}
-
-	private static ChannelJidVisibilityMode convertFromInt(int mode) {
-		if (mode == 1) {
-			return ChannelJidVisibilityMode.HIDDEN;
-		} else {
-			return ChannelJidVisibilityMode.VISIBLE;
-		}
+		return true;
 	}
 
 }

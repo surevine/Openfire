@@ -7,6 +7,7 @@ import java.util.Set;
 import org.apache.commons.lang.NotImplementedException;
 import org.dom4j.Element;
 import org.dom4j.Node;
+import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannelParticipant;
 import org.xmpp.packet.IQ;

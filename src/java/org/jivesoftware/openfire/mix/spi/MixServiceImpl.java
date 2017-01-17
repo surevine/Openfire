@@ -164,7 +164,7 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 					final IQ reply = IQ.createResultIQ(request);
 					reply.setChildElement(request.getChildElement().createCopy());
 					
-					MixChannel newChannel = new LocalMixChannel(this, request.getChildElement().attributeValue("channel"), router);
+					MixChannel newChannel = new LocalMixChannel(this, request.getChildElement().attributeValue("channel"), router, persistenceManager);
 					persistenceManager.save(newChannel);
 					
 					router.route(reply);

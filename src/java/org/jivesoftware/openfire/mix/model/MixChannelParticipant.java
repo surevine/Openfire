@@ -19,4 +19,6 @@ public interface MixChannelParticipant {
 	ChannelJidVisibilityPreference getJidVisibilityPreference();
 
 	JID getJid();
+
+	long getID();
 }

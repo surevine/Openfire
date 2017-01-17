@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.mix.model.MixChannel;
+import org.jivesoftware.openfire.mix.model.MixChannelParticipant;
 
 public interface MixPersistenceManager {
 	Collection<MixChannel> loadChannels(MixService mixService) throws MixPersistenceException;
@@ -17,4 +18,6 @@ public interface MixPersistenceManager {
 	MixChannel findByID(long ID) throws MixPersistenceException;
 	
 	boolean delete(MixChannel toDelete) throws MixPersistenceException;
+
+	boolean save(MixChannelParticipant mcp);
 }

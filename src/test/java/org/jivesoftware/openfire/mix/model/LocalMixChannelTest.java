@@ -7,6 +7,7 @@ import java.util.HashSet;
 
 import org.dom4j.DocumentFactory;
 import org.jivesoftware.openfire.PacketRouter;
+import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -45,7 +46,9 @@ public class LocalMixChannelTest {
 	
 	final PacketRouter mockRouter = context.mock(PacketRouter.class);
 	
-	private LocalMixChannel fixture = new LocalMixChannel(mockMixService, TEST_MIX_CHANNEL_NAME, mockRouter);
+	final MixPersistenceManager mockPersistenceManager = context.mock(MixPersistenceManager.class);
+	
+	private LocalMixChannel fixture = new LocalMixChannel(mockMixService, TEST_MIX_CHANNEL_NAME, mockRouter, mockPersistenceManager);
 	
 	@Before
 	public void setUp() {

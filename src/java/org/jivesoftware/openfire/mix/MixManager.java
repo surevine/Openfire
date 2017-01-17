@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.container.BasicModule;
+import org.jivesoftware.openfire.mix.repository.MixPersistenceManagerImpl;
 import org.jivesoftware.util.JiveProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

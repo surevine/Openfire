@@ -1,4 +1,4 @@
-package org.jivesoftware.openfire.mix;
+package org.jivesoftware.openfire.mix.repository;
 
 import static org.junit.Assert.*;
 
@@ -20,6 +20,10 @@ import java.util.Random;
 import org.jivesoftware.database.DbConnectionManager;
 import org.jivesoftware.database.EmbeddedConnectionProvider;
 import org.jivesoftware.openfire.PacketRouter;
+import org.jivesoftware.openfire.mix.MixPersistenceException;
+import org.jivesoftware.openfire.mix.MixService;
+import org.jivesoftware.openfire.mix.model.LocalMixChannel;
+import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.util.JiveGlobals;
 import org.jivesoftware.util.JiveProperties;
 import org.jivesoftware.util.StringUtils;
@@ -49,7 +53,8 @@ public class MixPersistenceManagerImplTest {
 	final MixService mockMixService = mockery.mock(MixService.class);
 
 	public MixPersistenceManagerImplTest() {
-		
+
+		mixPersistenceManager = new MixPersistenceManagerImpl(jiveProperties, mockPacketRouter);
 	}
 
 	@BeforeClass
@@ -67,24 +72,11 @@ public class MixPersistenceManagerImplTest {
 		Statement st = conn.createStatement();
 
 		st.execute(
-				"CREATE TABLE ofMixChannel (channelID INTEGER NOT NULL, serviceID INTEGER NOT NULL, creationDate CHAR(15) NOT NULL, modificationDate CHAR(15) NOT NULL, name VARCHAR(50) NOT NULL, jidVisibility INTEGER NOT NULL, CONSTRAINT ofMixChannel_pk PRIMARY KEY (channelID))");
+				"CREATE TABLE ofMixChannel (channelID INTEGER NOT NULL, creationDate CHAR(15) NOT NULL, modificationDate CHAR(15) NOT NULL, name VARCHAR(50) NOT NULL, jidVisibility INTEGER NOT NULL, CONSTRAINT ofMixChannel_pk PRIMARY KEY (channelID))");
 
 		st.close();
 		conn.close();
 
-	}
-
-	public static void deleteFilesInFolder(final File folder) {
-		for (final File fileEntry : folder.listFiles()) {
-			if (fileEntry.isDirectory()) {
-				deleteFilesInFolder(fileEntry);
-				fileEntry.delete();
-			} else {
-				fileEntry.delete();
-			}
-		}
-
-		folder.delete();
 	}
 
 	@AfterClass
@@ -96,9 +88,6 @@ public class MixPersistenceManagerImplTest {
 	@Before
 	public void setUp() throws Exception {
 		jiveProperties = mockery.mock(JiveProperties.class);
-
-		mixPersistenceManager = new MixPersistenceManagerImpl(jiveProperties, mockPacketRouter);
-
 	}
 
 	@After
@@ -117,21 +106,21 @@ public class MixPersistenceManagerImplTest {
 
 	}
 
-	private static final String INSERT_SINGLE_CHANNEL = "INSERT INTO " + MixPersistenceManagerImpl.CHANNEL_TABLE_NAME + "(channelid, serviceid, creationDate, modificationDate, name, jidVisibility)" 
-			+ " VALUES (?,?,?,?,?,?);";
+	private static final String INSERT_SINGLE_CHANNEL = "INSERT INTO " + MixPersistenceManagerImpl.CHANNEL_TABLE_NAME + "(channelid, creationDate, modificationDate, name, jidVisibility)" 
+			+ " VALUES (?,?,?,?,?);";
 	
 	@Test
 	public void testLoadChannels() throws SQLException, MixPersistenceException {
 		Connection conn = DbConnectionManager.getConnection();
+		Random rand = new Random();
 		
 		String dateStr = new Date().getTime() + "";
 		PreparedStatement stmt = conn.prepareStatement(INSERT_SINGLE_CHANNEL);
-		stmt.setLong(1, 1L);
-		stmt.setLong(2,  1L);
+		stmt.setLong(1, rand.nextInt());
+		stmt.setString(2, dateStr);
 		stmt.setString(3, dateStr);
-		stmt.setString(4, dateStr);
-		stmt.setString(5, "CHANNEL_NAME");
-		stmt.setInt(6, 0);
+		stmt.setString(4, "CHANNEL_NAME");
+		stmt.setInt(5, 0);
 		
 		stmt.execute();
 		
@@ -145,8 +134,32 @@ public class MixPersistenceManagerImplTest {
 		
 		assertEquals(1, mixPersistenceManager.loadChannels(mockMixService).size());
 		
+	}
+	
+	@Test
+	public void testSaving() throws MixPersistenceException {
 		
+		assertNotNull(mixPersistenceManager.save(new LocalMixChannel(mockMixService, "TEST_CHANNEL_NAME", mockPacketRouter, mixPersistenceManager)));
+	}
+	
+	@Test
+	public void testFindByID() throws MixPersistenceException {
+		MixChannel saved = mixPersistenceManager.save(new LocalMixChannel(mockMixService, "TEST_CHANNEL_NAME", mockPacketRouter, mixPersistenceManager));
 		
+	}
+	
+
+	public static void deleteFilesInFolder(final File folder) {
+		for (final File fileEntry : folder.listFiles()) {
+			if (fileEntry.isDirectory()) {
+				deleteFilesInFolder(fileEntry);
+				fileEntry.delete();
+			} else {
+				fileEntry.delete();
+			}
+		}
+
+		folder.delete();
 	}
 
 }

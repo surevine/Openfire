@@ -12,7 +12,6 @@ INSERT INTO ofMixService (serviceID, subdomain, isHidden) VALUES (1, 'mix', 0);
 
 CREATE TABLE ofMixChannel (
   channelID           INTEGER       NOT NULL,
-  serviceID           INTEGER       NOT NULL,
   creationDate        CHAR(15)      NOT NULL,
   modificationDate    CHAR(15)      NOT NULL,
   name                VARCHAR(50)   NOT NULL,
@@ -20,7 +19,6 @@ CREATE TABLE ofMixChannel (
   CONSTRAINT ofMixChannel_pk PRIMARY KEY (channelID)
 );
 
-CREATE INDEX ofMixChannel_serviceID_idx ON ofMixChannel(serviceID);
 CREATE INDEX ofMixChannel_name_idx ON ofMixChannel(name);
 
 UPDATE ofVersion SET version = 24 WHERE name = 'openfire';

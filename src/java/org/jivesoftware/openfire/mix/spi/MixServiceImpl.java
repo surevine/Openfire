@@ -29,6 +29,7 @@ import org.jivesoftware.openfire.mix.handler.MixChannelMessagePacketHandler;
 import org.jivesoftware.openfire.mix.handler.MixChannelPacketHandler;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannel;
+import org.jivesoftware.openfire.mix.repository.MixPersistenceManagerImpl;
 import org.jivesoftware.util.JiveProperties;
 import org.jivesoftware.util.LocaleUtils;
 import org.slf4j.Logger;
@@ -85,6 +86,7 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 
 	/**
 	 * Create a new group chat server.
+	 * @param mixPersistenceManagerImpl 
 	 *
 	 * @param subdomain
 	 *            Subdomain portion of the conference services (for example,
@@ -98,11 +100,10 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 	 *             if the provided subdomain is an invalid, according to the JID
 	 *             domain definition.
 	 */
-	public MixServiceImpl(XMPPServer xmppServer, JiveProperties jiveProperties,
-			MixPersistenceManager persistenceManager, String subdomain, String description, PacketRouter router) {
+	public MixServiceImpl(XMPPServer xmppServer, JiveProperties jiveProperties, String subdomain, String description, PacketRouter router) {
 		this.xmppServer = xmppServer;
 		this.jiveProperties = jiveProperties;
-		this.persistenceManager = persistenceManager;
+		this.persistenceManager = new MixPersistenceManagerImpl(jiveProperties, router);
 		this.router = router;
 
 		channels = new HashMap<>();

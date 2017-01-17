@@ -100,7 +100,7 @@ public class MixServiceImplTest {
 			allowing(iqDiscoInfoHandler).setServerNodeInfoProvider(with(any(String.class)), with(any(DiscoInfoProvider.class)));
 		}});
 
-		mixServiceImpl = new MixServiceImpl(xmppServer, jiveProperties, mixPersistenceManager, TEST_SUBDOMAIN, TEST_DESCRIPTION, mockPacketRouter);
+		mixServiceImpl = new MixServiceImpl(xmppServer, jiveProperties, TEST_SUBDOMAIN, TEST_DESCRIPTION, mockPacketRouter);
 		
 		testChannelOne = new LocalMixChannel(mixServiceImpl, "channel1", null, mixPersistenceManager); 
 		testChannelTwo = new LocalMixChannel(mixServiceImpl, "channel2", null, mixPersistenceManager);

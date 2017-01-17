@@ -21,4 +21,6 @@ public interface MixChannelParticipant {
 	JID getJid();
 
 	long getID();
+
+	void setID(long nextUniqueID);
 }

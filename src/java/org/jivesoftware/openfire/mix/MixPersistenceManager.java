@@ -11,13 +11,11 @@ public interface MixPersistenceManager {
 
 	Collection<MixService> loadServices(XMPPServer xmppServer) throws MixPersistenceException;
 	
-	boolean save(MixChannel toPersist) throws MixPersistenceException;
+	MixChannel save(MixChannel toPersist) throws MixPersistenceException;
 	
-	boolean update(MixChannel toUpdate) throws MixPersistenceException;
-	
-	MixChannel findByID(long ID) throws MixPersistenceException;
+	MixChannel update(MixChannel toUpdate) throws MixPersistenceException;
 	
 	boolean delete(MixChannel toDelete) throws MixPersistenceException;
 
-	boolean save(MixChannelParticipant mcp);
+	MixChannelParticipant save(MixChannelParticipant mcp) throws MixPersistenceException;
 }

@@ -31,4 +31,6 @@ public interface MixService extends Component {
     Collection<MixChannel> getChannels();
     
     boolean isServiceEnabled();
+
+	void setId(Long id);
 }

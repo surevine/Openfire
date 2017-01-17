@@ -6,15 +6,15 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 import org.dom4j.DocumentFactory;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
-import org.hamcrest.TypeSafeMatcher;
 import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.mix.MixService;
+import org.jivesoftware.openfire.testutil.ElementMatchers;
+import org.jivesoftware.openfire.testutil.PacketMatchers;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.States;
+import org.jmock.internal.State;
 import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,13 +59,15 @@ public class LocalMixChannelTest {
 	private LocalMixChannel fixture = new LocalMixChannel(mockMixService, TEST_MIX_CHANNEL_NAME, mockRouter);
 	
 	States test = context.states("test").startsAs("setting up");
+	State settingUp = test.is("setting up");
+	State setUp = test.is("set up");
 	
 	@Before
 	public void setUp() {
         context.checking(new Expectations() {{
             allowing(mockMixService).getServiceDomain();
             will(returnValue(TEST_MIX_DOMAIN));
-            when(test.isNot("set up"));
+            
             allowing(mockRouter).route(with(any(Packet.class)));
             when(test.isNot("set up"));
             allowing(mockRouter).route(with(any(Message.class)));
@@ -76,7 +78,7 @@ public class LocalMixChannelTest {
             when(test.isNot("set up"));
         }});
         
-        test.is("set up");
+        setUp.activate();
 	}
 	
 	@Test
@@ -108,7 +110,7 @@ public class LocalMixChannelTest {
 	
 	@Test
 	public void testMessageToGroupIsReflectedToOtherParticipants() {
-		test.is("setting up");
+		settingUp.activate();
 		
 		// We have three participants
 		final MixChannelParticipant sender = fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(PARTIAL_NODE_SET)));
@@ -128,7 +130,7 @@ public class LocalMixChannelTest {
 		
 		MixChannelMessage mcMessage = new MixChannelMessageImpl(message, sender);
 		
-		test.is("set up");
+		setUp.activate();
 		
 		// We expect messages to the other two participants and one to the sender
 		context.checking(new Expectations() {{
@@ -136,57 +138,24 @@ public class LocalMixChannelTest {
 	    	one(mockRouter).route(with(Matchers.<Message>allOf(
 	    			Matchers.hasProperty("body", equal(testBody)),
 	    			Matchers.hasProperty("to", equal(TEST_USER1_JID)),
-	    			PacketMatchers.hasTextChild("submission-id", equal(testMessageID)),
-	    			PacketMatchers.hasTextChild("jid", equal(sender.getJid().toBareJID()))
+	    			PacketMatchers.element(ElementMatchers.hasTextChild("submission-id", equal(testMessageID))),
+	    			PacketMatchers.element(ElementMatchers.hasTextChild("jid", equal(sender.getJid().toBareJID())))
 	    			)));
 	    	one(mockRouter).route(with(Matchers.<Message>allOf(
 	    			Matchers.hasProperty("body", equal(testBody)),
 	    			Matchers.hasProperty("to", equal(TEST_USER2_JID)),
-	    			PacketMatchers.hasTextChild("jid", equal(sender.getJid().toBareJID())),
-	    			PacketMatchers.hasNoChild("submission-id")
+	    			PacketMatchers.element(ElementMatchers.hasTextChild("jid", equal(sender.getJid().toBareJID()))),
+	    			PacketMatchers.element(ElementMatchers.hasNoChild("submission-id"))
 	    		)));
 	    	one(mockRouter).route(with(Matchers.<Message>allOf(
 	    			Matchers.hasProperty("body", equal(testBody)),
 	    			Matchers.hasProperty("to", equal(TEST_USER3_JID)),
-	    			PacketMatchers.hasTextChild("jid", equal(sender.getJid().toBareJID())),
-	    			PacketMatchers.hasNoChild("submission-id")
+	    			PacketMatchers.element(ElementMatchers.hasTextChild("jid", equal(sender.getJid().toBareJID()))),
+	    			PacketMatchers.element(ElementMatchers.hasNoChild("submission-id"))
 	    		)));
 	    }});
 		
 		fixture.receiveMessage(mcMessage);
 	}
 	
-	static class PacketMatchers {
-		public static <K extends Packet> Matcher<K> hasTextChild(final String childName, final Matcher<String> textValueMatcher) {
-			return new TypeSafeMatcher<K>() {
-
-				@Override
-				public void describeTo(Description arg0) {
-					arg0.appendText("has child " + childName + " with text value " + textValueMatcher);
-				}
-
-				@Override
-				protected boolean matchesSafely(K arg0) {
-					return (arg0.getElement().element(childName) != null)
-							&& (textValueMatcher.matches(arg0.getElement().element(childName).getText()));
-				}
-				
-			};
-		}
-		
-		public static <K extends Packet> Matcher<K> hasNoChild(final String childName) {
-			return new TypeSafeMatcher<K>() {
-
-				@Override
-				public void describeTo(Description arg0) {
-					arg0.appendText("doesn't have child " + childName);
-				}
-
-				@Override
-				protected boolean matchesSafely(K arg0) {
-					return (arg0.getElement().element(childName) == null);
-				}
-			};
-		}
-	}
 }

@@ -5,6 +5,8 @@ import org.hamcrest.Description;
 import org.hamcrest.Factory;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
+import org.xmpp.packet.IQ;
+import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
@@ -60,5 +62,20 @@ public class PacketMatchers {
 				return obj.getError().getCondition().equals(condition);
 			}
 		};		
+	}
+	
+	@Factory
+	public static <K extends IQ> Matcher<K> isType(final IQ.Type type) {
+		return new TypeSafeMatcher<K>() {
+			@Override
+			public void describeTo(Description description) {
+				description.appendText("IQ has type ").appendText(type.toString());
+			}
+
+			@Override
+			protected boolean matchesSafely(K obj) {
+				return obj.getType() == type;
+			}
+		};	
 	}
 }

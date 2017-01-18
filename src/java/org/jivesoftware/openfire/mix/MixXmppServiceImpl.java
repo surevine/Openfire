@@ -56,7 +56,6 @@ public class MixXmppServiceImpl implements MixXmppService {
 		}
 	}
 
-	@SuppressWarnings("unchecked")	// Don't like having to do this!
 	private <T> void handlePacket(T object, Packet packet) {
 		if(object == null) {
 			if (packet instanceof IQ) {
@@ -83,6 +82,7 @@ public class MixXmppServiceImpl implements MixXmppService {
 		if (packet instanceof IQ) {
 			try {
 				for (Object handlerObj : packetHandlers) {
+					@SuppressWarnings("unchecked")
 					MixPacketHandler<T> handler = (MixPacketHandler<T>) handlerObj;
 					
 					IQ result = handler.processIQ(object, (IQ) packet);
@@ -99,6 +99,7 @@ public class MixXmppServiceImpl implements MixXmppService {
 		} else if (packet instanceof Message) {
 			try {
 				for (Object handlerObj : packetHandlers) {
+					@SuppressWarnings("unchecked")
 					MixPacketHandler<T> handler = (MixPacketHandler<T>) handlerObj;
 					
 					if(handler.processMessage(object, (Message) packet)) {

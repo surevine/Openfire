@@ -1,7 +1,5 @@
 package org.jivesoftware.openfire.mix;
 
-import static org.junit.Assert.*;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -9,23 +7,24 @@ import org.hamcrest.Matchers;
 import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.mix.handler.channel.MixChannelPacketHandler;
 import org.jivesoftware.openfire.mix.handler.service.MixServicePacketHandler;
-import org.jivesoftware.openfire.testutil.ElementMatchers;
+import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.openfire.testutil.PacketMatchers;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.xmpp.packet.IQ;
-import org.xmpp.packet.JID;
-import org.xmpp.packet.PacketError.Condition;
 import org.xmpp.packet.IQ.Type;
+import org.xmpp.packet.JID;
+import org.xmpp.packet.Message;
+import org.xmpp.packet.PacketError.Condition;
 
 public class MixXmppServiceImplTest {
 
 	private static final JID TEST_SENDER = new JID("hag66@shakespeare.example");
 	
 	private static final String TEST_CHANNEL_NAME = "coven";
+	private static final JID TEST_SERVICE_JID = new JID("mix.shakespeare.example");
 	private static final JID TEST_CHANNEL_JID = new JID("coven@mix.shakespeare.example");
 	
 	Mockery mockery;
@@ -54,6 +53,12 @@ public class MixXmppServiceImplTest {
 		mockery = new Mockery();
 		
 		mockRouter = mockery.mock(PacketRouter.class);
+		
+		mockServiceHandler1 = mockery.mock(MixServicePacketHandler.class);
+		mockServiceHandler2 = mockery.mock(MixServicePacketHandler.class);
+		
+		mockChannelHandler1 = mockery.mock(MixChannelPacketHandler.class);
+		mockChannelHandler2 = mockery.mock(MixChannelPacketHandler.class);
 		
 		mockServiceHandlers = Arrays.asList(mockServiceHandler1, mockServiceHandler2);
 		mockChannelHandlers = Arrays.asList(mockChannelHandler1, mockChannelHandler2);
@@ -86,11 +91,48 @@ public class MixXmppServiceImplTest {
 			one(mockMixService).getChannel(TEST_CHANNEL_NAME); will(returnValue(null));
 			
 			one(mockRouter).route(with(Matchers.allOf(
-					PacketMatchers.isType(Type.error),
+					PacketMatchers.isType(IQ.Type.error),
 					PacketMatchers.hasErrorCondition(Condition.item_not_found)
 				)));
 		}});
 		
 		xmppService.processReceivedPacket(mockMixService, request);
 	}
+
+	@Test
+	public void testNullChannelReturnsMessageError() {
+		Message request = new Message();
+		request.setFrom(TEST_SENDER);
+		request.setTo(TEST_CHANNEL_JID);
+		
+		mockery.checking(new Expectations() {{
+			one(mockMixService).getChannel(TEST_CHANNEL_NAME); will(returnValue(null));
+			
+			one(mockRouter).route(with(Matchers.allOf(
+					PacketMatchers.isType(Message.Type.error),
+					PacketMatchers.hasErrorCondition(Condition.item_not_found)
+				)));
+		}});
+		
+		xmppService.processReceivedPacket(mockMixService, request);
+	}
+	
+	@Test
+	public void testAllHandlersAreRunForServiceIQ() throws Exception {
+		final IQ request = new IQ(Type.set);
+		request.setFrom(TEST_SENDER);
+		request.setTo(TEST_SERVICE_JID);
+		
+		final IQ response = IQ.createResultIQ(request);
+		
+		mockery.checking(new Expectations() {{
+			one(mockServiceHandler1).processIQ(mockMixService, request); will(returnValue(null));
+			one(mockServiceHandler2).processIQ(mockMixService, request); will(returnValue(response));
+			
+			one(mockRouter).route(response);
+		}});
+		
+		xmppService.processReceivedPacket(mockMixService, request);
+	}
+
 }

@@ -31,9 +31,6 @@ public class MixXmppServiceImpl implements MixXmppService {
 		this.channelPacketHandlers = channelPacketHandlers;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.jivesoftware.openfire.mix.IMixXmppService#processPacket(org.jivesoftware.openfire.mix.MixService, org.xmpp.packet.Packet)
-	 */
 	@Override
 	public void processReceivedPacket(MixService mixService, Packet packet) {
 		if (!mixService.isServiceEnabled()) {
@@ -136,33 +133,22 @@ public class MixXmppServiceImpl implements MixXmppService {
 		route(reply);		
 	}
 
-	/* (non-Javadoc)
-	 * @see org.jivesoftware.openfire.mix.IMixXmppService#route(org.xmpp.packet.Packet)
-	 */
 	@Override
 	public void route(Packet packet) {
 		router.route(packet);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.jivesoftware.openfire.mix.IMixXmppService#route(org.xmpp.packet.IQ)
-	 */
 	@Override
 	public void route(IQ packet) {
 		router.route(packet);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.jivesoftware.openfire.mix.IMixXmppService#route(org.xmpp.packet.Message)
-	 */
+
 	@Override
 	public void route(Message packet) {
 		router.route(packet);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.jivesoftware.openfire.mix.IMixXmppService#route(org.xmpp.packet.Presence)
-	 */
 	@Override
 	public void route(Presence packet) {
 		router.route(packet);

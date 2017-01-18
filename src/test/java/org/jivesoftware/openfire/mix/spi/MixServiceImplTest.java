@@ -3,6 +3,7 @@ package org.jivesoftware.openfire.mix.spi;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import org.dom4j.Element;
 import org.hamcrest.Description;
 import org.hamcrest.Factory;
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.XMPPServerInfo;
@@ -26,6 +28,7 @@ import org.jivesoftware.openfire.disco.ServerItemsProvider;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixXmppServiceImpl;
+import org.jivesoftware.openfire.mix.exception.MixChannelAlreadyExistsException;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.util.JiveProperties;
@@ -302,29 +305,18 @@ public class MixServiceImplTest {
 	}
 	
 	@Test
-	public void testCreateChannel() throws MixPersistenceException {
-		// Create a create IQ
-		final IQ createRequest = new IQ(IQ.Type.set);
-		createRequest.setFrom(TEST_SENDER);
-		createRequest.setTo(TEST_DOMAIN + "." + TEST_SUBDOMAIN);
+	public void testCreateChannel() throws Exception {
 		
-		Element createElement = createRequest.setChildElement("create", "urn:xmpp:mix:0");
-		createElement.addAttribute("channel", "coven");
+		final MixChannel newMixChannel = mockery.mock(MixChannel.class);
 		
 		mockery.checking(new Expectations() {{
-			
-			IQ createResult = IQ.createResultIQ(createRequest);
-			createResult.setChildElement(createRequest.getChildElement().createCopy());
-			
-			one(mixPersistenceManager).save(with(any(LocalMixChannel.class)));
-			will(returnValue(true));
-			
-			one(mockXmppService).route(with(IQMatcher.iqMatcher(createResult)));
+			one(mixPersistenceManager).save(with(Matchers.<MixChannel>hasProperty("name", equal("coven"))));
+			will(returnValue(newMixChannel));
 		}});
 		
-		mixServiceImpl.processPacket(createRequest);
+		MixChannel result = mixServiceImpl.createChannel("coven");
 		
-		mockery.assertIsSatisfied();
+		assertSame("The new mix channel is returned", newMixChannel, result);
 		
 	}
 	

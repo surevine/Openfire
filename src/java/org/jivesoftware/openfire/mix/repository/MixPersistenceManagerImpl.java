@@ -17,9 +17,9 @@ import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.MixXmppService;
 import org.jivesoftware.openfire.mix.MixXmppServiceImpl;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
+import org.jivesoftware.openfire.mix.model.LocalMixService;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannelParticipant;
-import org.jivesoftware.openfire.mix.spi.MixServiceImpl;
 import org.jivesoftware.util.JiveProperties;
 import org.jivesoftware.util.StringUtils;
 import org.slf4j.Logger;
@@ -69,7 +69,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 				Long id = rs.getLong(1);
 				String subdomain = rs.getString(2);
 				String description = rs.getString(3);
-				MixService newSerivce = new MixServiceImpl(xmppServer, jiveProperties, subdomain, description, this.xmppService, this);
+				MixService newSerivce = new LocalMixService(xmppServer, jiveProperties, subdomain, description, this.xmppService, this);
 				newSerivce.setId(id);
 				mixServices.add(newSerivce);
 			}

@@ -3,7 +3,6 @@ package org.jivesoftware.openfire.mix.handler.service;
 import static org.junit.Assert.assertEquals;
 
 import org.dom4j.Element;
-import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.exception.MixChannelAlreadyExistsException;
 import org.jmock.Expectations;

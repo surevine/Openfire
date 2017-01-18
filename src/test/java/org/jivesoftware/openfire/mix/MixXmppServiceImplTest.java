@@ -134,5 +134,88 @@ public class MixXmppServiceImplTest {
 		
 		xmppService.processReceivedPacket(mockMixService, request);
 	}
+	
+	@Test
+	public void testHandlingStopsWhenDealtWithForServiceIQ() throws Exception {
+		final IQ request = new IQ(Type.set);
+		request.setFrom(TEST_SENDER);
+		request.setTo(TEST_SERVICE_JID);
+		
+		final IQ response = IQ.createResultIQ(request);
+		
+		mockery.checking(new Expectations() {{
+			one(mockServiceHandler1).processIQ(mockMixService, request); will(returnValue(response));
+			never(mockServiceHandler2).processIQ(mockMixService, request);
+			
+			one(mockRouter).route(response);
+		}});
+		
+		xmppService.processReceivedPacket(mockMixService, request);
+	}
+	
+	@Test
+	public void testAllHandlersAreRunForChannelMessage() throws Exception {
+		final Message request = new Message();
+		request.setFrom(TEST_SENDER);
+		request.setTo(TEST_SERVICE_JID);
+		
+		mockery.checking(new Expectations() {{
+			one(mockServiceHandler1).processMessage(mockMixService, request); will(returnValue(false));
+			one(mockServiceHandler2).processMessage(mockMixService, request); will(returnValue(true));
+		}});
+		
+		xmppService.processReceivedPacket(mockMixService, request);
+	}
+	
+	@Test
+	public void testHandlingStopsWhenDealtWithForServiceMessage() throws Exception {
+		final Message request = new Message();
+		request.setFrom(TEST_SENDER);
+		request.setTo(TEST_SERVICE_JID);
+		
+		mockery.checking(new Expectations() {{
+			one(mockServiceHandler1).processMessage(mockMixService, request); will(returnValue(true));
+			never(mockServiceHandler2).processMessage(mockMixService, request);
+		}});
+		
+		xmppService.processReceivedPacket(mockMixService, request);
+	}
+	
+	@Test
+	public void testInternalServerErrorForIQ() throws Exception {
+		final IQ request = new IQ(Type.set);
+		request.setFrom(TEST_SENDER);
+		request.setTo(TEST_SERVICE_JID);
+		
+		mockery.checking(new Expectations() {{
+			one(mockServiceHandler1).processIQ(mockMixService, request);  will(throwException(new Exception()));
+			
+			one(mockRouter).route(with(Matchers.allOf(
+					PacketMatchers.isType(IQ.Type.error),
+					PacketMatchers.hasErrorCondition(Condition.internal_server_error)
+				)));
+		}});
+		
+		xmppService.processReceivedPacket(mockMixService, request);
+	}
+	
+	@Test
+	public void testInternalServerErrorForMessage() throws Exception {
+		final Message request = new Message();
+		request.setFrom(TEST_SENDER);
+		request.setTo(TEST_SERVICE_JID);
+		
+		mockery.checking(new Expectations() {{
+			one(mockServiceHandler1).processMessage(mockMixService, request);  will(throwException(new Exception()));
+			
+			one(mockRouter).route(with(Matchers.allOf(
+					PacketMatchers.isType(Message.Type.error),
+					PacketMatchers.hasErrorCondition(Condition.internal_server_error)
+				)));
+		}});
+		
+		xmppService.processReceivedPacket(mockMixService, request);
+	}
+	
 
 }

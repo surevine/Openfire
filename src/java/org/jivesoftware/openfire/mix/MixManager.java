@@ -14,6 +14,8 @@ import org.jivesoftware.openfire.mix.handler.channel.MixChannelPacketHandler;
 import org.jivesoftware.openfire.mix.handler.service.DiscoMixServicePacketHandler;
 import org.jivesoftware.openfire.mix.handler.service.MixServiceChannelCreatePacketHandler;
 import org.jivesoftware.openfire.mix.handler.service.MixServicePacketHandler;
+import org.jivesoftware.openfire.mix.repository.IdentityManager;
+import org.jivesoftware.openfire.mix.repository.MixIdentityManager;
 import org.jivesoftware.openfire.mix.repository.MixPersistenceManagerImpl;
 import org.jivesoftware.util.JiveProperties;
 import org.slf4j.Logger;
@@ -33,6 +35,11 @@ public class MixManager extends BasicModule {
 	private MixPersistenceManager persistenceManager;
 	
 	private ConcurrentHashMap<String, MixService> mixServices = new ConcurrentHashMap<>();
+	
+	// Keep these statics here, rather than update the static collection in sequence manager
+	private static final int CHANNEL_SEQ_TYPE = 500;
+	private static final int MCP_SEQ_TYPE = 501;
+	private static final int MCP_SUBS_SEQ_TYPE = 502;
 	
     /**
      * Creates a new MultiUserChatManager instance.
@@ -56,7 +63,8 @@ public class MixManager extends BasicModule {
     	
     	MixXmppService xmppService = new MixXmppService(router, serviceHandlers, channelHandlers);
     	
-    	this.persistenceManager = new MixPersistenceManagerImpl(JiveProperties.getInstance(), xmppService);
+    	this.persistenceManager = new MixPersistenceManagerImpl(JiveProperties.getInstance(), xmppService, 
+    			new MixIdentityManager(CHANNEL_SEQ_TYPE, 5), new MixIdentityManager(MCP_SEQ_TYPE, 5), new MixIdentityManager(MCP_SUBS_SEQ_TYPE, 5));
     }
     
     public MixManager(XMPPServer xmppServer, MixPersistenceManager persistenceManager) {

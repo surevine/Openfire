@@ -50,10 +50,15 @@ public class MixPersistenceManagerImplTest {
 
 	final MixXmppService mockXmppService = mockery.mock(MixXmppService.class);
 	final MixService mockMixService = mockery.mock(MixService.class);
+	final IdentityManager mockIdentityManager = mockery.mock(IdentityManager.class);
 
 	public MixPersistenceManagerImplTest() {
 
-		mixPersistenceManager = new MixPersistenceManagerImpl(jiveProperties, mockXmppService);
+		mixPersistenceManager = new MixPersistenceManagerImpl(jiveProperties, mockXmppService, mockIdentityManager, mockIdentityManager, mockIdentityManager);
+		
+		mockery.checking(new Expectations() {{
+			one(mockIdentityManager).nextUniqueID(); will(returnValue(1L));
+		}});
 	}
 
 	@BeforeClass
@@ -127,6 +132,7 @@ public class MixPersistenceManagerImplTest {
 		conn.close();
 		
 		mockery.checking(new Expectations() {{
+			allowing(mockIdentityManager);
 			allowing(mockMixService).getId();
 			will(returnValue(1L));
 		}});
@@ -138,15 +144,14 @@ public class MixPersistenceManagerImplTest {
 	@Test
 	public void testSaving() throws MixPersistenceException {
 		
+		mockery.checking(new Expectations() {{
+			one(mockIdentityManager).nextUniqueID();
+			will(returnValue(1L));
+			
+		}});
+		
 		assertNotNull(mixPersistenceManager.save(new LocalMixChannel(mockMixService, "TEST_CHANNEL_NAME", mockXmppService, mixPersistenceManager)));
 	}
-	
-	@Test
-	public void testFindByID() throws MixPersistenceException {
-		MixChannel saved = mixPersistenceManager.save(new LocalMixChannel(mockMixService, "TEST_CHANNEL_NAME", mockXmppService, mixPersistenceManager));
-		
-	}
-	
 
 	public static void deleteFilesInFolder(final File folder) {
 		for (final File fileEntry : folder.listFiles()) {

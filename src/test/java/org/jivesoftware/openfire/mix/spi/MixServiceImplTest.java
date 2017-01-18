@@ -23,6 +23,7 @@ import org.jivesoftware.openfire.XMPPServerInfo;
 import org.jivesoftware.openfire.XMPPServerListener;
 import org.jivesoftware.openfire.disco.DiscoInfoProvider;
 import org.jivesoftware.openfire.disco.DiscoItem;
+import org.jivesoftware.openfire.disco.DiscoServerItem;
 import org.jivesoftware.openfire.disco.IQDiscoInfoHandler;
 import org.jivesoftware.openfire.disco.IQDiscoItemsHandler;
 import org.jivesoftware.openfire.disco.ServerItemsProvider;
@@ -299,6 +300,18 @@ public class MixServiceImplTest {
 		}
 		
 		assertEquals(2, i);
+	}
+	
+	@Test
+	public void testGetServerItems() {
+		Iterator<DiscoServerItem> discoItems = mixServiceImpl.getItems();
+		
+		DiscoServerItem item = discoItems.next();
+		
+		assertEquals("JID is correct", new JID(TEST_SUBDOMAIN + "." + TEST_DOMAIN),  item.getJID());
+		assertEquals("Description is correct", TEST_DESCRIPTION,  item.getName());
+		
+		assertFalse("A single item is expected", discoItems.hasNext());
 	}
 	
 	@Test

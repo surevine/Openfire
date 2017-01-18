@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -143,6 +144,29 @@ public class MixServiceImplTest {
 		assertNull("Nothing is expected", result);
 	}
 
+	@Test
+	public void testGetIdentitiesForChannel() throws MixPersistenceException {
+		final List<? extends MixChannel> channels = Arrays.asList(testChannelOne);
+		
+		mockery.checking(new Expectations() {{
+			allowing(mixPersistenceManager).loadChannels(mixServiceImpl); will(returnValue(channels));
+		}});
+		
+		// Loads the channels
+		mixServiceImpl.start();
+		
+		Iterator<Element> result = mixServiceImpl.getIdentities(testChannelOne.getName(), null, TEST_SENDER);
+		
+		Element el = result.next();
+		
+		assertEquals("Element is of type 'identity'", "identity", el.getName());
+		assertEquals("Identity is of category 'conference'", "conference", el.attributeValue("category"));
+		assertEquals("Identity has correct name", testChannelOne.getName(), el.attributeValue("name"));
+		assertEquals("Identity is of type 'mix'", "mix", el.attributeValue("type"));
+		
+		assertFalse("A single identity is expected", result.hasNext());
+	}
+	
 	@Test
 	public void testGetFeaturesForService() {
 		Iterator<String> result = mixServiceImpl.getFeatures(null, null, TEST_SENDER);
@@ -320,7 +344,7 @@ public class MixServiceImplTest {
 		
 	}
 	
-	@Test(expected = MixChannelAlreadyExistsException.class)
+	@Test
 	public void testCreateChannelThrowExceptionIfAlreadyExists() throws Exception {
 		final List<? extends MixChannel> channels = Arrays.asList(testChannelOne);
 		
@@ -331,7 +355,13 @@ public class MixServiceImplTest {
 		// Loads the channels
 		mixServiceImpl.start();
 		
-		mixServiceImpl.createChannel(testChannelOne.getName());
+		try {
+			mixServiceImpl.createChannel(testChannelOne.getName());
+			
+			fail();
+		} catch(MixChannelAlreadyExistsException e) {
+			assertEquals("Exception has the correct name", testChannelOne.getName(), e.getNewChannelName());
+		}
 		
 	}	
 	@Test

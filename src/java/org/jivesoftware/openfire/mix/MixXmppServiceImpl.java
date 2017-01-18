@@ -128,9 +128,11 @@ public class MixXmppServiceImpl implements MixXmppService {
 	
 	private void replyWithError(IQ iq, PacketError error) {
 		final IQ reply = IQ.createResultIQ(iq);
-		reply.setChildElement(iq.getChildElement().createCopy());
+		if(iq.getChildElement() != null) {
+			reply.setChildElement(iq.getChildElement().createCopy());
+		}
 		reply.setError(error);
-		route(reply);		
+		route(reply);
 	}
 
 	@Override

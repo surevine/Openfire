@@ -7,14 +7,12 @@ import org.hamcrest.Matchers;
 import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.mix.handler.channel.MixChannelPacketHandler;
 import org.jivesoftware.openfire.mix.handler.service.MixServicePacketHandler;
-import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.openfire.testutil.PacketMatchers;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.junit.Before;
 import org.junit.Test;
 import org.xmpp.packet.IQ;
-import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.PacketError.Condition;
@@ -83,7 +81,7 @@ public class MixXmppServiceImplTest {
 
 	@Test
 	public void testNullChannelReturnsIQError() {
-		IQ request = new IQ(Type.set);
+		IQ request = new IQ(IQ.Type.set);
 		request.setFrom(TEST_SENDER);
 		request.setTo(TEST_CHANNEL_JID);
 		
@@ -119,7 +117,7 @@ public class MixXmppServiceImplTest {
 	
 	@Test
 	public void testAllHandlersAreRunForServiceIQ() throws Exception {
-		final IQ request = new IQ(Type.set);
+		final IQ request = new IQ(IQ.Type.set);
 		request.setFrom(TEST_SENDER);
 		request.setTo(TEST_SERVICE_JID);
 		
@@ -137,7 +135,7 @@ public class MixXmppServiceImplTest {
 	
 	@Test
 	public void testHandlingStopsWhenDealtWithForServiceIQ() throws Exception {
-		final IQ request = new IQ(Type.set);
+		final IQ request = new IQ(IQ.Type.set);
 		request.setFrom(TEST_SENDER);
 		request.setTo(TEST_SERVICE_JID);
 		
@@ -183,7 +181,7 @@ public class MixXmppServiceImplTest {
 	
 	@Test
 	public void testInternalServerErrorForIQ() throws Exception {
-		final IQ request = new IQ(Type.set);
+		final IQ request = new IQ(IQ.Type.set);
 		request.setFrom(TEST_SENDER);
 		request.setTo(TEST_SERVICE_JID);
 		

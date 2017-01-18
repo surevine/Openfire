@@ -256,6 +256,7 @@ public class LeafNode extends Node {
 
         // Build event notification packet to broadcast to subscribers
         Message message = new Message();
+        message.setType(Message.Type.headline);
         Element event = message.addChildElement("event", "http://jabber.org/protocol/pubsub#event");
         // Broadcast event notification to subscribers and parent node subscribers
         Set<NodeAffiliate> affiliatesToNotify = new HashSet<>(affiliates);
@@ -292,6 +293,7 @@ public class LeafNode extends Node {
             // Broadcast notification deletion to subscribers
             // Build packet to broadcast to subscribers
             Message message = new Message();
+            message.setType(Message.Type.headline);
             Element event =
                     message.addChildElement("event", "http://jabber.org/protocol/pubsub#event");
             // Send notification that items have been deleted to subscribers and parent node

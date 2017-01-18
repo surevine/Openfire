@@ -25,7 +25,7 @@ import org.jivesoftware.openfire.disco.IQDiscoItemsHandler;
 import org.jivesoftware.openfire.disco.ServerItemsProvider;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
-import org.jivesoftware.openfire.mix.MixXmppService;
+import org.jivesoftware.openfire.mix.MixXmppServiceImpl;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.util.JiveProperties;
@@ -73,7 +73,7 @@ public class MixServiceImplTest {
 	
 	private LocalMixChannel testChannelTwo;
 	
-	private MixXmppService mockXmppService;
+	private MixXmppServiceImpl mockXmppService;
 	
 	@Before
 	public void setUp() throws Exception {
@@ -85,7 +85,7 @@ public class MixServiceImplTest {
 		
 		mixPersistenceManager = mockery.mock(MixPersistenceManager.class);
 		
-		mockXmppService = mockery.mock(MixXmppService.class);
+		mockXmppService = mockery.mock(MixXmppServiceImpl.class);
 		
 		iqDiscoItemsHandler = mockery.mock(IQDiscoItemsHandler.class);
 		iqDiscoInfoHandler = mockery.mock(IQDiscoInfoHandler.class);

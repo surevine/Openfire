@@ -1,18 +1,15 @@
 package org.jivesoftware.openfire.mix.spi;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
-import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.XMPPServerListener;
 import org.jivesoftware.openfire.disco.DiscoInfoProvider;
@@ -26,9 +23,6 @@ import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.MixXmppService;
 import org.jivesoftware.openfire.mix.exception.MixChannelAlreadyExistsException;
-import org.jivesoftware.openfire.mix.handler.channel.MixChannelJoinPacketHandler;
-import org.jivesoftware.openfire.mix.handler.channel.MixChannelMessagePacketHandler;
-import org.jivesoftware.openfire.mix.handler.channel.MixChannelPacketHandler;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.openfire.mix.repository.MixPersistenceManagerImpl;
@@ -40,11 +34,8 @@ import org.xmpp.component.Component;
 import org.xmpp.component.ComponentException;
 import org.xmpp.component.ComponentManager;
 import org.xmpp.forms.DataForm;
-import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
-import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
-import org.xmpp.packet.PacketError;
 
 public class MixServiceImpl implements Component, MixService, ServerItemsProvider, DiscoInfoProvider,
 		DiscoItemsProvider, XMPPServerListener {
@@ -133,7 +124,7 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 	}
 
 	public void processPacket(Packet packet) {
-		xmppService.processPacket(this, packet);
+		xmppService.processReceivedPacket(this, packet);
 	}
 
 	public void shutdown() {

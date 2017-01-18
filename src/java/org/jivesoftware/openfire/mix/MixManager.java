@@ -54,7 +54,7 @@ public class MixManager extends BasicModule {
     			new MixChannelMessagePacketHandler(router)
     		);
     	
-    	MixXmppService xmppService = new MixXmppService(router, serviceHandlers, channelHandlers);
+    	MixXmppServiceImpl xmppService = new MixXmppServiceImpl(router, serviceHandlers, channelHandlers);
     	
     	this.persistenceManager = new MixPersistenceManagerImpl(JiveProperties.getInstance(), xmppService);
     }

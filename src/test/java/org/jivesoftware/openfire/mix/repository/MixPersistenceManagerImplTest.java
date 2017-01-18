@@ -22,7 +22,7 @@ import org.jivesoftware.database.DbConnectionManager;
 import org.jivesoftware.database.EmbeddedConnectionProvider;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixService;
-import org.jivesoftware.openfire.mix.MixXmppService;
+import org.jivesoftware.openfire.mix.MixXmppServiceImpl;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.util.JiveGlobals;
@@ -48,7 +48,7 @@ public class MixPersistenceManagerImplTest {
 
 	JiveProperties jiveProperties;
 
-	final MixXmppService mockXmppService = mockery.mock(MixXmppService.class);
+	final MixXmppServiceImpl mockXmppService = mockery.mock(MixXmppServiceImpl.class);
 	final MixService mockMixService = mockery.mock(MixService.class);
 
 	public MixPersistenceManagerImplTest() {

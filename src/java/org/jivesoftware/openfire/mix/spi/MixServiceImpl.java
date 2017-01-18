@@ -24,9 +24,11 @@ import org.jivesoftware.openfire.mix.MixChannelNode;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
-import org.jivesoftware.openfire.mix.handler.MixChannelJoinPacketHandler;
-import org.jivesoftware.openfire.mix.handler.MixChannelMessagePacketHandler;
-import org.jivesoftware.openfire.mix.handler.MixChannelPacketHandler;
+import org.jivesoftware.openfire.mix.MixXmppService;
+import org.jivesoftware.openfire.mix.exception.MixChannelAlreadyExistsException;
+import org.jivesoftware.openfire.mix.handler.channel.MixChannelJoinPacketHandler;
+import org.jivesoftware.openfire.mix.handler.channel.MixChannelMessagePacketHandler;
+import org.jivesoftware.openfire.mix.handler.channel.MixChannelPacketHandler;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.openfire.mix.repository.MixPersistenceManagerImpl;
@@ -55,7 +57,7 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 
 	private MixPersistenceManager persistenceManager;
 	
-	private List<MixChannelPacketHandler> packetHandlers;
+	private MixXmppService xmppService;
 
 	/**
 	 * The ID of the service in the database
@@ -77,11 +79,6 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 	 */
 	private boolean serviceEnabled = true;
 
-	/**
-	 * The packet router for the server.
-	 */
-	private PacketRouter router = null;
-
 	private Map<String, MixChannel> channels;
 
 	/**
@@ -100,18 +97,13 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 	 *             if the provided subdomain is an invalid, according to the JID
 	 *             domain definition.
 	 */
-	public MixServiceImpl(XMPPServer xmppServer, JiveProperties jiveProperties, String subdomain, String description, PacketRouter router) {
+	public MixServiceImpl(XMPPServer xmppServer, JiveProperties jiveProperties, String subdomain, String description, MixXmppService xmppService) {
 		this.xmppServer = xmppServer;
 		this.jiveProperties = jiveProperties;
-		this.persistenceManager = new MixPersistenceManagerImpl(jiveProperties, router);
-		this.router = router;
+		this.persistenceManager = new MixPersistenceManagerImpl(jiveProperties, xmppService);
+		this.xmppService = xmppService;
 
 		channels = new HashMap<>();
-		
-		packetHandlers = Arrays.asList(
-				new MixChannelJoinPacketHandler(),
-				new MixChannelMessagePacketHandler(router)
-			);
 
 		// Check subdomain and throw an IllegalArgumentException if its invalid
 		new JID(null, subdomain + "." + xmppServer.getServerInfo().getXMPPDomain(), null);
@@ -134,8 +126,6 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 
 	public void initialize(JID jid, ComponentManager componentManager) throws ComponentException {
 		initializeSettings();
-
-		router = xmppServer.getPacketRouter();
 	}
 
 	public void initializeSettings() {
@@ -143,108 +133,7 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 	}
 
 	public void processPacket(Packet packet) {
-		if (!isServiceEnabled()) {
-			return;
-		}
-
-		try {
-			// Check if the packet is a disco request or a packet with namespace
-			// iq:register
-			if (packet instanceof IQ) {
-				if (process((IQ) packet)) {
-					return;
-				}
-			}
-
-			if (packet.getTo().getNode() == null) {
-				// This was addressed at the service itself, which by now should
-				// have been handled.
-				IQ request = (IQ) packet;
-				if (packet instanceof IQ && request.isRequest()) {
-
-					final IQ reply = IQ.createResultIQ(request);
-					reply.setChildElement(request.getChildElement().createCopy());
-					
-					MixChannel newChannel = new LocalMixChannel(this, request.getChildElement().attributeValue("channel"), router, persistenceManager);
-					persistenceManager.save(newChannel);
-					
-					router.route(reply);
-				}
-				Log.debug("Ignoring stanza addressed at conference service: {}", packet.toXML());
-			} else {
-				// The packet is a normal packet that should possibly be sent to
-				// the node
-				String channelName = packet.getTo().getNode();
-				MixChannel channel = channels.get(channelName);
-				
-				if (packet instanceof IQ) {
-					if(channel == null) {
-						final IQ reply = IQ.createResultIQ((IQ) packet);
-						reply.setChildElement(((IQ) packet).getChildElement().createCopy());
-						reply.setError(PacketError.Condition.item_not_found);
-						router.route(reply);
-						return;
-					}
-
-					for (MixChannelPacketHandler handler : packetHandlers) {
-						IQ result = handler.processIQ(channels.get(channelName), (IQ) packet);
-
-						if (result != null) {
-							router.route(result);
-						}
-						
-						break;
-					}
-				} else if (packet instanceof Message) {
-					if(channel == null) {
-						final Message reply = (Message) packet.createCopy();
-						reply.setFrom(new JID(getServiceDomain()));
-						reply.setTo(packet.getFrom());
-						reply.setError(PacketError.Condition.item_not_found);
-						router.route(reply);
-						return;
-					}
-					
-					for(MixChannelPacketHandler handler : packetHandlers) {
-						if(handler.processMessage(channels.get(channelName), (Message) packet));
-					}
-				}
-
-			}
-		} catch (Exception e) {
-			Log.error(LocaleUtils.getLocalizedString("admin.error"), e);
-		}
-	}
-
-	/**
-	 * Returns true if the IQ packet was processed.
-	 *
-	 * @param iq
-	 *            the IQ packet to process.
-	 * @return true if the IQ packet was processed.
-	 */
-	private boolean process(IQ iq) {
-		Element childElement = iq.getChildElement();
-		String namespace = null;
-		// Ignore IQs of type ERROR
-		if (IQ.Type.error == iq.getType()) {
-			return false;
-		}
-		if (childElement != null) {
-			namespace = childElement.getNamespaceURI();
-		}
-		if ("http://jabber.org/protocol/disco#info".equals(namespace)) {
-			IQ reply = xmppServer.getIQDiscoInfoHandler().handleIQ(iq);
-			router.route(reply);
-		} else if ("http://jabber.org/protocol/disco#items".equals(namespace)) {
-			IQ reply = xmppServer.getIQDiscoItemsHandler().handleIQ(iq);
-			router.route(reply);
-		} else if ("urn:xmpp:ping".equals(namespace)) {
-			router.route(IQ.createResultIQ(iq));
-		} else {
-			return false;
-		}
-		return true;
+		xmppService.processPacket(this, packet);
 	}
 
 	public void shutdown() {
@@ -422,4 +311,22 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 		this.id = id;
 	}
 
+	@Override
+	public MixChannel createChannel(String name) throws MixPersistenceException, MixChannelAlreadyExistsException {
+		if(channels.containsKey(name)) {
+			throw new MixChannelAlreadyExistsException(name, channels.get(name));
+		}
+		
+		MixChannel newChannel = new LocalMixChannel(this, name, xmppService, persistenceManager);
+		persistenceManager.save(newChannel);
+		
+		channels.put(name, newChannel);
+		
+		return newChannel;
+	}
+
+	@Override
+	public MixChannel getChannel(String channelName) {
+		return channels.get(channelName);
+	}
 }

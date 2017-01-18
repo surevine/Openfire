@@ -1,4 +1,4 @@
-package org.jivesoftware.openfire.mix.handler;
+package org.jivesoftware.openfire.mix.handler.channel;
 
 import java.util.HashSet;
 import java.util.List;
@@ -53,13 +53,11 @@ public class MixChannelJoinPacketHandler implements MixChannelPacketHandler {
 
 	@Override
 	public boolean processPresence(MixChannel channel, Presence presence) {
-		// No implementation as yet
-		throw new NotImplementedException();
+		return false;
 	}
 
 	@Override
 	public boolean processMessage(MixChannel channel, Message message) {
-		// No implementation as yet
-		throw new NotImplementedException();
+		return false;
 	}
 }

@@ -10,12 +10,11 @@ import java.util.Date;
 import java.util.List;
 
 import org.jivesoftware.database.DbConnectionManager;
-import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
-import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityMode;
+import org.jivesoftware.openfire.mix.MixXmppService;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannelParticipant;
@@ -37,7 +36,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 
 	private JiveProperties jiveProperties;
 
-	private PacketRouter router;
+	private MixXmppService xmppService;
 	
 	private static final int CHANNEL_SEQ_TYPE = 500;
 
@@ -52,14 +51,9 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 	private IdentityManager mcpSubsKeys = new MixIdentityManager(MCP_SUBS_SEQ_TYPE, 5);
 	
 	
-	public MixPersistenceManagerImpl(JiveProperties jiveProperties, PacketRouter router) {
+	public MixPersistenceManagerImpl(JiveProperties jiveProperties, MixXmppService xmppService) {
 		this.jiveProperties = jiveProperties;
-		this.router = router;
-		
-	}
-
-	public void initialize(XMPPServer server) {
-		router = server.getPacketRouter();
+		this.xmppService = xmppService;
 	}
 
 	@Override
@@ -77,7 +71,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 				Long id = rs.getLong(1);
 				String subdomain = rs.getString(2);
 				String description = rs.getString(3);
-				MixService newSerivce = new MixServiceImpl(xmppServer, jiveProperties, subdomain, description, this.router);
+				MixService newSerivce = new MixServiceImpl(xmppServer, jiveProperties, subdomain, description, this.xmppService);
 				newSerivce.setId(id);
 				mixServices.add(newSerivce);
 			}
@@ -106,7 +100,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 				try {
 					// TODO: initialisation of the nodes that the channel
 					// supports
-					LocalMixChannel channel = new LocalMixChannel(mixService, resultSet.getString(4), router, this);
+					LocalMixChannel channel = new LocalMixChannel(mixService, resultSet.getString(4), xmppService, this);
 					channel.setID(resultSet.getLong(1));
 					channel.setCreationDate(new Date(Long.parseLong(resultSet.getString(2).trim()))); // creation
 																										// date

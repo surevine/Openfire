@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.hamcrest.Matchers;
 import org.jivesoftware.openfire.PacketRouter;
+import org.jivesoftware.openfire.mix.handler.channel.MixChannelMessagePacketHandler;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannelMessage;
 import org.jivesoftware.openfire.mix.model.MixChannelParticipant;

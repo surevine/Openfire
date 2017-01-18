@@ -1,10 +1,19 @@
 package org.jivesoftware.openfire.mix;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.container.BasicModule;
+import org.jivesoftware.openfire.mix.handler.channel.MixChannelJoinPacketHandler;
+import org.jivesoftware.openfire.mix.handler.channel.MixChannelMessagePacketHandler;
+import org.jivesoftware.openfire.mix.handler.channel.MixChannelPacketHandler;
+import org.jivesoftware.openfire.mix.handler.service.DiscoMixServicePacketHandler;
+import org.jivesoftware.openfire.mix.handler.service.MixServiceChannelCreatePacketHandler;
+import org.jivesoftware.openfire.mix.handler.service.MixServicePacketHandler;
 import org.jivesoftware.openfire.mix.repository.MixPersistenceManagerImpl;
 import org.jivesoftware.util.JiveProperties;
 import org.slf4j.Logger;
@@ -24,13 +33,30 @@ public class MixManager extends BasicModule {
 	private MixPersistenceManager persistenceManager;
 	
 	private ConcurrentHashMap<String, MixService> mixServices = new ConcurrentHashMap<>();
-
 	
     /**
      * Creates a new MultiUserChatManager instance.
      */
     public MixManager() {
-    	this(XMPPServer.getInstance(), new MixPersistenceManagerImpl(JiveProperties.getInstance(), XMPPServer.getInstance().getPacketRouter()));
+        super("Mediated Information eXchange (MIX) manager");
+
+        this.xmppServer = XMPPServer.getInstance();
+
+        PacketRouter router = XMPPServer.getInstance().getPacketRouter();
+    	
+    	List<MixServicePacketHandler> serviceHandlers = Arrays.asList(
+    			new DiscoMixServicePacketHandler(xmppServer),
+    			new MixServiceChannelCreatePacketHandler()
+    		);
+    	
+    	List<MixChannelPacketHandler> channelHandlers = Arrays.asList(
+    			new MixChannelJoinPacketHandler(),
+    			new MixChannelMessagePacketHandler(router)
+    		);
+    	
+    	MixXmppService xmppService = new MixXmppService(router, serviceHandlers, channelHandlers);
+    	
+    	this.persistenceManager = new MixPersistenceManagerImpl(JiveProperties.getInstance(), xmppService);
     }
     
     public MixManager(XMPPServer xmppServer, MixPersistenceManager persistenceManager) {
@@ -38,7 +64,6 @@ public class MixManager extends BasicModule {
 
         this.xmppServer = xmppServer;
     	this.persistenceManager = persistenceManager;
-    	
     }
 
 	/**

@@ -5,6 +5,7 @@ import java.util.Collection;
 import org.jivesoftware.database.JiveID;
 import org.jivesoftware.util.JiveConstants;
 import org.xmpp.component.Component;
+import org.jivesoftware.openfire.mix.exception.MixChannelAlreadyExistsException;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 
 @JiveID(JiveConstants.MIX_SERVICE)
@@ -33,4 +34,8 @@ public interface MixService extends Component {
     boolean isServiceEnabled();
 
 	void setId(Long id);
+
+	MixChannel createChannel(String name) throws MixPersistenceException, MixChannelAlreadyExistsException;
+
+	MixChannel getChannel(String channelName);
 }

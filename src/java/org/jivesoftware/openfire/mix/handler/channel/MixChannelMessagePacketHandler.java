@@ -1,4 +1,4 @@
-package org.jivesoftware.openfire.mix.handler;
+package org.jivesoftware.openfire.mix.handler.channel;
 
 import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.mix.model.MixChannel;

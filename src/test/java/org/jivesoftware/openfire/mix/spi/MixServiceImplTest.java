@@ -15,7 +15,6 @@ import org.hamcrest.Description;
 import org.hamcrest.Factory;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.XMPPServerInfo;
 import org.jivesoftware.openfire.XMPPServerListener;
@@ -26,6 +25,7 @@ import org.jivesoftware.openfire.disco.IQDiscoItemsHandler;
 import org.jivesoftware.openfire.disco.ServerItemsProvider;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
+import org.jivesoftware.openfire.mix.MixXmppService;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.util.JiveProperties;
@@ -73,7 +73,7 @@ public class MixServiceImplTest {
 	
 	private LocalMixChannel testChannelTwo;
 	
-	private PacketRouter mockPacketRouter;
+	private MixXmppService mockXmppService;
 	
 	@Before
 	public void setUp() throws Exception {
@@ -85,7 +85,7 @@ public class MixServiceImplTest {
 		
 		mixPersistenceManager = mockery.mock(MixPersistenceManager.class);
 		
-		mockPacketRouter = mockery.mock(PacketRouter.class);
+		mockXmppService = mockery.mock(MixXmppService.class);
 		
 		iqDiscoItemsHandler = mockery.mock(IQDiscoItemsHandler.class);
 		iqDiscoInfoHandler = mockery.mock(IQDiscoInfoHandler.class);
@@ -101,7 +101,7 @@ public class MixServiceImplTest {
 			allowing(iqDiscoInfoHandler).setServerNodeInfoProvider(with(any(String.class)), with(any(DiscoInfoProvider.class)));
 		}});
 
-		mixServiceImpl = new MixServiceImpl(xmppServer, jiveProperties, TEST_SUBDOMAIN, TEST_DESCRIPTION, mockPacketRouter);
+		mixServiceImpl = new MixServiceImpl(xmppServer, jiveProperties, TEST_SUBDOMAIN, TEST_DESCRIPTION, mockXmppService);
 		
 		testChannelOne = new LocalMixChannel(mixServiceImpl, "channel1", null, mixPersistenceManager); 
 		testChannelTwo = new LocalMixChannel(mixServiceImpl, "channel2", null, mixPersistenceManager);
@@ -319,7 +319,7 @@ public class MixServiceImplTest {
 			one(mixPersistenceManager).save(with(any(LocalMixChannel.class)));
 			will(returnValue(true));
 			
-			one(mockPacketRouter).route(with(IQMatcher.iqMatcher(createResult)));
+			one(mockXmppService).route(with(IQMatcher.iqMatcher(createResult)));
 		}});
 		
 		mixServiceImpl.processPacket(createRequest);

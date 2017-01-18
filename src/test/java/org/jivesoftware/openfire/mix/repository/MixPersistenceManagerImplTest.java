@@ -1,6 +1,8 @@
 package org.jivesoftware.openfire.mix.repository;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,7 +11,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,14 +20,13 @@ import java.util.Random;
 
 import org.jivesoftware.database.DbConnectionManager;
 import org.jivesoftware.database.EmbeddedConnectionProvider;
-import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixService;
+import org.jivesoftware.openfire.mix.MixXmppService;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.util.JiveGlobals;
 import org.jivesoftware.util.JiveProperties;
-import org.jivesoftware.util.StringUtils;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.lib.legacy.ClassImposteriser;
@@ -34,7 +34,6 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class MixPersistenceManagerImplTest {
@@ -49,12 +48,12 @@ public class MixPersistenceManagerImplTest {
 
 	JiveProperties jiveProperties;
 
-	final PacketRouter mockPacketRouter = mockery.mock(PacketRouter.class);
+	final MixXmppService mockXmppService = mockery.mock(MixXmppService.class);
 	final MixService mockMixService = mockery.mock(MixService.class);
 
 	public MixPersistenceManagerImplTest() {
 
-		mixPersistenceManager = new MixPersistenceManagerImpl(jiveProperties, mockPacketRouter);
+		mixPersistenceManager = new MixPersistenceManagerImpl(jiveProperties, mockXmppService);
 	}
 
 	@BeforeClass
@@ -139,12 +138,12 @@ public class MixPersistenceManagerImplTest {
 	@Test
 	public void testSaving() throws MixPersistenceException {
 		
-		assertNotNull(mixPersistenceManager.save(new LocalMixChannel(mockMixService, "TEST_CHANNEL_NAME", mockPacketRouter, mixPersistenceManager)));
+		assertNotNull(mixPersistenceManager.save(new LocalMixChannel(mockMixService, "TEST_CHANNEL_NAME", mockXmppService, mixPersistenceManager)));
 	}
 	
 	@Test
 	public void testFindByID() throws MixPersistenceException {
-		MixChannel saved = mixPersistenceManager.save(new LocalMixChannel(mockMixService, "TEST_CHANNEL_NAME", mockPacketRouter, mixPersistenceManager));
+		MixChannel saved = mixPersistenceManager.save(new LocalMixChannel(mockMixService, "TEST_CHANNEL_NAME", mockXmppService, mixPersistenceManager));
 		
 	}
 	

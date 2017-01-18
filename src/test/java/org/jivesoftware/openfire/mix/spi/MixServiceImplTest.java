@@ -320,6 +320,20 @@ public class MixServiceImplTest {
 		
 	}
 	
+	@Test(expected = MixChannelAlreadyExistsException.class)
+	public void testCreateChannelThrowExceptionIfAlreadyExists() throws Exception {
+		final List<? extends MixChannel> channels = Arrays.asList(testChannelOne);
+		
+		mockery.checking(new Expectations() {{
+			allowing(mixPersistenceManager).loadChannels(mixServiceImpl); will(returnValue(channels));
+		}});
+		
+		// Loads the channels
+		mixServiceImpl.start();
+		
+		mixServiceImpl.createChannel(testChannelOne.getName());
+		
+	}	
 	@Test
 	public void testProcessDoesNothingIfServiceDisabled() {
 		mockery.checking(new Expectations() {{

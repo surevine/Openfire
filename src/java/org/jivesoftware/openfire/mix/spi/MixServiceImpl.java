@@ -306,7 +306,7 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 	@Override
 	public MixChannel createChannel(String name) throws MixPersistenceException, MixChannelAlreadyExistsException {
 		if(channels.containsKey(name)) {
-			throw new MixChannelAlreadyExistsException(name, channels.get(name));
+			throw new MixChannelAlreadyExistsException(name);
 		}
 		
 		MixChannel newChannel = new LocalMixChannel(this, name, xmppService, persistenceManager);

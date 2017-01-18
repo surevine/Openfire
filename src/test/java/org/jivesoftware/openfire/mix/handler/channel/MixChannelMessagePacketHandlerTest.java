@@ -1,4 +1,4 @@
-package org.jivesoftware.openfire.mix.handler;
+package org.jivesoftware.openfire.mix.handler.channel;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;

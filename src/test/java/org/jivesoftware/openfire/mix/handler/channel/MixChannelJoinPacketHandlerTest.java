@@ -1,4 +1,4 @@
-package org.jivesoftware.openfire.mix.handler;
+package org.jivesoftware.openfire.mix.handler.channel;
 
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
@@ -76,14 +76,14 @@ public class MixChannelJoinPacketHandlerTest {
 		
 	}
 	
-	@Test(expected=NotImplementedException.class)
+	@Test
 	public void processPresence() {
-		fixture.processPresence(mockMixChannel, null);
+		assertFalse(fixture.processPresence(mockMixChannel, null));
 	}
 	
-	@Test(expected=NotImplementedException.class)
-	public void processMessagwe() {
-		fixture.processMessage(mockMixChannel, null);
+	@Test
+	public void processMessage() {
+		assertFalse(fixture.processMessage(mockMixChannel, null));
 	}
 	
     private IQ createJoinRequest(String []nodes) {

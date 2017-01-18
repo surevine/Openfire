@@ -104,7 +104,7 @@ public class MixServiceImplTest {
 			allowing(iqDiscoInfoHandler).setServerNodeInfoProvider(with(any(String.class)), with(any(DiscoInfoProvider.class)));
 		}});
 
-		mixServiceImpl = new MixServiceImpl(xmppServer, jiveProperties, TEST_SUBDOMAIN, TEST_DESCRIPTION, mockXmppService);
+		mixServiceImpl = new MixServiceImpl(xmppServer, jiveProperties, TEST_SUBDOMAIN, TEST_DESCRIPTION, mockXmppService, mixPersistenceManager);
 		
 		testChannelOne = new LocalMixChannel(mixServiceImpl, "channel1", null, mixPersistenceManager); 
 		testChannelTwo = new LocalMixChannel(mixServiceImpl, "channel2", null, mixPersistenceManager);
@@ -324,6 +324,7 @@ public class MixServiceImplTest {
 	public void testProcessDoesNothingIfServiceDisabled() {
 		mockery.checking(new Expectations() {{
 			allowing(jiveProperties).getBooleanProperty("xmpp.mix.enabled", true); will(returnValue(false));
+			allowing(mockXmppService);
 		}});
 		
 		Message message = new Message();

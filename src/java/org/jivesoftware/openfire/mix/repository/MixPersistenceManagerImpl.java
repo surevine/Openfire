@@ -38,23 +38,19 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 	private JiveProperties jiveProperties;
 
 	private MixXmppService xmppService;
-	
-	private static final int CHANNEL_SEQ_TYPE = 500;
 
-	private IdentityManager channelKeys = new MixIdentityManager(CHANNEL_SEQ_TYPE, 5);
+	private IdentityManager channelKeys;
+
+	private IdentityManager mcpKeys;
+
+	private IdentityManager mcpSubsKeys;
 	
-	private static final int MCP_SEQ_TYPE = 501;
-	
-	private IdentityManager mcpKeys = new MixIdentityManager(MCP_SEQ_TYPE, 5);
-	
-	private static final int MCP_SUBS_SEQ_TYPE = 502;
-	
-	private IdentityManager mcpSubsKeys = new MixIdentityManager(MCP_SUBS_SEQ_TYPE, 5);
-	
-	
-	public MixPersistenceManagerImpl(JiveProperties jiveProperties, MixXmppService xmppService) {
+	public MixPersistenceManagerImpl(JiveProperties jiveProperties, MixXmppService xmppService, IdentityManager channelKeys, IdentityManager mcpKeys, IdentityManager mcpSubsKeys) {
 		this.jiveProperties = jiveProperties;
 		this.xmppService = xmppService;
+		this.channelKeys = channelKeys;
+		this.mcpKeys = mcpKeys;
+		this.mcpSubsKeys = mcpSubsKeys;
 	}
 
 	@Override
@@ -72,7 +68,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 				Long id = rs.getLong(1);
 				String subdomain = rs.getString(2);
 				String description = rs.getString(3);
-				MixService newSerivce = new MixServiceImpl(xmppServer, jiveProperties, subdomain, description, this.xmppService);
+				MixService newSerivce = new MixServiceImpl(xmppServer, jiveProperties, subdomain, description, this.xmppService, this);
 				newSerivce.setId(id);
 				mixServices.add(newSerivce);
 			}

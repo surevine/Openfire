@@ -82,17 +82,18 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 	 * @param description
 	 *            Short description of service for disco and such. If
 	 *            <tt>null</tt> or empty, a default value will be used.
+	 * @param mixPersistenceManagerImpl 
 	 * @param isHidden
 	 *            True if this service should be hidden from services views.
 	 * @throws IllegalArgumentException
 	 *             if the provided subdomain is an invalid, according to the JID
 	 *             domain definition.
 	 */
-	public MixServiceImpl(XMPPServer xmppServer, JiveProperties jiveProperties, String subdomain, String description, MixXmppService xmppService) {
+	public MixServiceImpl(XMPPServer xmppServer, JiveProperties jiveProperties, String subdomain, String description, MixXmppService xmppService, MixPersistenceManager mixPersistenceManagerImpl) {
 		this.xmppServer = xmppServer;
 		this.jiveProperties = jiveProperties;
-		this.persistenceManager = new MixPersistenceManagerImpl(jiveProperties, xmppService);
 		this.xmppService = xmppService;
+		this.persistenceManager = mixPersistenceManagerImpl;
 
 		channels = new HashMap<>();
 
@@ -309,7 +310,7 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 		}
 		
 		MixChannel newChannel = new LocalMixChannel(this, name, xmppService, persistenceManager);
-		persistenceManager.save(newChannel);
+		newChannel = persistenceManager.save(newChannel);
 		
 		channels.put(name, newChannel);
 		

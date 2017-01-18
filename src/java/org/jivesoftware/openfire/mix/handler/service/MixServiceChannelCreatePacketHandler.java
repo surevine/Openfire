@@ -13,7 +13,7 @@ public class MixServiceChannelCreatePacketHandler implements MixServicePacketHan
 		final IQ reply = IQ.createResultIQ(iq);
 		reply.setChildElement(iq.getChildElement().createCopy());
 		
-		service.createChannel(iq.getChildElement().attributeValue("channel"));
+		service.createChannel(iq.getFrom(), iq.getChildElement().attributeValue("channel"));
 		
 		return reply;
 	}

@@ -20,6 +20,7 @@ import org.hamcrest.TypeSafeMatcher;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.XMPPServerInfo;
 import org.jivesoftware.openfire.XMPPServerListener;
+import org.jivesoftware.openfire.auth.UnauthorizedException;
 import org.jivesoftware.openfire.disco.DiscoInfoProvider;
 import org.jivesoftware.openfire.disco.DiscoItem;
 import org.jivesoftware.openfire.disco.IQDiscoInfoHandler;
@@ -53,7 +54,9 @@ public class MixServiceImplTest {
 	
 	private static final String TEST_DESCRIPTION = "Some kind of MIX service";
 	
-	private static final JID TEST_SENDER = new JID("name@server.com");
+	private static final String TEST_CHANNEL_NAME = "coven";
+	
+	private static final JID TEST_SENDER_JID = new JID("name@server.com");
 	
 	/**
 	 * The class under test
@@ -106,8 +109,8 @@ public class MixServiceImplTest {
 
 		mixServiceImpl = new MixServiceImpl(xmppServer, jiveProperties, TEST_SUBDOMAIN, TEST_DESCRIPTION, mockXmppService, mixPersistenceManager);
 		
-		testChannelOne = new LocalMixChannel(mixServiceImpl, "channel1", null, mixPersistenceManager); 
-		testChannelTwo = new LocalMixChannel(mixServiceImpl, "channel2", null, mixPersistenceManager);
+		testChannelOne = new LocalMixChannel(mixServiceImpl, "channel1", TEST_SENDER_JID, mockXmppService, mixPersistenceManager); 
+		testChannelTwo = new LocalMixChannel(mixServiceImpl, "channel2", TEST_SENDER_JID, mockXmppService, mixPersistenceManager);
 	}
 
 	@Test
@@ -118,7 +121,7 @@ public class MixServiceImplTest {
 		
 		mixServiceImpl.initializeSettings();
 		
-		Iterator<Element> result = mixServiceImpl.getIdentities(null, null, TEST_SENDER);
+		Iterator<Element> result = mixServiceImpl.getIdentities(null, null, TEST_SENDER_JID);
 		
 		Element el = result.next();
 		
@@ -138,14 +141,14 @@ public class MixServiceImplTest {
 		
 		mixServiceImpl.initializeSettings();
 		
-		Iterator<Element> result = mixServiceImpl.getIdentities(null, null, TEST_SENDER);
+		Iterator<Element> result = mixServiceImpl.getIdentities(null, null, TEST_SENDER_JID);
 		
 		assertNull("Nothing is expected", result);
 	}
 
 	@Test
 	public void testGetFeaturesForService() {
-		Iterator<String> result = mixServiceImpl.getFeatures(null, null, TEST_SENDER);
+		Iterator<String> result = mixServiceImpl.getFeatures(null, null, TEST_SENDER_JID);
 		
 		String feature = result.next();
 		
@@ -162,7 +165,7 @@ public class MixServiceImplTest {
 		
 		mixServiceImpl.initializeSettings();
 		
-		boolean result = mixServiceImpl.hasInfo(null, null, TEST_SENDER);
+		boolean result = mixServiceImpl.hasInfo(null, null, TEST_SENDER_JID);
 		
 		assertTrue("We always have info on the service", result);
 	}
@@ -175,7 +178,7 @@ public class MixServiceImplTest {
 		
 		mixServiceImpl.initializeSettings();
 		
-		boolean result = mixServiceImpl.hasInfo(null, null, TEST_SENDER);
+		boolean result = mixServiceImpl.hasInfo(null, null, TEST_SENDER_JID);
 		
 		assertFalse("Expect no info if the service is disabled", result);
 	}
@@ -192,7 +195,7 @@ public class MixServiceImplTest {
 		// Loads the channels
 		mixServiceImpl.start();
 		
-		Iterator<DiscoItem> result = mixServiceImpl.getItems(null, null, TEST_SENDER);
+		Iterator<DiscoItem> result = mixServiceImpl.getItems(null, null, TEST_SENDER_JID);
 		
 		DiscoItem el = result.next();		
 		assertEquals("Element is of type 'identity'", new JID("channel1@" + TEST_SUBDOMAIN + "." + TEST_DOMAIN), el.getJID());
@@ -213,7 +216,7 @@ public class MixServiceImplTest {
 		// Loads the channels
 		mixServiceImpl.start();
 		
-		boolean result = mixServiceImpl.hasInfo("channel1", null, TEST_SENDER);
+		boolean result = mixServiceImpl.hasInfo("channel1", null, TEST_SENDER_JID);
 		
 		assertTrue("We have info on the channel", result);
 	}
@@ -229,7 +232,7 @@ public class MixServiceImplTest {
 		// Loads the channels
 		mixServiceImpl.start();
 		
-		boolean result = mixServiceImpl.hasInfo("nonexistant", null, TEST_SENDER);
+		boolean result = mixServiceImpl.hasInfo("nonexistant", null, TEST_SENDER_JID);
 		
 		assertFalse("We have no info on the channel", result);
 	}
@@ -245,7 +248,7 @@ public class MixServiceImplTest {
 		// Loads the channels
 		mixServiceImpl.start();
 		
-		Iterator<String> result = mixServiceImpl.getFeatures("channel1", null, TEST_SENDER);
+		Iterator<String> result = mixServiceImpl.getFeatures("channel1", null, TEST_SENDER_JID);
 		
 		String feature = result.next();
 		
@@ -314,7 +317,7 @@ public class MixServiceImplTest {
 			will(returnValue(newMixChannel));
 		}});
 		
-		MixChannel result = mixServiceImpl.createChannel("coven");
+		MixChannel result = mixServiceImpl.createChannel(TEST_SENDER_JID, TEST_CHANNEL_NAME);
 		
 		assertSame("The new mix channel is returned", newMixChannel, result);
 		
@@ -330,6 +333,49 @@ public class MixServiceImplTest {
 		Message message = new Message();
 		
 		mixServiceImpl.processPacket(message);
+	}
+	
+	@Test
+	public void testSuccessfulChannelDestruction() throws MixPersistenceException, MixChannelAlreadyExistsException, UnauthorizedException {
+		
+		mockery.checking(new Expectations() {{
+			one(mixPersistenceManager).save(with(any(MixChannel.class)));
+			will(returnValue(testChannelOne));
+			
+			one(mixPersistenceManager).delete(with(any(MixChannel.class)));
+		}});
+		
+		// Create the channel for destruction
+		mixServiceImpl.createChannel(TEST_SENDER_JID, TEST_CHANNEL_NAME);
+		mixServiceImpl.destroyChannel(TEST_SENDER_JID, TEST_CHANNEL_NAME);
+		
+		mockery.assertIsSatisfied();
+	}
+	
+	@Test(expected=MixChannelAlreadyExistsException.class)
+	public void thatCreateWithDuplicateNameThrowsException() throws MixPersistenceException, MixChannelAlreadyExistsException {
+		mockery.checking(new Expectations() {{
+			one(mixPersistenceManager).save(with(any(MixChannel.class)));
+			one(mixPersistenceManager).save(with(any(MixChannel.class)));
+		}});
+		
+		// Create two channels with same name
+		mixServiceImpl.createChannel(TEST_SENDER_JID, TEST_CHANNEL_NAME);
+		mixServiceImpl.createChannel(TEST_SENDER_JID, TEST_CHANNEL_NAME);
+	}
+	
+	@Test(expected=UnauthorizedException.class)
+	public void thatDeletionByNotOwnerThrowsException() throws MixPersistenceException, MixChannelAlreadyExistsException, UnauthorizedException {
+		mockery.checking(new Expectations() {{
+			one(mixPersistenceManager).save(with(any(MixChannel.class)));
+			will(returnValue(testChannelOne));
+			
+			one(mixPersistenceManager).delete(with(any(MixChannel.class)));
+		}});
+		
+		// Create two channels with same name
+		mixServiceImpl.createChannel(TEST_SENDER_JID, TEST_CHANNEL_NAME);
+		mixServiceImpl.destroyChannel(new JID("notowner@server.com"), TEST_CHANNEL_NAME);
 	}
 	
 	static class IQMatcher extends TypeSafeMatcher<IQ> {

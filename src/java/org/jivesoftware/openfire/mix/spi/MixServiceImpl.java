@@ -12,6 +12,7 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.XMPPServerListener;
+import org.jivesoftware.openfire.auth.UnauthorizedException;
 import org.jivesoftware.openfire.disco.DiscoInfoProvider;
 import org.jivesoftware.openfire.disco.DiscoItem;
 import org.jivesoftware.openfire.disco.DiscoItemsProvider;
@@ -25,7 +26,6 @@ import org.jivesoftware.openfire.mix.MixXmppService;
 import org.jivesoftware.openfire.mix.exception.MixChannelAlreadyExistsException;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannel;
-import org.jivesoftware.openfire.mix.repository.MixPersistenceManagerImpl;
 import org.jivesoftware.util.JiveProperties;
 import org.jivesoftware.util.LocaleUtils;
 import org.slf4j.Logger;
@@ -304,13 +304,18 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 	}
 
 	@Override
-	public MixChannel createChannel(String name) throws MixPersistenceException, MixChannelAlreadyExistsException {
+	public MixChannel createChannel(JID owner, String name) throws MixChannelAlreadyExistsException {
 		if(channels.containsKey(name)) {
 			throw new MixChannelAlreadyExistsException(name, channels.get(name));
 		}
 		
-		MixChannel newChannel = new LocalMixChannel(this, name, xmppService, persistenceManager);
-		newChannel = persistenceManager.save(newChannel);
+		MixChannel newChannel = new LocalMixChannel(this, name, owner, xmppService, persistenceManager);
+		try {
+			newChannel = persistenceManager.save(newChannel);
+		} catch (MixPersistenceException e) {
+			Log.error(e.getMessage());
+			return null;
+		}
 		
 		channels.put(name, newChannel);
 		
@@ -320,5 +325,27 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 	@Override
 	public MixChannel getChannel(String channelName) {
 		return channels.get(channelName);
+	}
+
+	@Override
+	public boolean destroyChannel(JID requestor, String name) throws UnauthorizedException {
+
+		MixChannel toDestroy = this.getChannel(name);
+		
+		if (toDestroy != null) {
+			if (toDestroy.getOwner().equals(requestor)) {
+				channels.remove(name);
+				try {
+					this.persistenceManager.delete(toDestroy);
+				} catch (MixPersistenceException e) {
+					Log.error(e.getMessage());
+					return false;
+				}	
+			} else {
+				throw new UnauthorizedException("Not owner");
+			}
+			
+		}
+		return true;
 	}
 }

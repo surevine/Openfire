@@ -52,4 +52,6 @@ public interface MixChannel {
 	Set<MixChannelParticipant> getNodeSubscribers(String node);
 
 	void setID(long ID);
+
+	JID getOwner();
 }

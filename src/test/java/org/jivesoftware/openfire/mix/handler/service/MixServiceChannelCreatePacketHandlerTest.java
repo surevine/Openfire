@@ -51,7 +51,7 @@ public class MixServiceChannelCreatePacketHandlerTest {
 		createElement.addAttribute("channel", "coven");
 		
 		mockery.checking(new Expectations() {{
-			one(mockMixService).createChannel("coven");
+			one(mockMixService).createChannel(TEST_SENDER, "coven");
 		}});
 		
 		IQ result = handler.processIQ(mockMixService, createRequest);

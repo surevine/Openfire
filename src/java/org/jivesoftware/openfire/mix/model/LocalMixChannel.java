@@ -57,10 +57,13 @@ public class LocalMixChannel implements MixChannel {
 	// Default to visible
 	private ChannelJidVisibilityMode jidVisibilityMode = ChannelJidVisibilityMode.VISIBLE;
 
-	public LocalMixChannel(MixService service, String name, PacketRouter packetRouter, MixPersistenceManager mpm) {
+	private JID owner;
+
+	public LocalMixChannel(MixService service, String name, JID owner, PacketRouter packetRouter, MixPersistenceManager mpm) {
 		this.packetRouter = packetRouter;
 		this.mixService = service;
 		this.channelRepository = mpm;
+		this.owner = owner;
 		
 		this.participantsListeners = new ArrayList<>();
 		this.participants = new HashMap<>();
@@ -89,6 +92,11 @@ public class LocalMixChannel implements MixChannel {
 	@Override
 	public String getName() {
 		return name;
+	}
+	
+	@Override
+	public JID getOwner() {
+		return this.owner;
 	}
 
 	@Override

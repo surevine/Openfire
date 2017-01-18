@@ -3,8 +3,10 @@ package org.jivesoftware.openfire.mix;
 import java.util.Arrays;
 import java.util.List;
 
+import org.dom4j.Element;
 import org.hamcrest.Matchers;
 import org.jivesoftware.openfire.PacketRouter;
+import org.jivesoftware.openfire.auth.UnauthorizedException;
 import org.jivesoftware.openfire.mix.handler.channel.MixChannelPacketHandler;
 import org.jivesoftware.openfire.mix.handler.service.MixServicePacketHandler;
 import org.jivesoftware.openfire.mix.model.MixChannel;
@@ -133,6 +135,72 @@ public class MixXmppServiceImplTest {
 		}});
 		
 		xmppService.processReceivedPacket(mockMixService, request);
+	}
+	
+	@Test
+	public void testSuccessfulCreateChannel() throws Exception {
+		final IQ request = new IQ(Type.set);
+		request.setFrom(TEST_SENDER);
+		request.setTo(TEST_SERVICE_JID);
+		
+		Element createElement = request.setChildElement("create", "urn:xmpp:mix:0");
+		createElement.addAttribute("channel", TEST_CHANNEL_NAME);
+		
+		final IQ response = IQ.createResultIQ(request);
+		
+		mockery.checking(new Expectations() {{
+			one(mockServiceHandler1).processIQ(mockMixService, request); will(returnValue(response));
+			one(mockMixService).createChannel(TEST_SENDER, TEST_CHANNEL_NAME);
+			one(mockRouter).route(response);
+		}});
+		
+		xmppService.processReceivedPacket(mockMixService, request);
+		
+	}
+
+	
+	@Test
+	public void testSuccessfulChannelDeletion() throws Exception {
+		final IQ request = new IQ(Type.set);
+		request.setFrom(TEST_SENDER);
+		request.setTo(TEST_SERVICE_JID);
+		
+		// Create the copy before adding in the destroy element as it is not part of the response
+		final IQ response = IQ.createResultIQ(request);
+		
+		Element createElement = request.setChildElement("destroy", "urn:xmpp:mix:0");
+		createElement.addAttribute("channel", TEST_CHANNEL_NAME);
+		
+		mockery.checking(new Expectations() {{
+			one(mockServiceHandler1).processIQ(mockMixService, request); will(returnValue(response));
+			one(mockMixService).destroyChannel(TEST_SENDER, TEST_CHANNEL_NAME);
+			one(mockRouter).route(response);
+		}});
+		
+		xmppService.processReceivedPacket(mockMixService, request);
+	}
+	
+	@Test
+	public void thatDeletionByNonOwnerFails() throws Exception {
+		final IQ request = new IQ(Type.set);
+		request.setFrom(TEST_SENDER);
+		request.setTo(TEST_SERVICE_JID);
+		
+		// Create the copy before adding in the destroy element as it is not part of the response
+		final IQ response = IQ.createResultIQ(request);
+		response.setType(Type.error);
+		
+		Element createElement = request.setChildElement("destroy", "urn:xmpp:mix:0");
+		createElement.addAttribute("channel", TEST_CHANNEL_NAME);
+		
+		mockery.checking(new Expectations() {{
+			one(mockServiceHandler1).processIQ(mockMixService, request); will(returnValue(response));
+			one(mockRouter).route(response);
+		}});
+		
+		xmppService.processReceivedPacket(mockMixService, request);		
+		
+		mockery.assertIsSatisfied();
 	}
 
 }

@@ -24,7 +24,6 @@ import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.MixXmppServiceImpl;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
-import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.util.JiveGlobals;
 import org.jivesoftware.util.JiveProperties;
 import org.jmock.Expectations;
@@ -35,6 +34,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.xmpp.packet.JID;
 
 public class MixPersistenceManagerImplTest {
 
@@ -75,8 +75,10 @@ public class MixPersistenceManagerImplTest {
 
 		Statement st = conn.createStatement();
 
+		// TODO - this should probably come from the upgrade script.
 		st.execute(
-				"CREATE TABLE ofMixChannel (channelID INTEGER NOT NULL, creationDate CHAR(15) NOT NULL, modificationDate CHAR(15) NOT NULL, name VARCHAR(50) NOT NULL, jidVisibility INTEGER NOT NULL, CONSTRAINT ofMixChannel_pk PRIMARY KEY (channelID))");
+				"CREATE TABLE ofMixChannel (channelID INTEGER NOT NULL, creationDate CHAR(15) NOT NULL, modificationDate CHAR(15) "
+				+ "NOT NULL, name VARCHAR(50) NOT NULL, owner VARCHAR(50) NOT NULL, jidVisibility INTEGER NOT NULL, CONSTRAINT ofMixChannel_pk PRIMARY KEY (channelID))");
 
 		st.close();
 		conn.close();
@@ -110,8 +112,8 @@ public class MixPersistenceManagerImplTest {
 
 	}
 
-	private static final String INSERT_SINGLE_CHANNEL = "INSERT INTO " + MixPersistenceManagerImpl.CHANNEL_TABLE_NAME + "(channelid, creationDate, modificationDate, name, jidVisibility)" 
-			+ " VALUES (?,?,?,?,?);";
+	private static final String INSERT_SINGLE_CHANNEL = "INSERT INTO " + MixPersistenceManagerImpl.CHANNEL_TABLE_NAME + "(channelid, creationDate, modificationDate, name, jidVisibility, owner)" 
+			+ " VALUES (?,?,?,?,?,?);";
 	
 	@Test
 	public void testLoadChannels() throws SQLException, MixPersistenceException {
@@ -125,6 +127,7 @@ public class MixPersistenceManagerImplTest {
 		stmt.setString(3, dateStr);
 		stmt.setString(4, "CHANNEL_NAME");
 		stmt.setInt(5, 0);
+		stmt.setString(6, "test_node");
 		
 		stmt.execute();
 		
@@ -133,6 +136,7 @@ public class MixPersistenceManagerImplTest {
 		
 		mockery.checking(new Expectations() {{
 			allowing(mockIdentityManager);
+			allowing(mockMixService).getServiceDomain(); will(returnValue("shakespeare.example.com"));
 			allowing(mockMixService).getId();
 			will(returnValue(1L));
 		}});
@@ -150,7 +154,7 @@ public class MixPersistenceManagerImplTest {
 			
 		}});
 		
-		assertNotNull(mixPersistenceManager.save(new LocalMixChannel(mockMixService, "TEST_CHANNEL_NAME", mockXmppService, mixPersistenceManager)));
+		assertNotNull(mixPersistenceManager.save(new LocalMixChannel(mockMixService, "TEST_CHANNEL_NAME", new JID("a", "b", "c"), mockXmppService, mixPersistenceManager)));
 	}
 
 	public static void deleteFilesInFolder(final File folder) {

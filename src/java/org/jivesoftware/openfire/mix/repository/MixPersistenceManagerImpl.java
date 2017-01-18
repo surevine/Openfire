@@ -24,6 +24,7 @@ import org.jivesoftware.util.JiveProperties;
 import org.jivesoftware.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xmpp.packet.JID;
 
 public class MixPersistenceManagerImpl implements MixPersistenceManager {
 	private static final Logger Log = LoggerFactory.getLogger(MixPersistenceManager.class);
@@ -32,7 +33,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 
 	private static final String LOAD_SERVICES = "SELECT serviceID, subdomain, description FROM ofMixService";
 
-	private static final String LOAD_ALL_CHANNELS = "SELECT channelID, creationDate, modificationDate, name, jidVisibility "
+	private static final String LOAD_ALL_CHANNELS = "SELECT channelID, creationDate, modificationDate, name, jidVisibility, owner "
 			+ "FROM ofMixChannel";
 
 	private JiveProperties jiveProperties;
@@ -97,7 +98,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 				try {
 					// TODO: initialisation of the nodes that the channel
 					// supports
-					LocalMixChannel channel = new LocalMixChannel(mixService, resultSet.getString(4), xmppService, this);
+					LocalMixChannel channel = new LocalMixChannel(mixService, resultSet.getString(4), new JID(resultSet.getString(6), mixService.getServiceDomain(), null), xmppService, this);
 					channel.setID(resultSet.getLong(1));
 					channel.setCreationDate(new Date(Long.parseLong(resultSet.getString(2).trim()))); // creation
 																										// date
@@ -119,7 +120,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 			+ " SET creationDate=?, name=?, jidVisibility=? WHERE channelID=?";
 
 	private static final String ADD_CHANNEL = "INSERT INTO " + CHANNEL_TABLE_NAME
-			+ " (channelID, creationDate, name, jidVisibility, modificationDate)" + " VALUES (?,?,?,?,?)";
+			+ " (channelID, creationDate, name, jidVisibility, modificationDate, owner)" + " VALUES (?,?,?,?,?,?)";
 
 	@Override
 	public MixChannel save(MixChannel toPersist) throws MixPersistenceException {
@@ -140,6 +141,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 			pstmt.setString(3, toPersist.getName());
 			pstmt.setInt(4, toPersist.getJidVisibilityMode().getId());
 			pstmt.setString(5, StringUtils.dateToMillis(toPersist.getCreationDate()));
+			pstmt.setString(6, toPersist.getOwner().getNode());
 
 			pstmt.executeUpdate();
 

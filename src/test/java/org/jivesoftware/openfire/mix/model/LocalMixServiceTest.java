@@ -1,4 +1,4 @@
-package org.jivesoftware.openfire.mix.spi;
+package org.jivesoftware.openfire.mix.model;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -33,6 +33,7 @@ import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixXmppServiceImpl;
 import org.jivesoftware.openfire.mix.exception.MixChannelAlreadyExistsException;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
+import org.jivesoftware.openfire.mix.model.LocalMixService;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.util.JiveProperties;
 import org.jmock.Expectations;
@@ -45,7 +46,7 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 
-public class MixServiceImplTest {
+public class LocalMixServiceTest {
 	Mockery mockery = new Mockery() {{
         setImposteriser(ClassImposteriser.INSTANCE);
     }};
@@ -63,7 +64,7 @@ public class MixServiceImplTest {
 	/**
 	 * The class under test
 	 */
-	private MixServiceImpl mixServiceImpl;
+	private LocalMixService mixServiceImpl;
 	
 	private XMPPServer xmppServer;
 	
@@ -109,7 +110,7 @@ public class MixServiceImplTest {
 			allowing(iqDiscoInfoHandler).setServerNodeInfoProvider(with(any(String.class)), with(any(DiscoInfoProvider.class)));
 		}});
 
-		mixServiceImpl = new MixServiceImpl(xmppServer, jiveProperties, TEST_SUBDOMAIN, TEST_DESCRIPTION, mockXmppService, mixPersistenceManager);
+		mixServiceImpl = new LocalMixService(xmppServer, jiveProperties, TEST_SUBDOMAIN, TEST_DESCRIPTION, mockXmppService, mixPersistenceManager);
 		
 		testChannelOne = new LocalMixChannel(mixServiceImpl, "channel1", TEST_SENDER_JID, mockXmppService, mixPersistenceManager); 
 		testChannelTwo = new LocalMixChannel(mixServiceImpl, "channel2", TEST_SENDER_JID, mockXmppService, mixPersistenceManager);

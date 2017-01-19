@@ -1,4 +1,4 @@
-package org.jivesoftware.openfire.mix.spi;
+package org.jivesoftware.openfire.mix.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,8 +24,6 @@ import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.MixXmppService;
 import org.jivesoftware.openfire.mix.exception.MixChannelAlreadyExistsException;
-import org.jivesoftware.openfire.mix.model.LocalMixChannel;
-import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.util.JiveProperties;
 import org.jivesoftware.util.LocaleUtils;
 import org.slf4j.Logger;
@@ -37,10 +35,10 @@ import org.xmpp.forms.DataForm;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 
-public class MixServiceImpl implements Component, MixService, ServerItemsProvider, DiscoInfoProvider,
+public class LocalMixService implements Component, MixService, ServerItemsProvider, DiscoInfoProvider,
 		DiscoItemsProvider, XMPPServerListener {
 
-	private static final Logger Log = LoggerFactory.getLogger(MixServiceImpl.class);
+	private static final Logger Log = LoggerFactory.getLogger(LocalMixService.class);
 
 	private final XMPPServer xmppServer;
 
@@ -89,7 +87,7 @@ public class MixServiceImpl implements Component, MixService, ServerItemsProvide
 	 *             if the provided subdomain is an invalid, according to the JID
 	 *             domain definition.
 	 */
-	public MixServiceImpl(XMPPServer xmppServer, JiveProperties jiveProperties, String subdomain, String description, MixXmppService xmppService, MixPersistenceManager mixPersistenceManagerImpl) {
+	public LocalMixService(XMPPServer xmppServer, JiveProperties jiveProperties, String subdomain, String description, MixXmppService xmppService, MixPersistenceManager mixPersistenceManagerImpl) {
 		this.xmppServer = xmppServer;
 		this.jiveProperties = jiveProperties;
 		this.xmppService = xmppService;

@@ -18,4 +18,6 @@ public interface MixPersistenceManager {
 	boolean delete(MixChannel toDelete) throws MixPersistenceException;
 
 	MixChannelParticipant save(MixChannelParticipant mcp) throws MixPersistenceException;
+	
+	boolean delete(MixChannelParticipant toDelete) throws MixPersistenceException;
 }

@@ -15,7 +15,7 @@ CREATE TABLE ofMixChannel (
   creationDate        CHAR(15)      NOT NULL,
   modificationDate    CHAR(15)      NOT NULL,
   name                VARCHAR(50)   NOT NULL,
-  owner               VARCHAR(50)   NOT NULL,  
+  owner               VARCHAR(255)  NOT NULL,  
   jidVisibility       INTEGER       NOT NULL,
   CONSTRAINT ofMixChannel_pk PRIMARY KEY (channelID)
 );

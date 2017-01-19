@@ -45,8 +45,9 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 	private IdentityManager mcpKeys;
 
 	private IdentityManager mcpSubsKeys;
-	
-	public MixPersistenceManagerImpl(JiveProperties jiveProperties, MixXmppService xmppService, IdentityManager channelKeys, IdentityManager mcpKeys, IdentityManager mcpSubsKeys) {
+
+	public MixPersistenceManagerImpl(JiveProperties jiveProperties, MixXmppService xmppService,
+			IdentityManager channelKeys, IdentityManager mcpKeys, IdentityManager mcpSubsKeys) {
 		this.jiveProperties = jiveProperties;
 		this.xmppService = xmppService;
 		this.channelKeys = channelKeys;
@@ -69,7 +70,8 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 				Long id = rs.getLong(1);
 				String subdomain = rs.getString(2);
 				String description = rs.getString(3);
-				MixService newSerivce = new MixServiceImpl(xmppServer, jiveProperties, subdomain, description, this.xmppService, this);
+				MixService newSerivce = new MixServiceImpl(xmppServer, jiveProperties, subdomain, description,
+						this.xmppService, this);
 				newSerivce.setId(id);
 				mixServices.add(newSerivce);
 			}
@@ -98,7 +100,8 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 				try {
 					// TODO: initialisation of the nodes that the channel
 					// supports
-					LocalMixChannel channel = new LocalMixChannel(mixService, resultSet.getString(4), new JID(resultSet.getString(6), mixService.getServiceDomain(), null), xmppService, this);
+					LocalMixChannel channel = new LocalMixChannel(mixService, resultSet.getString(4),
+							new JID(resultSet.getString(6), mixService.getServiceDomain(), null), xmppService, this);
 					channel.setID(resultSet.getLong(1));
 					channel.setCreationDate(new Date(Long.parseLong(resultSet.getString(2).trim()))); // creation
 																										// date
@@ -116,7 +119,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 		return channels;
 	}
 
-	private static final String UPDATE_CHANNEL = "UPDATE " + CHANNEL_TABLE_NAME
+	public static final String UPDATE_CHANNEL = "UPDATE " + CHANNEL_TABLE_NAME
 			+ " SET creationDate=?, name=?, jidVisibility=? WHERE channelID=?";
 
 	private static final String ADD_CHANNEL = "INSERT INTO " + CHANNEL_TABLE_NAME
@@ -132,11 +135,11 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 			con = DbConnectionManager.getConnection();
 
 			pstmt = con.prepareStatement(ADD_CHANNEL);
-			
+
 			// Get PK for the channel
 			toPersist.setID(this.channelKeys.nextUniqueID());
 			pstmt.setLong(1, toPersist.getID());
-			
+
 			pstmt.setString(2, StringUtils.dateToMillis(toPersist.getCreationDate()));
 			pstmt.setString(3, toPersist.getName());
 			pstmt.setInt(4, toPersist.getJidVisibilityMode().getId());
@@ -183,12 +186,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 		return toUpdate;
 	}
 
-	private static final String FIND_BY_ID = "SELECT channelID, creationDate, name, jidVisibility FROM "
-			+ CHANNEL_TABLE_NAME + " WHERE channelID=?";
-
 	private static final String DELETE_CHANNEL = "DELETE FROM " + CHANNEL_TABLE_NAME + " WHERE channelID=?";
-
-	private static final String CHANNEL_PARTICIPANT_TABLE_NAME = null;
 
 	@Override
 	public boolean delete(MixChannel toDelete) throws MixPersistenceException {
@@ -215,16 +213,17 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 		return true;
 	}
 
-	private static final String ADD_CHANNEL_PARTICIPANT = "INSERT INTO " + CHANNEL_PARTICIPANT_TABLE_NAME
-			+ " (mcpID, realJID, proxyJID, nickName, channelJidVisibilityPreference, channelID_FK)" 
-			+ " VALUES (?, ?,?,?,?,?,?,?,?,?,?,?,?,?)";
+	public static final String CHANNEL_PARTICIPANT_TABLE_NAME = "ofMixChannelParticipant";
 
-	private static final String CHANNEL_PARTICIPANT_SUBSCRIPTIONS_TABLE = null;
-	
-	private static final String ADD_NODE_SUBSCRIPTIONS = "INSERT INTO " + CHANNEL_PARTICIPANT_SUBSCRIPTIONS_TABLE 
-			+ "(cpsID, participantID_FK, nodeName)"
-			+ " VALUES (?,?,?);";
-	
+	private static final String ADD_CHANNEL_PARTICIPANT = "INSERT INTO " + CHANNEL_PARTICIPANT_TABLE_NAME
+			+ " (mcpID, realJID, proxyJID, nickName, channelJidVisibilityPreference, channelID_fk)"
+			+ " VALUES (?,?,?,?,?,?)";
+
+	public static final String CHANNEL_PARTICIPANT_SUBSCRIPTIONS_TABLE = "ofMixChannelParticipantSubscription";
+
+	private static final String ADD_NODE_SUBSCRIPTIONS = "INSERT INTO " + CHANNEL_PARTICIPANT_SUBSCRIPTIONS_TABLE
+			+ "(mcpSubsID, participantID_fk, nodeName)" + " VALUES (?,?,?);";
+
 	@Override
 	public MixChannelParticipant save(MixChannelParticipant mcp) throws MixPersistenceException {
 		Connection con = null;
@@ -235,28 +234,28 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 			con = DbConnectionManager.getConnection();
 
 			pstmt = con.prepareStatement(ADD_CHANNEL_PARTICIPANT);
-			
+
 			// Set the PK for the MCP
 			mcp.setID(this.mcpKeys.nextUniqueID());
 			pstmt.setLong(1, mcp.getID());
-			pstmt.setString(2, mcp.getRealJid().toFullJID());
-			pstmt.setString(3, mcp.getJid().toFullJID());
+			pstmt.setString(2, mcp.getRealJid().getNode());
+			pstmt.setString(3, mcp.getJid().getNode());
 			pstmt.setString(4, mcp.getNick());
 			pstmt.setInt(5, mcp.getJidVisibilityPreference().getId());
 			pstmt.setLong(6, mcp.getChannel().getID());
-			
+
 			pstmt.executeUpdate();
-			
+
 			pstmt.close();
-			
+
 			// Now deal with the subscriptions
 			for (String sub : mcp.getSubscriptions()) {
 				pstmt = con.prepareStatement(ADD_NODE_SUBSCRIPTIONS);
-				
+
 				pstmt.setLong(1, this.mcpSubsKeys.nextUniqueID());
 				pstmt.setLong(2, mcp.getID());
 				pstmt.setString(3, sub);
-				
+
 				pstmt.executeUpdate();
 				pstmt.close();
 			}
@@ -269,6 +268,39 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 		}
 
 		return mcp;
+	}
+
+	private static final String DELETE_MCP = "DELETE FROM " + CHANNEL_PARTICIPANT_TABLE_NAME + " WHERE mcpID=?";
+	private static final String DELETE_MCP_SUBS = "DELETE FROM " + CHANNEL_PARTICIPANT_SUBSCRIPTIONS_TABLE
+			+ " WHERE participantID_fk=?";
+
+	@Override
+	public boolean delete(MixChannelParticipant toDelete) throws MixPersistenceException {
+		Connection con = null;
+		PreparedStatement mcpDelete, subsDelete = null;
+
+		try {
+
+			con = DbConnectionManager.getConnection();
+
+			subsDelete = con.prepareStatement(DELETE_MCP_SUBS);
+			subsDelete.setLong(1, toDelete.getID());
+			subsDelete.executeUpdate();
+			subsDelete.close();
+
+			mcpDelete = con.prepareStatement(DELETE_MCP);
+			mcpDelete.setLong(1, toDelete.getID());
+			mcpDelete.executeUpdate();
+			mcpDelete.close();
+
+		} catch (SQLException sqle) {
+			Log.error(sqle.getMessage(), sqle);
+			return false;
+		} finally {
+			DbConnectionManager.closeConnection(con);
+		}
+
+		return true;
 	}
 
 }

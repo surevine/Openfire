@@ -1,6 +1,8 @@
 package org.jivesoftware.openfire.mix.repository;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -8,8 +10,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,7 +18,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -29,7 +28,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.jivesoftware.database.ConnectionProvider;
 import org.jivesoftware.database.DbConnectionManager;
 import org.jivesoftware.database.EmbeddedConnectionProvider;
-import org.jivesoftware.database.SchemaManager;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.MixXmppServiceImpl;
@@ -75,10 +73,12 @@ public class MixPersistenceManagerImplTest {
 	public static void initialiseDatabase() throws SQLException, ClassNotFoundException, IOException {
 		// The Embedded database needs somewhere to store temporary files
 
-		String workingDir = System.getProperty("user.dir");
-		Path hsqldbDirPath = Paths.get(workingDir + File.separator + "hsqldb");
+		System.out.println("Database script dir is " + System.getProperty(DATABASE_UPGRADE_DIR));
+		
+		String scriptDir = System.getProperty(DATABASE_UPGRADE_DIR) + File.separator + "24" + File.separator;
+		Path hsqldbDirPath = Paths.get(scriptDir + File.separator + "hsqldb");
 		Files.createDirectory(hsqldbDirPath);
-		JiveGlobals.setHomeDirectory(workingDir + File.separator + "hsqldb");
+		JiveGlobals.setHomeDirectory(scriptDir + File.separator + "hsqldb");
 
 		ConnectionProvider embedded = new EmbeddedConnectionProvider();
 
@@ -87,17 +87,17 @@ public class MixPersistenceManagerImplTest {
 		Connection conn = DbConnectionManager.getConnection();
 
 		// Could be running from the local test diretory, or from ANT so deal with locating the file
-		String openfirePath = System.getProperty("user.dir").substring(0, workingDir.indexOf("openfire"));
-		String resourceName = openfirePath + File.separator + "openfire" + File.separator + "src" + File.separator + "database"
-				+ File.separator + "upgrade" + File.separator + "24" + File.separator + "openfire_"
+		String resourceName = scriptDir + File.separator + "openfire_"
 				+ DbConnectionManager.getDatabaseType() + ".sql";
 
 		TestSchemaManager.executeSQLScript(conn, new FileInputStream(resourceName), Boolean.TRUE);
 	}
+	
+	private static final String DATABASE_UPGRADE_DIR = "databaseUpgradeDir";
 
 	@AfterClass
 	public static void tidyUp() {
-		Path hsqldbDirPath = Paths.get(System.getProperty("user.dir") + File.separator + "hsqldb");
+		Path hsqldbDirPath = Paths.get(System.getProperty(DATABASE_UPGRADE_DIR) + File.separator + "24" + File.separator + "hsqldb");
 		deleteFilesInFolder(hsqldbDirPath.toFile());
 	}
 

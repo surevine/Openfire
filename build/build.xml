@@ -50,6 +50,7 @@
     <property name="lib.web.dir" value="${web.dir}/WEB-INF/lib"/>
     <property name="i18n.basename" value="openfire_i18n"/>
     <property name="i18n.default.locale" value="en"/>
+	<property name="database.upgrade.dir" value="${src.dir}/database/upgrade"/>
 
     <property name="work.dir" value="${basedir}/work"/>
     <property name="temp.build.dir" value="${work.dir}/tempbuild"/>
@@ -718,7 +719,9 @@
         <mkdir dir="${test.results.dest.dir}"/>
     	<jacoco:coverage destfile="${test.results.dest.dir}/jacoco.exec">
 	        <junit printsummary="yes" haltonfailure="yes" fork="yes" forkmode="once" dir="${test.dest.dir}" includeantruntime="false">
+	        	
 		    	<sysproperty key="openfireHome" value="${target.openfireHome}"/>
+	        	<sysproperty key="databaseUpgradeDir" value="${database.upgrade.dir}"/>
 	
 	            <!-- We must add our own classes to the classpath for testing -->
 	            <classpath>

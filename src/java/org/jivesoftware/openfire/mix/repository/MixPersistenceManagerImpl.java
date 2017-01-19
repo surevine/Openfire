@@ -243,9 +243,8 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 			pstmt.setInt(5, mcp.getJidVisibilityPreference().getId());
 			pstmt.setLong(6, mcp.getChannel().getID());
 
-			pstmt.executeUpdate();
-
-			pstmt.close();
+            pstmt.executeUpdate();
+            DbConnectionManager.fastcloseStmt(pstmt);
 
 			// Now deal with the subscriptions
 			for (String sub : mcp.getSubscriptions()) {
@@ -256,7 +255,6 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 				pstmt.setString(3, sub);
 
 				pstmt.executeUpdate();
-				pstmt.close();
 			}
 
 		} catch (SQLException sqle) {
@@ -276,27 +274,26 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 	@Override
 	public boolean delete(MixChannelParticipant toDelete) throws MixPersistenceException {
 		Connection con = null;
-		PreparedStatement mcpDelete, subsDelete = null;
+		PreparedStatement stmt = null;
 
 		try {
 
 			con = DbConnectionManager.getConnection();
 
-			subsDelete = con.prepareStatement(DELETE_MCP_SUBS);
-			subsDelete.setLong(1, toDelete.getID());
-			subsDelete.executeUpdate();
-			subsDelete.close();
+			stmt = con.prepareStatement(DELETE_MCP_SUBS);
+			stmt.setLong(1, toDelete.getID());
+			stmt.executeUpdate();
+            DbConnectionManager.fastcloseStmt(stmt);
 
-			mcpDelete = con.prepareStatement(DELETE_MCP);
-			mcpDelete.setLong(1, toDelete.getID());
-			mcpDelete.executeUpdate();
-			mcpDelete.close();
+            stmt = con.prepareStatement(DELETE_MCP);
+            stmt.setLong(1, toDelete.getID());
+            stmt.executeUpdate();
 
 		} catch (SQLException sqle) {
 			Log.error(sqle.getMessage(), sqle);
 			return false;
 		} finally {
-			DbConnectionManager.closeConnection(con);
+			DbConnectionManager.closeConnection(stmt, con);
 		}
 
 		return true;

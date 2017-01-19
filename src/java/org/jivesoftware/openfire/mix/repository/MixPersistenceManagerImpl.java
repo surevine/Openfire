@@ -117,9 +117,6 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 		return channels;
 	}
 
-	public static final String UPDATE_CHANNEL = "UPDATE " + CHANNEL_TABLE_NAME
-			+ " SET creationDate=?, name=?, jidVisibility=? WHERE channelID=?";
-
 	private static final String ADD_CHANNEL = "INSERT INTO " + CHANNEL_TABLE_NAME
 			+ " (channelID, creationDate, name, jidVisibility, modificationDate, owner)" + " VALUES (?,?,?,?,?,?)";
 
@@ -156,32 +153,6 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 
 		return toPersist;
 
-	}
-
-	@Override
-	public MixChannel update(MixChannel toUpdate) throws MixPersistenceException {
-		Connection con = null;
-		PreparedStatement pstmt = null;
-
-		try {
-
-			con = DbConnectionManager.getConnection();
-
-			// its an update
-			pstmt = con.prepareStatement(UPDATE_CHANNEL);
-			pstmt.setString(1, StringUtils.dateToMillis(toUpdate.getCreationDate()));
-			pstmt.setString(2, toUpdate.getName());
-			pstmt.setInt(3, toUpdate.getJidVisibilityMode().getId());
-
-			pstmt.executeUpdate();
-		} catch (SQLException sqle) {
-			Log.error(sqle.getMessage(), sqle);
-			throw new MixPersistenceException(sqle);
-		} finally {
-			DbConnectionManager.closeConnection(pstmt, con);
-		}
-
-		return toUpdate;
 	}
 
 	private static final String DELETE_CHANNEL = "DELETE FROM " + CHANNEL_TABLE_NAME + " WHERE channelID=?";

@@ -1,8 +1,6 @@
 package org.jivesoftware.openfire.mix.repository;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -153,15 +151,34 @@ public class MixPersistenceManagerImplTest {
 			}
 		});
 
-		assertTrue(mixPersistenceManager.loadChannels(mockMixService).size() > 1);
-
+		assertEquals(1, mixPersistenceManager.loadChannels(mockMixService).size());
+		
 	}
 
 	@Test
-	public void testSavingMixChannel() throws MixPersistenceException {
+	public void testSavingAndDeletingMixChannel() throws MixPersistenceException, SQLException {
 
-		assertNotNull(mixPersistenceManager.save(new LocalMixChannel(mockMixService, TEST_CHANNEL_NAME,
-				new JID(TEST_OWNER_NODE, TEST_SERVICE_DOMAIN, null), mockXmppService, mixPersistenceManager)));
+		MixChannel mc = new LocalMixChannel(mockMixService, TEST_CHANNEL_NAME,
+				new JID(TEST_OWNER_NODE, TEST_SERVICE_DOMAIN, null), mockXmppService, mixPersistenceManager);
+		mc = mixPersistenceManager.save(mc);
+		assertNotNull(mc);
+		assertNotNull(mc.getID());
+		
+		Connection conn = DbConnectionManager.getConnection();
+		PreparedStatement stmt = conn.prepareStatement(
+				"SELECT * FROM " + MixPersistenceManagerImpl.CHANNEL_TABLE_NAME + "  WHERE channelID=?");
+		stmt.setLong(1, mc.getID());
+
+		ResultSet rs = stmt.executeQuery();
+		
+		assertTrue(rs.next());
+		
+		mixPersistenceManager.delete(mc);
+		
+		rs = stmt.executeQuery();
+		
+		assertFalse(rs.next());
+		
 	}
 
 	private static final String TEST_OWNER_NODE = "hag66";

@@ -13,6 +13,7 @@ import java.util.Set;
 import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.mix.MixChannelNode;
 import org.jivesoftware.openfire.mix.MixManager;
+import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityMode;
@@ -148,6 +149,8 @@ public class LocalMixChannel implements MixChannel {
 
 	private int proxyNodeNamePart = 0;
 
+	private MixPersistenceManager mixPersistenceManager;
+
 	private String getNextProxyNodePart() {
 		// TODO - temporary implementation
 		return Integer.toString(proxyNodeNamePart++);
@@ -205,6 +208,20 @@ public class LocalMixChannel implements MixChannel {
 
 	public void setJidVisibilityMode(ChannelJidVisibilityMode jidVisibilityMode) {
 		this.jidVisibilityMode = jidVisibilityMode;
+	}
+
+	/**
+	 * Cascade deletion of channel participants
+	 * @throws MixPersistenceException 
+	 * 
+	 * @see org.jivesoftware.openfire.mix.model.MixChannel#destroy()
+	 */
+	@Override
+	public void destroy() throws MixPersistenceException {
+		for (MixChannelParticipant participant : participants.values()) {
+			this.mixPersistenceManager.delete(participant);	
+		}
+		
 	}
 
 }

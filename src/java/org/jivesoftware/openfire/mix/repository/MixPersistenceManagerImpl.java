@@ -15,7 +15,6 @@ import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.MixXmppService;
-import org.jivesoftware.openfire.mix.MixXmppServiceImpl;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.model.LocalMixService;
 import org.jivesoftware.openfire.mix.model.MixChannel;

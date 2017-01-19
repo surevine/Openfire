@@ -333,7 +333,9 @@ public class LocalMixService implements Component, MixService, ServerItemsProvid
 		if (toDestroy != null) {
 			if (toDestroy.getOwner().equals(requestor)) {
 				channels.remove(name);
+
 				try {
+					toDestroy.destroy();
 					this.persistenceManager.delete(toDestroy);
 				} catch (MixPersistenceException e) {
 					Log.error(e.getMessage());

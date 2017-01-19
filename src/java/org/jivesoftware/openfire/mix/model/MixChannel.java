@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.jivesoftware.database.JiveID;
 import org.jivesoftware.openfire.mix.MixChannelNode;
+import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityMode;
 import org.jivesoftware.util.JiveConstants;
 import org.xmpp.packet.JID;
@@ -54,4 +55,6 @@ public interface MixChannel {
 	void setID(long ID);
 
 	JID getOwner();
+
+	void destroy() throws MixPersistenceException;
 }

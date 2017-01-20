@@ -56,6 +56,8 @@ public interface MixChannel {
 	Collection<MixChannelParticipant> getParticipants();
 
 	MixChannelParticipant getParticipantByJID(JID from);
+	
+	Collection<MixChannelParticipant> getParticipants();
 
 	void receiveMessage(MixChannelMessage mcMessage);
 	
@@ -65,6 +67,8 @@ public interface MixChannel {
 
 	JID getOwner();
 
+	MixChannelNode getNodeByName(String nodeName);
+	
 	void destroy() throws MixPersistenceException;
 
 	boolean isDestructable(JID requestor);

@@ -70,7 +70,7 @@ public class MixChannelNodeImpl implements MixChannelNode {
 		
 	private Element addItemElement(Element parent, MixChannelNodeItem item) {
 		return item.appendPayload(parent.addElement("item")
-				.addAttribute("id", item.getId()));
+				.addAttribute("id", item.getUID()));
 	}
 
 	private Element addRetractElement(Element parent, JID jid) {
@@ -90,6 +90,13 @@ public class MixChannelNodeImpl implements MixChannelNode {
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public void appendAllItems(Element parent) {
+		for(MixChannelNodeItem item : itemsProvider.getItems()) {
+			addItemElement(parent, item);
+		}
 	}
 
 }

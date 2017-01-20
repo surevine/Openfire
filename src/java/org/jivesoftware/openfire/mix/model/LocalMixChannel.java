@@ -317,4 +317,15 @@ public class LocalMixChannel implements MixChannel {
 		return this.getOwner().toBareJID().equals(requestor.toBareJID()) && this.getParticipants().size() == 1 ? true : false;
 
 	}
+
+	@Override
+	public Collection<MixChannelParticipant> getParticipants() {
+		return Collections.unmodifiableCollection(participants.values());
+	}
+
+	@Override
+	public MixChannelNode getNodeByName(String nodeName) {
+		return nodes.get(nodeName);
+	}
+
 }

@@ -2,10 +2,10 @@ package org.jivesoftware.openfire.mix.model;
 
 import org.dom4j.Element;
 
-public class MixChannelParticipantNodeItem implements MixChannelNodeItem {
+public class MixChannelJidMapNodeItem implements MixChannelNodeItem {
 	private MixChannelParticipant participant;
 
-	public MixChannelParticipantNodeItem(MixChannelParticipant participant) {
+	public MixChannelJidMapNodeItem(MixChannelParticipant participant) {
 		this.participant = participant;
 	}
 
@@ -17,7 +17,7 @@ public class MixChannelParticipantNodeItem implements MixChannelNodeItem {
 	@Override
 	public Element appendPayload(Element container) {
 		Element participantEl = container.addElement("participant", "urn:xmpp:mix:0");
-		participantEl.addAttribute("nick", participant.getNick());
+		participantEl.addAttribute("jid", participant.getRealJid().toBareJID());
 		return participantEl;
 	}
 	

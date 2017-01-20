@@ -16,6 +16,8 @@ import org.xmpp.packet.JID;
 public interface MixChannel {
 	public interface MixChannelParticipantsListener {
 		void onParticipantAdded(MixChannelParticipant participant);
+
+		void onParticipantRemoved(MixChannelParticipant mcp);
 	}
 
 	/**

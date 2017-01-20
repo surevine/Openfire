@@ -1,8 +1,6 @@
 package org.jivesoftware.openfire.mix.model;
 
-import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
-import org.dom4j.QName;
 
 public class MixChannelParticipantNodeItem implements MixChannelNodeItem {
 	private MixChannelParticipant participant;

@@ -21,6 +21,13 @@ public class MixChannelParticipantsNodeItemsProvider implements MixChannelNodeIt
 					listener.publishItem(new MixChannelParticipantNodeItem(participant));
 				}
 			}
+
+			@Override
+			public void onParticipantRemoved(MixChannelParticipant leaver) {
+				for(ItemsListener listener : itemsListeners) {
+					listener.retractItem(leaver.getJid());
+				}
+			}
 		});
 	}
 	

@@ -1,6 +1,5 @@
 package org.jivesoftware.openfire.mix.model;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import org.dom4j.Element;
@@ -47,6 +46,24 @@ public class MixChannelNodeImpl implements MixChannelNode {
 						packetRouter.route(message);
 					}
 				}
+
+				@Override
+				public void retractItem(JID rectract) {
+					Message baseMessage = new Message();
+					baseMessage.setFrom(mixChannel.getJID());
+					
+					addRetractElement(addItemsElement(addEventElement(baseMessage)), rectract);
+					
+					Set<MixChannelParticipant> subscribers = mixChannel.getNodeSubscribers(name);
+	
+					for(MixChannelParticipant subscriber : subscribers) {
+						Message message = baseMessage.createCopy();
+						
+						message.setTo(subscriber.getRealJid());
+						
+						packetRouter.route(message);
+					}
+				}
 			});
 		}
 	}
@@ -54,6 +71,11 @@ public class MixChannelNodeImpl implements MixChannelNode {
 	private Element addItemElement(Element parent, MixChannelNodeItem item) {
 		return item.appendPayload(parent.addElement("item")
 				.addAttribute("id", item.getId()));
+	}
+
+	private Element addRetractElement(Element parent, JID jid) {
+		return parent.addElement("retract")
+				.addAttribute("id", jid.toString());
 	}
 	
 	private Element addItemsElement(Element parent) {

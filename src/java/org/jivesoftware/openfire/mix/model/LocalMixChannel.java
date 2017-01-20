@@ -130,6 +130,28 @@ public class LocalMixChannel implements MixChannel {
 
 		return participant;
 	}
+	
+	@Override
+	public void removeParticipant(JID jid) throws CannotLeaveMixChannelException {
+
+		if (participants.containsKey(jid)) {
+			MixChannelParticipant mcp = participants.get(jid);
+			
+			// Let all listeners know that the participant has left
+			for (MixChannelParticipantsListener listener : participantsListeners) {
+				listener.onParticipantRemoved(mcp);
+			}
+			try {
+				this.channelRepository.delete(mcp);
+				this.participants.remove(jid);
+			} catch (MixPersistenceException e) {
+				LOG.error(e.getMessage());
+				throw new CannotLeaveMixChannelException(this.getName(), e.getMessage());
+			}
+		} 
+		
+		return;
+	}
 
 	private JID getNewProxyJID() {
 		return new JID(this.name + "+" + this.getNextProxyNodePart(), this.getJID().getDomain(), "", false);
@@ -222,22 +244,4 @@ public class LocalMixChannel implements MixChannel {
 		}
 		
 	}
-
-	@Override
-	public void removeParticipant(JID jid) throws CannotLeaveMixChannelException {
-
-		if (participants.containsKey(jid)) {
-			MixChannelParticipant mcp = participants.get(jid);
-			try {
-				this.channelRepository.delete(mcp);
-				this.participants.remove(jid);
-			} catch (MixPersistenceException e) {
-				LOG.error(e.getMessage());
-				throw new CannotLeaveMixChannelException(this.getName(), e.getMessage());
-			}
-		} 
-		
-		return;
-	}
-
 }

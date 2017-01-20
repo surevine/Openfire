@@ -1,6 +1,6 @@
 package org.jivesoftware.openfire.mix.model;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -8,8 +8,10 @@ import java.util.HashSet;
 import org.dom4j.DocumentFactory;
 import org.hamcrest.Matchers;
 import org.jivesoftware.openfire.PacketRouter;
+import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
+import org.jivesoftware.openfire.mix.exception.CannotLeaveMixChannelException;
 import org.jivesoftware.openfire.testutil.ElementMatchers;
 import org.jivesoftware.openfire.testutil.PacketMatchers;
 import org.jmock.Expectations;
@@ -43,9 +45,6 @@ public class LocalMixChannelTest {
     private static final JID TEST_USER3_JID = new JID(TEST_USER + 66, TEST_SERVICE_DOMAIN, null);
     
 	private static final String []PARTIAL_NODE_SET = {"urn:xmpp:mix:nodes:messages", "urn:xmpp:mix:nodes:participants", "urn:xmpp:mix:nodes:subject", "urn:xmpp:mix:nodes:config"};
-	
-	private static final DocumentFactory docFactory = DocumentFactory.getInstance();
-
 	
 	Mockery context = new Mockery() {{
         setImposteriser(ClassImposteriser.INSTANCE);
@@ -161,4 +160,22 @@ public class LocalMixChannelTest {
 		fixture.receiveMessage(mcMessage);
 	}
 	
+	@Test
+	public void testParticipantSuccessfullyLeavesChannel() throws MixPersistenceException, CannotLeaveMixChannelException {
+		context.checking(new Expectations() {{
+			one(mockPersistenceManager).save(with(any(MixChannelParticipant.class)));
+			allowing(mockRouter).route(with(any(Message.class)));
+			one(mockRouter).route(with(any(IQ.class)));
+			one(mockPersistenceManager).delete(with(any(MixChannelParticipant.class)));
+	    }});
+		
+		fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(PARTIAL_NODE_SET)));
+		
+		assertNotNull(fixture.getParticipantByJID(TEST_USER1_JID));
+		
+		fixture.removeParticipant(TEST_USER1_JID);
+		
+		assertNull(fixture.getParticipantByJID(TEST_USER1_JID));
+
+	}
 }

@@ -17,6 +17,7 @@ import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityMode;
+import org.jivesoftware.openfire.mix.exception.CannotLeaveMixChannelException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmpp.packet.JID;
@@ -149,8 +150,6 @@ public class LocalMixChannel implements MixChannel {
 
 	private int proxyNodeNamePart = 0;
 
-	private MixPersistenceManager mixPersistenceManager;
-
 	private String getNextProxyNodePart() {
 		// TODO - temporary implementation
 		return Integer.toString(proxyNodeNamePart++);
@@ -219,9 +218,26 @@ public class LocalMixChannel implements MixChannel {
 	@Override
 	public void destroy() throws MixPersistenceException {
 		for (MixChannelParticipant participant : participants.values()) {
-			this.mixPersistenceManager.delete(participant);	
+			this.channelRepository.delete(participant);	
 		}
 		
+	}
+
+	@Override
+	public void removeParticipant(JID jid) throws CannotLeaveMixChannelException {
+
+		if (participants.containsKey(jid)) {
+			MixChannelParticipant mcp = participants.get(jid);
+			try {
+				this.channelRepository.delete(mcp);
+				this.participants.remove(jid);
+			} catch (MixPersistenceException e) {
+				LOG.error(e.getMessage());
+				throw new CannotLeaveMixChannelException(this.getName(), e.getMessage());
+			}
+		} 
+		
+		return;
 	}
 
 }

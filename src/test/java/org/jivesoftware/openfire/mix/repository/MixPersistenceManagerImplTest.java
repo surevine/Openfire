@@ -44,14 +44,13 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.xmpp.packet.JID;
+import org.xmpp.packet.Message;
 
 public class MixPersistenceManagerImplTest {
 
-	Mockery mockery = new Mockery() {
-		{
+	Mockery mockery = new Mockery() {{
 			setImposteriser(ClassImposteriser.INSTANCE);
-		}
-	};
+		}};
 
 	MixPersistenceManagerImpl mixPersistenceManager;
 
@@ -65,6 +64,15 @@ public class MixPersistenceManagerImplTest {
 
 		mixPersistenceManager = new MixPersistenceManagerImpl(jiveProperties, mockXmppService, testIdentityManager,
 				testIdentityManager, testIdentityManager);
+		
+		mockery.checking(new Expectations() {
+			{
+				allowing(mockMixService).getServiceDomain();
+				will(returnValue("shakespeare.example.com"));
+				
+				allowing(mockXmppService).route(with(any(Message.class)));
+			}
+		});
 	}
 
 	@BeforeClass

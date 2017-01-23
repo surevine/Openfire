@@ -1,11 +1,6 @@
 package org.jivesoftware.openfire.mix.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,6 +26,7 @@ import org.jivesoftware.openfire.disco.ServerItemsProvider;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixXmppServiceImpl;
+import org.jivesoftware.openfire.mix.exception.CannotCreateMixChannelException;
 import org.jivesoftware.openfire.mix.exception.MixChannelAlreadyExistsException;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.model.LocalMixService;
@@ -105,7 +101,7 @@ public class LocalMixServiceTest {
 			allowing(xmppServer).addServerListener(with(any(XMPPServerListener.class)));
 			allowing(xmppServer).getIQDiscoItemsHandler(); will(returnValue(iqDiscoItemsHandler));
 			allowing(xmppServer).getIQDiscoInfoHandler(); will(returnValue(iqDiscoInfoHandler));
-//			allowing(iqDiscoInfoHandler).addServerFeature(with(any(String.class)));
+			allowing(mockXmppService).route(with(any(Message.class)));
 			allowing(iqDiscoItemsHandler).addServerItemsProvider(with(any(ServerItemsProvider.class)));
 			allowing(iqDiscoInfoHandler).setServerNodeInfoProvider(with(any(String.class)), with(any(DiscoInfoProvider.class)));
 		}});
@@ -351,12 +347,14 @@ public class LocalMixServiceTest {
 		final MixChannel newMixChannel = mockery.mock(MixChannel.class);
 		
 		mockery.checking(new Expectations() {{
+			allowing(newMixChannel).getParticipantByJID(TEST_SENDER_JID);
 			one(mixPersistenceManager).save(with(Matchers.<MixChannel>hasProperty("name", equal("coven"))));
 			will(returnValue(newMixChannel));
 		}});
 		
 		MixChannel result = mixServiceImpl.createChannel(TEST_SENDER_JID, TEST_CHANNEL_NAME);
 		
+		assertNotNull(result.getParticipantByJID(TEST_SENDER_JID));
 		assertSame("The new mix channel is returned", newMixChannel, result);
 		
 	}
@@ -394,12 +392,13 @@ public class LocalMixServiceTest {
 	}
 	
 	@Test
-	public void testSuccessfulChannelDestruction() throws MixPersistenceException, MixChannelAlreadyExistsException, UnauthorizedException {
+	public void testSuccessfulChannelDestruction() throws MixPersistenceException, MixChannelAlreadyExistsException, UnauthorizedException, CannotCreateMixChannelException {
 		
 		mockery.checking(new Expectations() {{
 			one(mixPersistenceManager).save(with(any(MixChannel.class)));
 			will(returnValue(testChannelOne));
 			
+			one(mixPersistenceManager).delete(with(any(MixChannelParticipant.class)));
 			one(mixPersistenceManager).delete(with(any(MixChannel.class)));
 		}});
 		
@@ -411,7 +410,7 @@ public class LocalMixServiceTest {
 	}
 	
 	@Test(expected=MixChannelAlreadyExistsException.class)
-	public void thatCreateWithDuplicateNameThrowsException() throws MixPersistenceException, MixChannelAlreadyExistsException {
+	public void thatCreateWithDuplicateNameThrowsException() throws MixPersistenceException, MixChannelAlreadyExistsException, CannotCreateMixChannelException {
 		mockery.checking(new Expectations() {{
 			one(mixPersistenceManager).save(with(any(MixChannel.class)));
 			one(mixPersistenceManager).save(with(any(MixChannel.class)));
@@ -423,7 +422,7 @@ public class LocalMixServiceTest {
 	}
 	
 	@Test(expected=UnauthorizedException.class)
-	public void thatDeletionByNotOwnerThrowsException() throws MixPersistenceException, MixChannelAlreadyExistsException, UnauthorizedException {
+	public void thatDeletionByNotOwnerThrowsException() throws MixPersistenceException, MixChannelAlreadyExistsException, UnauthorizedException, CannotCreateMixChannelException {
 		mockery.checking(new Expectations() {{
 			one(mixPersistenceManager).save(with(any(MixChannel.class)));
 			will(returnValue(testChannelOne));

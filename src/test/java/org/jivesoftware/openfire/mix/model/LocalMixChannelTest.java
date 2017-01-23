@@ -58,14 +58,13 @@ public class LocalMixChannelTest {
 	
 	final MixPersistenceManager mockPersistenceManager = context.mock(MixPersistenceManager.class);
 	
-	private LocalMixChannel fixture = new LocalMixChannel(mockMixService, TEST_MIX_CHANNEL_NAME, TEST_USER1_JID, mockRouter, mockPersistenceManager);
+	private LocalMixChannel fixture;
 	
 	States test = context.states("test").startsAs("setting up");
 	State settingUp = test.is("setting up");
 	State setUp = test.is("set up");
 	
-	@Before
-	public void setUp() {
+	public LocalMixChannelTest() {
         context.checking(new Expectations() {{
             allowing(mockMixService).getServiceDomain();
             will(returnValue(TEST_MIX_DOMAIN));
@@ -80,7 +79,13 @@ public class LocalMixChannelTest {
             when(test.isNot("set up"));
         }});
         
-        setUp.activate();
+		fixture = new LocalMixChannel(mockMixService, TEST_MIX_CHANNEL_NAME, TEST_USER1_JID, mockRouter, mockPersistenceManager);
+	}
+
+	
+	@Test
+	public void thatOwnerIsParticipant() {
+		assertNotNull(fixture.getParticipantByJID(TEST_USER1_JID));
 	}
 	
 	@Test

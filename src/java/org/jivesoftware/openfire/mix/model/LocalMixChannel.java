@@ -79,6 +79,9 @@ public class LocalMixChannel implements MixChannel {
 				null));
 		
 		this.setCreationDate(new Date());
+		
+		// Add the owner as a participant, and subscribe to all nodes
+		this.addParticipant(owner, nodes.keySet());
 	}
 
 	@Override

@@ -23,6 +23,7 @@ import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.MixXmppService;
+import org.jivesoftware.openfire.mix.exception.CannotCreateMixChannelException;
 import org.jivesoftware.openfire.mix.exception.MixChannelAlreadyExistsException;
 import org.jivesoftware.util.JiveProperties;
 import org.jivesoftware.util.LocaleUtils;
@@ -302,7 +303,7 @@ public class LocalMixService implements Component, MixService, ServerItemsProvid
 	}
 
 	@Override
-	public MixChannel createChannel(JID owner, String name) throws MixChannelAlreadyExistsException {
+	public MixChannel createChannel(JID owner, String name) throws MixChannelAlreadyExistsException, CannotCreateMixChannelException {
 		if(channels.containsKey(name)) {
 			throw new MixChannelAlreadyExistsException(name);
 		}
@@ -312,7 +313,7 @@ public class LocalMixService implements Component, MixService, ServerItemsProvid
 			newChannel = persistenceManager.save(newChannel);
 		} catch (MixPersistenceException e) {
 			Log.error(e.getMessage());
-			return null;
+			throw new CannotCreateMixChannelException(name);
 		}
 		
 		channels.put(name, newChannel);

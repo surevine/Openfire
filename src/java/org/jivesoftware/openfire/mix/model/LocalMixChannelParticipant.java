@@ -109,4 +109,10 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 		return true;
 	}
 
+
+	@Override
+	public void setSubscriptions(Set<String> subs) {
+		this.subscriptions = subs
+	}
+
 }

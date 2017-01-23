@@ -112,7 +112,7 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 
 	@Override
 	public void setSubscriptions(Set<String> subs) {
-		this.subscriptions = subs
+		this.subscriptions = subs;
 	}
 
 }

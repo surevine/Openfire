@@ -13,6 +13,7 @@ import org.hamcrest.Factory;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
+import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.XMPPServerInfo;
 import org.jivesoftware.openfire.XMPPServerListener;
@@ -80,6 +81,8 @@ public class LocalMixServiceTest {
 	
 	private MixXmppServiceImpl mockXmppService;
 	
+	private PacketRouter mockRouter;
+	
 	@Before
 	public void setUp() throws Exception {
 		xmppServer = mockery.mock(XMPPServer.class);
@@ -95,6 +98,8 @@ public class LocalMixServiceTest {
 		iqDiscoItemsHandler = mockery.mock(IQDiscoItemsHandler.class);
 		iqDiscoInfoHandler = mockery.mock(IQDiscoInfoHandler.class);
 		
+		mockRouter = mockery.mock(PacketRouter.class);
+		
 		mockery.checking(new Expectations() {{
 			allowing(xmppServerInfo).getXMPPDomain(); will(returnValue(TEST_DOMAIN));
 			allowing(xmppServer).getServerInfo(); will(returnValue(xmppServerInfo));
@@ -104,12 +109,13 @@ public class LocalMixServiceTest {
 			allowing(mockXmppService).route(with(any(Message.class)));
 			allowing(iqDiscoItemsHandler).addServerItemsProvider(with(any(ServerItemsProvider.class)));
 			allowing(iqDiscoInfoHandler).setServerNodeInfoProvider(with(any(String.class)), with(any(DiscoInfoProvider.class)));
+			allowing(mockRouter).route(with(any(Message.class)));
 		}});
 
 		mixServiceImpl = new LocalMixService(xmppServer, jiveProperties, TEST_SUBDOMAIN, TEST_DESCRIPTION, mockXmppService, mixPersistenceManager);
 		
-		testChannelOne = new LocalMixChannel(mixServiceImpl, "channel1", TEST_SENDER_JID, mockXmppService, mixPersistenceManager); 
-		testChannelTwo = new LocalMixChannel(mixServiceImpl, "channel2", TEST_SENDER_JID, mockXmppService, mixPersistenceManager);
+		testChannelOne = new LocalMixChannel(mixServiceImpl, "channel1", TEST_SENDER_JID, mockRouter, mixPersistenceManager); 
+		testChannelTwo = new LocalMixChannel(mixServiceImpl, "channel2", TEST_SENDER_JID, mockRouter, mixPersistenceManager);
 	}
 
 	@Test

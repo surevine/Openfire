@@ -23,4 +23,6 @@ public interface MixChannelParticipant {
 	long getID();
 
 	void setID(long nextUniqueID);
+	
+	void setSubscriptions(Set<String> subs);
 }

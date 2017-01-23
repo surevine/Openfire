@@ -7,7 +7,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.jivesoftware.database.DbConnectionManager;
 import org.jivesoftware.openfire.XMPPServer;
@@ -16,6 +18,7 @@ import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.MixXmppService;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
+import org.jivesoftware.openfire.mix.model.LocalMixChannelParticipant;
 import org.jivesoftware.openfire.mix.model.LocalMixService;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannelParticipant;
@@ -96,13 +99,9 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 
 			while (resultSet.next()) {
 				try {
-					// TODO: initialisation of the nodes that the channel
-					// supports
-					LocalMixChannel channel = new LocalMixChannel(mixService, resultSet.getString(4),
-							new JID(resultSet.getString(6), mixService.getServiceDomain(), null), xmppService, this);
-					channel.setID(resultSet.getLong(1));
-					channel.setCreationDate(new Date(Long.parseLong(resultSet.getString(2).trim()))); // creation
-																										// date
+					LocalMixChannel channel = new LocalMixChannel(resultSet.getLong(1), mixService, resultSet.getString(4),
+							new JID(resultSet.getString(6), mixService.getServiceDomain(), null), xmppService, this, new Date(Long.parseLong(resultSet.getString(2).trim())));
+
 					channels.add(channel);
 				} catch (SQLException e) {
 					Log.error("A database exception prevented one particular MIX channel loaded from the database.", e);
@@ -267,6 +266,76 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 		}
 
 		return true;
+	}
+
+	private static final String LOAD_ALL_PARTICIPANTS_BY_CHANNEL = "SELECT mcpID, realJID, proxyJID, nickName, channelJidVisibilityPreference, channelID_fk "
+			+ "FROM " + CHANNEL_PARTICIPANT_TABLE_NAME + " WHERE channelID_fk=?";
+	
+	@Override
+	public Collection<MixChannelParticipant> findByChannel(MixChannel channel) throws MixPersistenceException {
+		List<MixChannelParticipant> participantsByChannel = new ArrayList<>();
+		
+		Connection connection = null;
+		PreparedStatement statement = null;
+		ResultSet resultSet = null;
+		try {
+			connection = DbConnectionManager.getConnection();
+			statement = connection.prepareStatement(LOAD_ALL_PARTICIPANTS_BY_CHANNEL);
+			statement.setLong(1, channel.getID());
+			resultSet = statement.executeQuery();
+
+			while (resultSet.next()) {
+				try {
+					JID proxyJid = new JID(resultSet.getString(3));
+					JID realJid = new JID(resultSet.getString(2));
+					
+					LocalMixChannelParticipant mcp = new LocalMixChannelParticipant(proxyJid, realJid, channel, null);
+					
+					participantsByChannel.add(mcp);
+					
+				} catch (SQLException e) {
+					Log.error("A database exception prevented one particular MIX channel loaded from the database.", e);
+				}
+			}
+		} catch (SQLException e) {
+			throw new MixPersistenceException(e);
+		} finally {
+			DbConnectionManager.closeConnection(resultSet, statement, connection);
+		}
+		
+		return participantsByChannel;
+	}
+	
+	private static final String LOAD_SUBSCRIPTIONS_BY_PARTICIPANT = "SELECT mcpSubsID, nodeName, participantID_fk "
+			+ "FROM " + CHANNEL_PARTICIPANT_SUBSCRIPTIONS_TABLE + " WHERE participantID_fk=?";
+	
+	public Set<String> findByParticipant(MixChannelParticipant participant) throws MixPersistenceException {
+		Set<String> subscriptions = new HashSet<>();
+		
+		Connection connection = null;
+		PreparedStatement statement = null;
+		ResultSet resultSet = null;
+		try {
+			connection = DbConnectionManager.getConnection();
+			statement = connection.prepareStatement(LOAD_SUBSCRIPTIONS_BY_PARTICIPANT);
+			statement.setLong(1, participant.getID());
+			resultSet = statement.executeQuery();
+
+			while (resultSet.next()) {
+				try {
+					subscriptions.add(resultSet.getString(2));
+					
+				} catch (SQLException e) {
+					Log.error("A database exception prevented one particular MIX channel loaded from the database.", e);
+				}
+			}
+		} catch (SQLException e) {
+			throw new MixPersistenceException(e);
+		} finally {
+			DbConnectionManager.closeConnection(resultSet, statement, connection);
+		}
+		
+		return subscriptions;
 	}
 
 }

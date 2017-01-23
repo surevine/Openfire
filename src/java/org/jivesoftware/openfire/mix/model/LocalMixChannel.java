@@ -60,17 +60,31 @@ public class LocalMixChannel implements MixChannel {
 	private ChannelJidVisibilityMode jidVisibilityMode = ChannelJidVisibilityMode.VISIBLE;
 
 	private JID owner;
+	
+	/**
+	 * Constructor to be used when serialising from the database.  The id on the constructor is key as it will be known when constructing as part of a query.
+	 * @param id
+	 * @param service
+	 * @param name
+	 * @param owner
+	 * @param packetRouter
+	 * @param mpm
+	 * @param creationDate
+	 * @throws MixPersistenceException 
+	 */
+	public LocalMixChannel(long id, MixService service, String name, JID owner, PacketRouter packetRouter, MixPersistenceManager mpm, Date creationDate) throws MixPersistenceException {
 
-	public LocalMixChannel(MixService service, String name, JID owner, PacketRouter packetRouter, MixPersistenceManager mpm) {
+		this.id = id;
+		this.creationDate = new Date(creationDate.getTime());
 		this.packetRouter = packetRouter;
 		this.mixService = service;
 		this.channelRepository = mpm;
 		this.owner = owner;
+		this.name = name;
 		
 		this.participantsListeners = new ArrayList<>();
 		this.participants = new HashMap<>();
 		this.nodes = new HashMap<>();
-		this.name = name;
 		
 		nodes.put("urn:xmpp:mix:nodes:participants", new MixChannelNodeImpl(packetRouter, this, "urn:xmpp:mix:nodes:participants",
 				new MixChannelParticipantsNodeItemsProvider(this)));
@@ -78,6 +92,32 @@ public class LocalMixChannel implements MixChannel {
 		nodes.put(NODE_MESSAGES, new MixChannelNodeImpl(packetRouter, this, NODE_MESSAGES,
 				null));
 		
+		Collection<MixChannelParticipant> fromDB = mpm.findByChannel(this);
+		
+		for (MixChannelParticipant mcp : fromDB) {
+			mcp.setSubscriptions(mpm.findByParticipant(mcp));
+			participants.put(mcp.getJid(), mcp);
+		}
+		
+	}
+
+	public LocalMixChannel(MixService service, String name, JID owner, PacketRouter packetRouter, MixPersistenceManager mpm) {
+		this.packetRouter = packetRouter;
+		this.mixService = service;
+		this.channelRepository = mpm;
+		this.owner = owner;
+		this.name = name;
+		
+		this.participantsListeners = new ArrayList<>();
+		this.participants = new HashMap<>();
+		this.nodes = new HashMap<>();
+		
+		nodes.put("urn:xmpp:mix:nodes:participants", new MixChannelNodeImpl(packetRouter, this, "urn:xmpp:mix:nodes:participants",
+				new MixChannelParticipantsNodeItemsProvider(this)));
+
+		nodes.put(NODE_MESSAGES, new MixChannelNodeImpl(packetRouter, this, NODE_MESSAGES,
+				null));
+
 		this.setCreationDate(new Date());
 		
 		// Add the owner as a participant, and subscribe to all nodes

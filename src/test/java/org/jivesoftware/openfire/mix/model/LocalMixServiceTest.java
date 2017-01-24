@@ -28,6 +28,7 @@ import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixXmppServiceImpl;
 import org.jivesoftware.openfire.mix.exception.CannotCreateMixChannelException;
+import org.jivesoftware.openfire.mix.exception.CannotDestroyMixChannelException;
 import org.jivesoftware.openfire.mix.exception.MixChannelAlreadyExistsException;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.model.LocalMixService;
@@ -398,7 +399,7 @@ public class LocalMixServiceTest {
 	}
 	
 	@Test
-	public void testSuccessfulChannelDestruction() throws MixPersistenceException, MixChannelAlreadyExistsException, UnauthorizedException, CannotCreateMixChannelException {
+	public void testSuccessfulChannelDestruction() throws MixPersistenceException, MixChannelAlreadyExistsException, UnauthorizedException, CannotCreateMixChannelException, CannotDestroyMixChannelException {
 		
 		mockery.checking(new Expectations() {{
 			one(mixPersistenceManager).save(with(any(MixChannel.class)));
@@ -428,7 +429,7 @@ public class LocalMixServiceTest {
 	}
 	
 	@Test(expected=UnauthorizedException.class)
-	public void thatDeletionByNotOwnerThrowsException() throws MixPersistenceException, MixChannelAlreadyExistsException, UnauthorizedException, CannotCreateMixChannelException {
+	public void thatDeletionByNotOwnerThrowsException() throws MixPersistenceException, MixChannelAlreadyExistsException, UnauthorizedException, CannotCreateMixChannelException, CannotDestroyMixChannelException {
 		mockery.checking(new Expectations() {{
 			one(mixPersistenceManager).save(with(any(MixChannel.class)));
 			will(returnValue(testChannelOne));

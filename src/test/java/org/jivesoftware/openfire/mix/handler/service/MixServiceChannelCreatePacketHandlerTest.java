@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.dom4j.Element;
 import org.jivesoftware.openfire.mix.MixService;
+import org.jivesoftware.openfire.mix.TestConstants;
 import org.jivesoftware.openfire.mix.exception.MixChannelAlreadyExistsException;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -44,14 +45,14 @@ public class MixServiceChannelCreatePacketHandlerTest {
 	public void testCreateChannel() throws Exception {
 		// Create a create IQ
 		final IQ createRequest = new IQ(IQ.Type.set);
-		createRequest.setFrom(TEST_SENDER);
-		createRequest.setTo(TEST_DOMAIN + "." + TEST_SUBDOMAIN);
+		createRequest.setFrom(TestConstants.TEST_USERS_JID);
+		createRequest.setTo(TestConstants.MIX_CHANNEL_JID);
 		
 		Element createElement = createRequest.setChildElement("create", "urn:xmpp:mix:0");
-		createElement.addAttribute("channel", "coven");
+		createElement.addAttribute("channel", TestConstants.TEST_MIX_CHANNEL_NAME);
 		
 		mockery.checking(new Expectations() {{
-			one(mockMixService).createChannel(TEST_SENDER, "coven");
+			one(mockMixService).createChannel(TestConstants.TEST_USERS_JID, TestConstants.TEST_MIX_CHANNEL_NAME);
 		}});
 		
 		IQ result = handler.processIQ(mockMixService, createRequest);

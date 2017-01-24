@@ -24,6 +24,7 @@ import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.MixXmppService;
 import org.jivesoftware.openfire.mix.exception.CannotCreateMixChannelException;
+import org.jivesoftware.openfire.mix.exception.CannotDestroyMixChannelException;
 import org.jivesoftware.openfire.mix.exception.MixChannelAlreadyExistsException;
 import org.jivesoftware.util.JiveProperties;
 import org.jivesoftware.util.LocaleUtils;
@@ -327,7 +328,7 @@ public class LocalMixService implements Component, MixService, ServerItemsProvid
 	}
 
 	@Override
-	public boolean destroyChannel(JID requestor, String name) throws UnauthorizedException {
+	public void destroyChannel(JID requestor, String name) throws UnauthorizedException, CannotDestroyMixChannelException {
 
 		MixChannel toDestroy = this.getChannel(name);
 		
@@ -340,13 +341,13 @@ public class LocalMixService implements Component, MixService, ServerItemsProvid
 					this.persistenceManager.delete(toDestroy);
 				} catch (MixPersistenceException e) {
 					Log.error(e.getMessage());
-					return false;
+					throw new CannotDestroyMixChannelException(name, e.getMessage());
 				}	
 			} else {
 				throw new UnauthorizedException("Not owner");
 			}
 			
 		}
-		return true;
+		return;
 	}
 }

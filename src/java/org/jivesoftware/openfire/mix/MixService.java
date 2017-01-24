@@ -8,6 +8,7 @@ import org.xmpp.component.Component;
 import org.xmpp.packet.JID;
 import org.jivesoftware.openfire.auth.UnauthorizedException;
 import org.jivesoftware.openfire.mix.exception.CannotCreateMixChannelException;
+import org.jivesoftware.openfire.mix.exception.CannotDestroyMixChannelException;
 import org.jivesoftware.openfire.mix.exception.MixChannelAlreadyExistsException;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 
@@ -40,7 +41,7 @@ public interface MixService extends Component {
 
 	MixChannel createChannel(JID owner, String name) throws MixChannelAlreadyExistsException, CannotCreateMixChannelException;
 	
-	boolean destroyChannel(JID requestor, String name) throws UnauthorizedException;
+	void destroyChannel(JID requestor, String name) throws UnauthorizedException, CannotDestroyMixChannelException;
 
 	MixChannel getChannel(String channelName);
 }

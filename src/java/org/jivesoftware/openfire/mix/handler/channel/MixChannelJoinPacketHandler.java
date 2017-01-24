@@ -7,6 +7,7 @@ import java.util.Set;
 import org.apache.commons.lang.NotImplementedException;
 import org.dom4j.Element;
 import org.dom4j.Node;
+import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannelParticipant;
 import org.xmpp.packet.IQ;
@@ -34,7 +35,13 @@ public class MixChannelJoinPacketHandler implements MixChannelPacketHandler {
 				}
 			}
 
-			MixChannelParticipant mcp = channel.addParticipant(iq.getFrom().asBareJID(), subscriptionRequests);
+			MixChannelParticipant mcp = null;
+			try {
+				mcp = channel.addParticipant(iq.getFrom().asBareJID(), subscriptionRequests);
+			} catch (MixPersistenceException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 
 			IQ result = IQ.createResultIQ(iq);
 			

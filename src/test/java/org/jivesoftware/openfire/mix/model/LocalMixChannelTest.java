@@ -64,10 +64,13 @@ public class LocalMixChannelTest {
 	State settingUp = test.is("setting up");
 	State setUp = test.is("set up");
 	
-	public LocalMixChannelTest() {
+	public LocalMixChannelTest() throws MixPersistenceException {
         context.checking(new Expectations() {{
             allowing(mockMixService).getServiceDomain();
             will(returnValue(TEST_MIX_DOMAIN));
+            
+            allowing(mockPersistenceManager).save(with(any(LocalMixChannel.class)));
+            allowing(mockPersistenceManager).save(with(any(MixChannelParticipant.class)));
             
             allowing(mockRouter).route(with(any(Packet.class)));
             when(test.isNot("set up"));
@@ -81,15 +84,9 @@ public class LocalMixChannelTest {
         
 		fixture = new LocalMixChannel(mockMixService, TEST_MIX_CHANNEL_NAME, TEST_USER1_JID, mockRouter, mockPersistenceManager);
 	}
-
 	
 	@Test
-	public void thatOwnerIsParticipant() {
-		assertNotNull(fixture.getParticipantByJID(TEST_USER1_JID));
-	}
-	
-	@Test
-	public void thatFirstUserCanJoinChannelAndSubscribeToNodes() {	    
+	public void thatFirstUserCanJoinChannelAndSubscribeToNodes() throws MixPersistenceException {	    
 		
 		// Expect that a single message is sent to the participant that has just signed up 
 	    context.checking(new Expectations() {{
@@ -103,7 +100,7 @@ public class LocalMixChannelTest {
 	}
 	
 	@Test
-	public void thatSecondUserJoiningTriggersTwoParticipantUpdates() {
+	public void thatSecondUserJoiningTriggersTwoParticipantUpdates() throws MixPersistenceException {
 		
 		context.checking(new Expectations() {{
 			// One for the first participant, and two for the second participant
@@ -116,7 +113,7 @@ public class LocalMixChannelTest {
 	}
 	
 	@Test
-	public void testMessageToGroupIsReflectedToOtherParticipants() {
+	public void testMessageToGroupIsReflectedToOtherParticipants() throws MixPersistenceException {
 		settingUp.activate();
 		
 		// We have three participants

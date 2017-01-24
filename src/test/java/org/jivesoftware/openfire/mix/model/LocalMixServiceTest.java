@@ -357,6 +357,8 @@ public class LocalMixServiceTest {
 			allowing(newMixChannel).getParticipantByJID(TEST_SENDER_JID);
 			one(mixPersistenceManager).save(with(Matchers.<MixChannel>hasProperty("name", equal("coven"))));
 			will(returnValue(newMixChannel));
+			allowing(newMixChannel).addParticipant(TEST_SENDER_JID);
+			one(mixPersistenceManager).save(with(any(MixChannelParticipant.class)));
 		}});
 		
 		MixChannel result = mixServiceImpl.createChannel(TEST_SENDER_JID, TEST_CHANNEL_NAME);
@@ -404,6 +406,7 @@ public class LocalMixServiceTest {
 		mockery.checking(new Expectations() {{
 			one(mixPersistenceManager).save(with(any(MixChannel.class)));
 			will(returnValue(testChannelOne));
+			one(mixPersistenceManager).save(with(any(MixChannelParticipant.class)));
 			
 			one(mixPersistenceManager).delete(with(any(MixChannelParticipant.class)));
 			one(mixPersistenceManager).delete(with(any(MixChannel.class)));
@@ -433,6 +436,7 @@ public class LocalMixServiceTest {
 		mockery.checking(new Expectations() {{
 			one(mixPersistenceManager).save(with(any(MixChannel.class)));
 			will(returnValue(testChannelOne));
+			one(mixPersistenceManager).save(with(any(MixChannelParticipant.class)));
 			
 			one(mixPersistenceManager).delete(with(any(MixChannel.class)));
 		}});

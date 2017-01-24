@@ -6,6 +6,7 @@ import org.hamcrest.Description;
 import org.hamcrest.Factory;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
+import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.handler.channel.MixChannelJoinPacketHandler;
 import org.jivesoftware.openfire.mix.model.LocalMixChannelParticipant;
 import org.jivesoftware.openfire.mix.model.MixChannel;
@@ -55,7 +56,7 @@ public class MixChannelJoinPacketHandlerTest {
 
 	
 	@Test
-	public void testSuccessfulJoinRequest() {
+	public void testSuccessfulJoinRequest() throws MixPersistenceException {
 		
 		final Set<String> subscriptions = new HashSet<String>(Arrays.asList(PARTIAL_NODE_SET));
 		

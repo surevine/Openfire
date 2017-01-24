@@ -86,6 +86,7 @@ public class LocalMixChannel implements MixChannel {
 		this.participants = new HashMap<>();
 		this.nodes = new HashMap<>();
 		
+		// TODO these shouldn't be hardcoded
 		nodes.put("urn:xmpp:mix:nodes:participants", new MixChannelNodeImpl(packetRouter, this, "urn:xmpp:mix:nodes:participants",
 				new MixChannelParticipantsNodeItemsProvider(this)));
 
@@ -98,6 +99,15 @@ public class LocalMixChannel implements MixChannel {
 			mcp.setSubscriptions(mpm.findByParticipant(mcp));
 			participants.put(mcp.getJid(), mcp);
 		}
+		
+	}
+	
+	public static LocalMixChannel constructAndCascadePersist(MixService service, String name, JID owner, PacketRouter packetRouter, MixPersistenceManager mpm) throws MixPersistenceException {
+		
+		LocalMixChannel lmc = new LocalMixChannel(service, name, owner, packetRouter, mpm);
+		lmc = (LocalMixChannel) mpm.save(lmc);
+		lmc.addParticipant(owner);
+		return lmc;
 		
 	}
 
@@ -119,9 +129,6 @@ public class LocalMixChannel implements MixChannel {
 				null));
 
 		this.setCreationDate(new Date());
-		
-		// Add the owner as a participant, and subscribe to all nodes
-		this.addParticipant(owner, nodes.keySet());
 	}
 
 	@Override
@@ -160,7 +167,7 @@ public class LocalMixChannel implements MixChannel {
 	}
 
 	@Override
-	public MixChannelParticipant addParticipant(JID jid, Set<String> subscribeNodes) {
+	public MixChannelParticipant addParticipant(JID jid, Set<String> subscribeNodes) throws MixPersistenceException {
 		JID proxyJid = this.getNewProxyJID();
 		MixChannelParticipant participant = new LocalMixChannelParticipant(proxyJid, jid, this, subscribeNodes);
 
@@ -170,8 +177,23 @@ public class LocalMixChannel implements MixChannel {
 		for (MixChannelParticipantsListener listener : participantsListeners) {
 			listener.onParticipantAdded(participant);
 		}
+		
+		channelRepository.save(participant);
 
 		return participant;
+	}
+	
+
+	/**
+	 * Add the participant and subscribe to all nodes
+	 * 
+	 * @param owner
+	 * @return
+	 * @throws MixPersistenceException 
+	 */
+	@Override
+	public MixChannelParticipant addParticipant(JID owner) throws MixPersistenceException {
+		return this.addParticipant(owner, this.nodes.keySet());
 	}
 	
 	@Override
@@ -292,4 +314,5 @@ public class LocalMixChannel implements MixChannel {
 		}
 		
 	}
+
 }

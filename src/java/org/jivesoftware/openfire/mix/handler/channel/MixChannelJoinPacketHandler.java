@@ -36,22 +36,22 @@ public class MixChannelJoinPacketHandler implements MixChannelPacketHandler {
 			}
 
 			MixChannelParticipant mcp = null;
-			try {
-				mcp = channel.addParticipant(iq.getFrom().asBareJID(), subscriptionRequests);
-			} catch (MixPersistenceException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			
 
 			IQ result = IQ.createResultIQ(iq);
 			
 			Element joinElement = result.setChildElement("join", "urn:xmpp:mix:0");
-
-			for (String subscription : mcp.getSubscriptions()) {
-				Element current = joinElement.addElement("node");
-				current.addAttribute("node", subscription);
-			}
 			
+			try {
+				mcp = channel.addParticipant(iq.getFrom().asBareJID(), subscriptionRequests);
+
+				for (String subscription : mcp.getSubscriptions()) {
+					Element current = joinElement.addElement("node");
+					current.addAttribute("node", subscription);
+				}
+			} catch (MixPersistenceException e) {
+				result.setType(IQ.Type.error);
+			}
 			return result;
 		}
 

@@ -183,4 +183,9 @@ public class LocalMixChannelTest {
 		assertNull(fixture.getParticipantByJID(TEST_USER1_JID));
 
 	}
+	
+	@Test(expected=CannotLeaveMixChannelException.class)
+	public void testExceptionThrownWhenLeaveNotChannelParticipant() throws CannotLeaveMixChannelException {
+		fixture.removeParticipant(new JID("not_participant", TEST_SERVICE_DOMAIN, null));
+	}
 }

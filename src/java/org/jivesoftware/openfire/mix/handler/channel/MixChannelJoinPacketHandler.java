@@ -20,34 +20,35 @@ public class MixChannelJoinPacketHandler implements MixChannelPacketHandler {
 	public IQ processIQ(MixChannel channel, IQ iq) {
 		// Unpack packet
 		Element joinNode = iq.getChildElement();
-
-		@SuppressWarnings("unchecked")
-		List<Element> selectedSubscriptions = joinNode.elements("subscribe");
-
-		Set<String> subscriptionRequests = new HashSet<>();
-
-		for (Node subscription : selectedSubscriptions) {
-			if (subscription.getNodeType() == Node.ELEMENT_NODE) {
-				Element elem = (Element) subscription;
-				subscriptionRequests.add(elem.attributeValue("node"));
-			}
-		}
-
-		MixChannelParticipant mcp = channel.addParticipant(iq.getFrom().asBareJID(), subscriptionRequests);
-
-		IQ result = new IQ(Type.result, iq.getID());
-		result.setFrom(channel.getJID());
-		result.setTo(iq.getFrom());
-		result.setChildElement("join", "urn:xmpp:mix:0");
-		Element joinElement = result.getChildElement();
-		joinElement.addAttribute("jid", iq.getFrom().toBareJID());
-
-		for (String subscription : mcp.getSubscriptions()) {
-			Element current = joinElement.addElement("node");
-			current.addAttribute("node", subscription);
-		}
 		
-		return result;
+		if ("join".equals(joinNode.getName())) {
+			@SuppressWarnings("unchecked")
+			List<Element> selectedSubscriptions = joinNode.elements("subscribe");
+
+			Set<String> subscriptionRequests = new HashSet<>();
+
+			for (Node subscription : selectedSubscriptions) {
+				if (subscription.getNodeType() == Node.ELEMENT_NODE) {
+					Element elem = (Element) subscription;
+					subscriptionRequests.add(elem.attributeValue("node"));
+				}
+			}
+
+			MixChannelParticipant mcp = channel.addParticipant(iq.getFrom().asBareJID(), subscriptionRequests);
+
+			IQ result = IQ.createResultIQ(iq);
+			
+			Element joinElement = result.setChildElement("join", "urn:xmpp:mix:0");
+
+			for (String subscription : mcp.getSubscriptions()) {
+				Element current = joinElement.addElement("node");
+				current.addAttribute("node", subscription);
+			}
+			
+			return result;
+		}
+
+		return null;
 	}
 
 	@Override

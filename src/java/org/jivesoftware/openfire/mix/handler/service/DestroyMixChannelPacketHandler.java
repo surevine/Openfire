@@ -24,7 +24,7 @@ public class DestroyMixChannelPacketHandler implements MixServicePacketHandler {
 			reply.setChildElement(iq.getChildElement().createCopy());
 
 			try {
-				service.destroyChannel(iq.getFrom(), iq.getTo().getNode());
+				service.destroyChannel(iq.getFrom(), iq.getChildElement().attributeValue("channel"));
 			} catch (Exception  e) {
 				LOG.error("Unable to destroy mix channel + " + iq.getTo().getNode(), e);
 				reply.setType(Type.error);

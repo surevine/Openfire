@@ -333,7 +333,7 @@ public class LocalMixService implements Component, MixService, ServerItemsProvid
 		MixChannel toDestroy = this.getChannel(name);
 		
 		if (toDestroy != null) {
-			if (toDestroy.getOwner().equals(requestor)) {
+			if (toDestroy.getOwner().toBareJID().equals(requestor.toBareJID())) {
 				channels.remove(name);
 
 				try {

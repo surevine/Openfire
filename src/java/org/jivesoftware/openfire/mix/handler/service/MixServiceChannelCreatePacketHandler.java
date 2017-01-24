@@ -15,15 +15,19 @@ public class MixServiceChannelCreatePacketHandler implements MixServicePacketHan
 
 		final IQ reply = IQ.createResultIQ(iq);
 		reply.setChildElement(iq.getChildElement().createCopy());
-		
-		try {
-			service.createChannel(iq.getFrom(), iq.getChildElement().attributeValue("channel"));
-		} catch(MixChannelAlreadyExistsException e) {
-			reply.setType(Type.error);
-			reply.setError(Condition.conflict);
+
+		if ("create".equals(iq.getChildElement().getName())) {
+			try {
+				service.createChannel(iq.getFrom(), iq.getChildElement().attributeValue("channel"));
+			} catch(MixChannelAlreadyExistsException e) {
+				reply.setType(Type.error);
+				reply.setError(Condition.conflict);
+			}
+			
+			return reply;
 		}
 		
-		return reply;
+		return null;
 	}
 
 	@Override

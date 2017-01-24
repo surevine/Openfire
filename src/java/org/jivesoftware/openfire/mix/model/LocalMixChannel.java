@@ -177,8 +177,10 @@ public class LocalMixChannel implements MixChannel {
 	@Override
 	public void removeParticipant(JID jid) throws CannotLeaveMixChannelException {
 
-		if (participants.containsKey(jid)) {
-			MixChannelParticipant mcp = participants.get(jid);
+		JID bareJid = jid.asBareJID();
+		
+		if (participants.containsKey(bareJid)) {
+			MixChannelParticipant mcp = participants.get(bareJid);
 			
 			// Let all listeners know that the participant has left
 			for (MixChannelParticipantsListener listener : participantsListeners) {
@@ -191,7 +193,10 @@ public class LocalMixChannel implements MixChannel {
 				LOG.error(e.getMessage());
 				throw new CannotLeaveMixChannelException(this.getName(), e.getMessage());
 			}
-		} 
+		} else {
+			throw new CannotLeaveMixChannelException(this.getName(), "Not a participant");
+		}
+		
 		
 		return;
 	}

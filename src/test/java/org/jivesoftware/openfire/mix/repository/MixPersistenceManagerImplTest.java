@@ -216,7 +216,7 @@ public class MixPersistenceManagerImplTest {
 		Connection conn = DbConnectionManager.getConnection();
 		PreparedStatement stmt = conn.prepareStatement(
 				"SELECT * FROM " + MixPersistenceManagerImpl.CHANNEL_PARTICIPANT_TABLE_NAME + "  WHERE realJid=?");
-		stmt.setString(1, TEST_USER_NODE);
+		stmt.setString(1, TEST_USER_JID.toString());
 
 		ResultSet rs = stmt.executeQuery();
 		

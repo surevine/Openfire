@@ -206,8 +206,8 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 			// Set the PK for the MCP
 			mcp.setID(this.mcpKeys.nextUniqueID());
 			pstmt.setLong(1, mcp.getID());
-			pstmt.setString(2, mcp.getRealJid().getNode());
-			pstmt.setString(3, mcp.getJid().getNode());
+			pstmt.setString(2, mcp.getRealJid().toString());
+			pstmt.setString(3, mcp.getJid().toString());
 			pstmt.setString(4, mcp.getNick());
 			pstmt.setInt(5, mcp.getJidVisibilityPreference().getId());
 			pstmt.setLong(6, mcp.getChannel().getID());

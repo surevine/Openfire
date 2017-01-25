@@ -11,12 +11,12 @@ import org.jivesoftware.openfire.container.BasicModule;
 import org.jivesoftware.openfire.mix.handler.channel.MixChannelJoinPacketHandler;
 import org.jivesoftware.openfire.mix.handler.channel.MixChannelLeavePacketHandler;
 import org.jivesoftware.openfire.mix.handler.channel.MixChannelMessagePacketHandler;
+import org.jivesoftware.openfire.mix.handler.channel.MixChannelNodeItemsGetPacketHandler;
 import org.jivesoftware.openfire.mix.handler.channel.MixChannelPacketHandler;
 import org.jivesoftware.openfire.mix.handler.service.DestroyMixChannelPacketHandler;
 import org.jivesoftware.openfire.mix.handler.service.DiscoMixServicePacketHandler;
 import org.jivesoftware.openfire.mix.handler.service.MixServiceChannelCreatePacketHandler;
 import org.jivesoftware.openfire.mix.handler.service.MixServicePacketHandler;
-import org.jivesoftware.openfire.mix.repository.IdentityManager;
 import org.jivesoftware.openfire.mix.repository.MixIdentityManager;
 import org.jivesoftware.openfire.mix.repository.MixPersistenceManagerImpl;
 import org.jivesoftware.util.JiveProperties;
@@ -63,6 +63,7 @@ public class MixManager extends BasicModule {
     			new MixChannelJoinPacketHandler(),
     			new MixChannelMessagePacketHandler(router),
     			new MixChannelLeavePacketHandler()
+    			new MixChannelNodeItemsGetPacketHandler()
     		);
     	
     	MixXmppServiceImpl xmppService = new MixXmppServiceImpl(router, serviceHandlers, channelHandlers);

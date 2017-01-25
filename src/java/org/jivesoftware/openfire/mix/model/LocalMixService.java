@@ -193,7 +193,7 @@ public class LocalMixService implements Component, MixService, ServerItemsProvid
             	return null;
             }
             
-            for(MixChannelNode channelNode : channel.getNodes()) {
+            for(MixChannelNode<?> channelNode : channel.getNodes()) {
             	answer.add(new DiscoItem(channel.getJID(),
     					null, channelNode.getName(), null));
             }

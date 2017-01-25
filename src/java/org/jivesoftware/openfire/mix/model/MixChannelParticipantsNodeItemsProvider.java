@@ -6,9 +6,9 @@ import java.util.List;
 
 import org.jivesoftware.openfire.mix.model.MixChannel.MixChannelParticipantsListener;
 
-public class MixChannelParticipantsNodeItemsProvider implements MixChannelNodeItemsProvider {
+public class MixChannelParticipantsNodeItemsProvider implements MixChannelNodeItemsProvider<MixChannelParticipantNodeItem> {
 
-	List<ItemsListener> itemsListeners;
+	List<ItemsListener<MixChannelParticipantNodeItem>> itemsListeners;
 	
 	public MixChannelParticipantsNodeItemsProvider(MixChannel channel) {
 		itemsListeners = new ArrayList<>();
@@ -17,7 +17,7 @@ public class MixChannelParticipantsNodeItemsProvider implements MixChannelNodeIt
 			
 			@Override
 			public void onParticipantAdded(MixChannelParticipant participant) {
-				for(ItemsListener listener : itemsListeners) {
+				for(ItemsListener<MixChannelParticipantNodeItem> listener : itemsListeners) {
 					listener.publishItem(new MixChannelParticipantNodeItem(participant));
 				}
 			}
@@ -32,12 +32,12 @@ public class MixChannelParticipantsNodeItemsProvider implements MixChannelNodeIt
 	}
 	
 	@Override
-	public List<MixChannelNodeItem> getItems() {
+	public List<MixChannelParticipantNodeItem> getItems() {
 		return Collections.emptyList();
 	}
 
 	@Override
-	public void addItemsListener(ItemsListener listener) {
+	public void addItemsListener(ItemsListener<MixChannelParticipantNodeItem> listener) {
 		itemsListeners.add(listener);
 	}
 	

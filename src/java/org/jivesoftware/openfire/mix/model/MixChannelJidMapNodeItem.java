@@ -8,6 +8,10 @@ public class MixChannelJidMapNodeItem implements MixChannelNodeItem {
 	public MixChannelJidMapNodeItem(MixChannelParticipant participant) {
 		this.participant = participant;
 	}
+	
+	public MixChannelParticipant getParticipant() {
+		return participant;
+	}
 
 	@Override
 	public String getUID() {

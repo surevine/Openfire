@@ -51,7 +51,7 @@ public interface MixChannel {
 	
 	void removeParticipant(JID jid) throws CannotLeaveMixChannelException;
 
-	Collection<MixChannelNode> getNodes();
+	Collection<MixChannelNode<? extends MixChannelNodeItem>> getNodes();
 	
 	Collection<MixChannelParticipant> getParticipants();
 
@@ -67,7 +67,7 @@ public interface MixChannel {
 
 	JID getOwner();
 
-	MixChannelNode getNodeByName(String nodeName);
+	MixChannelNode<? extends MixChannelNodeItem> getNodeByName(String nodeName);
 	
 	void destroy() throws MixPersistenceException;
 

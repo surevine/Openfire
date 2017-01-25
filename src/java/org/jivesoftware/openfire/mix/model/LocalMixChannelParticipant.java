@@ -83,6 +83,15 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 	public JID getJid() {
 		return proxyJid;
 	}
+	
+	@Override
+	public Role getRole() {
+		if(getRealJid().asBareJID().equals(channel.getOwner().asBareJID())) {
+			return Role.OWNER;
+		}
+		
+		return Role.PARTICIPANT;
+	}
 
 	@Override
 	public int hashCode() {

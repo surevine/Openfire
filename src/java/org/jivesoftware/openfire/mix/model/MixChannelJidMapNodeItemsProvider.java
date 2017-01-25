@@ -5,9 +5,9 @@ import java.util.List;
 
 import org.jivesoftware.openfire.mix.model.MixChannel.MixChannelParticipantsListener;
 
-public class MixChannelJidMapNodeItemsProvider implements MixChannelNodeItemsProvider {
+public class MixChannelJidMapNodeItemsProvider implements MixChannelNodeItemsProvider<MixChannelJidMapNodeItem> {
 
-	List<ItemsListener> itemsListeners;
+	List<ItemsListener<MixChannelJidMapNodeItem>> itemsListeners;
 	
 	MixChannel channel;
 	
@@ -20,7 +20,7 @@ public class MixChannelJidMapNodeItemsProvider implements MixChannelNodeItemsPro
 			
 			@Override
 			public void onParticipantAdded(MixChannelParticipant participant) {
-				for(ItemsListener listener : itemsListeners) {
+				for(ItemsListener<MixChannelJidMapNodeItem> listener : itemsListeners) {
 					listener.publishItem(new MixChannelJidMapNodeItem(participant));
 				}
 			}
@@ -28,8 +28,8 @@ public class MixChannelJidMapNodeItemsProvider implements MixChannelNodeItemsPro
 	}
 	
 	@Override
-	public List<MixChannelNodeItem> getItems() {
-		List<MixChannelNodeItem> items = new ArrayList<>();
+	public List<MixChannelJidMapNodeItem> getItems() {
+		List<MixChannelJidMapNodeItem> items = new ArrayList<>();
 		
 		for(MixChannelParticipant participant : channel.getParticipants()) {
 			items.add(new MixChannelJidMapNodeItem(participant));
@@ -39,7 +39,7 @@ public class MixChannelJidMapNodeItemsProvider implements MixChannelNodeItemsPro
 	}
 
 	@Override
-	public void addItemsListener(ItemsListener listener) {
+	public void addItemsListener(ItemsListener<MixChannelJidMapNodeItem> listener) {
 		itemsListeners.add(listener);
 	}
 	

@@ -1,11 +1,11 @@
 package org.jivesoftware.openfire.mix;
 
 import org.dom4j.Element;
+import org.jivesoftware.openfire.mix.handler.MixRequestContext;
 import org.jivesoftware.openfire.mix.model.MixChannelNodeItem;
-import org.xmpp.packet.JID;
 
-public interface MixChannelNode {
+public interface MixChannelNode<T extends MixChannelNodeItem> {
 	String getName();
 
-	void appendAllItems(Element itemsEl);
+	void appendAllItems(MixRequestContext context, Element itemsEl);
 }

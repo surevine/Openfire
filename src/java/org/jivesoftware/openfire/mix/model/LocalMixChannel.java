@@ -101,15 +101,6 @@ public class LocalMixChannel implements MixChannel {
 		}
 		
 	}
-	
-	public static LocalMixChannel constructAndCascadePersist(MixService service, String name, JID owner, PacketRouter packetRouter, MixPersistenceManager mpm) throws MixPersistenceException {
-		
-		LocalMixChannel lmc = new LocalMixChannel(service, name, owner, packetRouter, mpm);
-		lmc = (LocalMixChannel) mpm.save(lmc);
-		lmc.addParticipant(owner);
-		return lmc;
-		
-	}
 
 	public LocalMixChannel(MixService service, String name, JID owner, PacketRouter packetRouter, MixPersistenceManager mpm) {
 		this.packetRouter = packetRouter;

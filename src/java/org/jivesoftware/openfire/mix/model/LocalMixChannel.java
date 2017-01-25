@@ -151,37 +151,39 @@ public class LocalMixChannel implements MixChannel {
 
 	@Override
 	public MixChannelParticipant addParticipant(JID jid, Set<String> subscribeNodes) throws CannotJoinMixChannelException {
-		JID proxyJid = this.getNewProxyJID();
-		MixChannelParticipant participant = new LocalMixChannelParticipant(proxyJid, jid.asBareJID(), this, subscribeNodes);
 
-		this.participants.put(jid, participant);
+		JID joiner = jid.asBareJID();
 		
-		// Trigger the participant added event.
-		for (MixChannelParticipantsListener listener : participantsListeners) {
-			listener.onParticipantAdded(participant);
-		}
-		
-		try {
-			channelRepository.save(participant);
-		} catch (MixPersistenceException e) {
-			LOG.error("Persistence exception adding participant " + jid + " to " + this.getName(), e);
-			throw new CannotJoinMixChannelException(this.getName(), e.getMessage());
-		}
+		if (!this.participants.containsKey(joiner)) {
+			JID proxyJid = this.getNewProxyJID();
+			
+			MixChannelParticipant participant = null;
+			
+			if (subscribeNodes.isEmpty()) {
+				participant = new LocalMixChannelParticipant(proxyJid, joiner, this);
+			} else {
+				participant = new LocalMixChannelParticipant(proxyJid, joiner, this, subscribeNodes);				
+			}
 
-		return participant;
-	}
-	
 
-	/**
-	 * Add the participant and subscribe to all nodes
-	 * 
-	 * @param owner
-	 * @return
-	 * @throws MixPersistenceException 
-	 */
-	@Override
-	public MixChannelParticipant addParticipant(JID owner) throws CannotJoinMixChannelException {
-		return this.addParticipant(owner, this.nodes.keySet());
+			this.participants.put(joiner, participant);
+			
+			// Trigger the participant added event.
+			for (MixChannelParticipantsListener listener : participantsListeners) {
+				listener.onParticipantAdded(participant);
+			}
+			
+			try {
+				channelRepository.save(participant);
+			} catch (MixPersistenceException e) {
+				LOG.error("Persistence exception adding participant " + jid + " to " + this.getName(), e);
+				throw new CannotJoinMixChannelException(this.getName(), e.getMessage());
+			}
+			
+			return participant;
+		} else {
+			throw new CannotJoinMixChannelException(this.getName(), "Already a member");
+		}
 	}
 	
 	@Override

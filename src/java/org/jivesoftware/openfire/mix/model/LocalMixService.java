@@ -2,6 +2,7 @@ package org.jivesoftware.openfire.mix.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -313,7 +314,7 @@ public class LocalMixService implements Component, MixService, ServerItemsProvid
 		try {
 			newChannel = persistenceManager.save(newChannel);
 			// Need to delay adding the owner as a participant until we have a database ID
-			newChannel.addParticipant(owner);
+			newChannel.addParticipant(owner, Collections.<String> emptySet());
 		} catch (Exception e) {
 			Log.error(e.getMessage());
 			throw new CannotCreateMixChannelException(name);

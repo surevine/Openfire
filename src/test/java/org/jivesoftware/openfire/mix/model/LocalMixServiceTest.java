@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -357,7 +358,7 @@ public class LocalMixServiceTest {
 			allowing(newMixChannel).getParticipantByJID(TEST_SENDER_JID);
 			one(mixPersistenceManager).save(with(Matchers.<MixChannel>hasProperty("name", equal("coven"))));
 			will(returnValue(newMixChannel));
-			allowing(newMixChannel).addParticipant(TEST_SENDER_JID);
+			allowing(newMixChannel).addParticipant(TEST_SENDER_JID, Collections.<String> emptySet());
 			one(mixPersistenceManager).save(with(any(MixChannelParticipant.class)));
 		}});
 		

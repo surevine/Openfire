@@ -186,4 +186,17 @@ public class LocalMixChannelTest {
 	public void testExceptionThrownWhenLeaveNotChannelParticipant() throws CannotLeaveMixChannelException {
 		fixture.removeParticipant(new JID("not_participant", TEST_SERVICE_DOMAIN, null));
 	}
+	
+	@Test(expected=CannotJoinMixChannelException.class)
+	public void testRepeatedJoinRequestThrowsException() throws CannotJoinMixChannelException, MixPersistenceException {
+		
+		context.checking(new Expectations() {{
+			one(mockPersistenceManager).save(with(any(MixChannelParticipant.class)));
+			allowing(mockRouter).route(with(any(Message.class)));
+			one(mockRouter).route(with(any(IQ.class)));
+	    }});
+		
+		fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)));
+		fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)));
+	}
 }

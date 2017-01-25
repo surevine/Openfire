@@ -47,8 +47,6 @@ public interface MixChannel {
 	void addParticipantsListener(MixChannelParticipantsListener listener);
 	
 	MixChannelParticipant addParticipant(JID jid, Set<String> subscribeNodes) throws CannotJoinMixChannelException;
-
-	MixChannelParticipant addParticipant(JID owner) throws CannotJoinMixChannelException;
 	
 	void removeParticipant(JID jid) throws CannotLeaveMixChannelException;
 

@@ -334,7 +334,7 @@ public class LocalMixServiceTest {
 		
 		Iterator<DiscoItem> discoItems = mixServiceImpl.getItems(testChannelOne.getName(), null, null);
 		
-		List<String> expectedNodes = new ArrayList<>(Arrays.asList("urn:xmpp:mix:nodes:participants", "urn:xmpp:mix:nodes:messages"));
+		List<String> expectedNodes = new ArrayList<>(Arrays.asList("urn:xmpp:mix:nodes:participants", "urn:xmpp:mix:nodes:messages", "urn:xmpp:mix:nodes:jidmap"));
 		
 		while(discoItems.hasNext()) {
 			DiscoItem item = discoItems.next();

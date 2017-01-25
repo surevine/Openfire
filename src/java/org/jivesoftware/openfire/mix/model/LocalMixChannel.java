@@ -210,7 +210,7 @@ public class LocalMixChannel implements MixChannel {
 			}
 			try {
 				this.channelRepository.delete(mcp);
-				this.participants.remove(jid);
+				this.participants.remove(bareJid);
 			} catch (MixPersistenceException e) {
 				LOG.error(e.getMessage());
 				throw new CannotLeaveMixChannelException(this.getName(), e.getMessage());
@@ -250,6 +250,12 @@ public class LocalMixChannel implements MixChannel {
 	@Override
 	public MixChannelParticipant getParticipantByJID(JID from) {
 		return participants.get(from);
+	}
+	
+
+	@Override
+	public Collection<MixChannelParticipant> getParticipants() {
+		return Collections.unmodifiableCollection(participants.values());
 	}
 
 	@Override
@@ -315,4 +321,9 @@ public class LocalMixChannel implements MixChannel {
 		
 	}
 
+	@Override
+	public boolean isDestructable(JID requestor) {
+		return this.getOwner().toBareJID().equals(requestor.toBareJID()) && this.getParticipants().size() == 1 ? true : false;
+
+	}
 }

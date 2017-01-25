@@ -335,7 +335,7 @@ public class LocalMixService implements Component, MixService, ServerItemsProvid
 		MixChannel toDestroy = this.getChannel(name);
 		
 		if (toDestroy != null) {
-			if (toDestroy.getOwner().toBareJID().equals(requestor.toBareJID())) {
+			if (toDestroy.isDestructable(requestor)) {
 				channels.remove(name);
 
 				try {

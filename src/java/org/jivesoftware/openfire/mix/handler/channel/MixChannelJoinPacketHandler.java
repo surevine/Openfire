@@ -52,6 +52,7 @@ public class MixChannelJoinPacketHandler implements MixChannelPacketHandler {
 			} catch (MixPersistenceException e) {
 				result.setType(IQ.Type.error);
 			}
+			
 			return result;
 		}
 

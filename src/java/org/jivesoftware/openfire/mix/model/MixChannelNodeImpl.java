@@ -10,6 +10,7 @@ import org.jivesoftware.openfire.mix.model.MixChannelNodeItemsProvider.ItemsList
 import org.jivesoftware.openfire.mix.policy.AlwaysAllowPermissionPolicy;
 import org.jivesoftware.openfire.mix.policy.PermissionPolicy;
 import org.jivesoftware.openfire.mix.policy.PermissionPolicy.Action;
+import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 
 public class MixChannelNodeImpl<T extends MixChannelNodeItem> implements MixChannelNode<T> {

@@ -24,6 +24,13 @@ public class MixChannelJidMapNodeItemsProvider implements MixChannelNodeItemsPro
 					listener.publishItem(new MixChannelJidMapNodeItem(participant));
 				}
 			}
+
+			@Override
+			public void onParticipantRemoved(MixChannelParticipant mcp) {
+				for(ItemsListener<MixChannelJidMapNodeItem> listener : itemsListeners) {
+					listener.retractItem(mcp.getJid());
+				}
+			}
 		});
 	}
 	

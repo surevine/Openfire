@@ -12,7 +12,7 @@ public class MixChannelParticipantNodeItem implements MixChannelNodeItem {
 
 	@Override
 	public String getId() {
-		return participant.getNick(); // This isn't right
+		return participant.getJid().toString();
 	}
 
 	@Override

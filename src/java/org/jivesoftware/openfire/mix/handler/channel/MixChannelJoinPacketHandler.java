@@ -8,6 +8,7 @@ import org.apache.commons.lang.NotImplementedException;
 import org.dom4j.Element;
 import org.dom4j.Node;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
+import org.jivesoftware.openfire.mix.exception.CannotJoinMixChannelException;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannelParticipant;
 import org.xmpp.packet.IQ;
@@ -43,13 +44,13 @@ public class MixChannelJoinPacketHandler implements MixChannelPacketHandler {
 			Element joinElement = result.setChildElement("join", "urn:xmpp:mix:0");
 			
 			try {
-				mcp = channel.addParticipant(iq.getFrom().asBareJID(), subscriptionRequests);
+				mcp = channel.addParticipant(iq.getFrom(), subscriptionRequests);
 
 				for (String subscription : mcp.getSubscriptions()) {
 					Element current = joinElement.addElement("node");
 					current.addAttribute("node", subscription);
 				}
-			} catch (MixPersistenceException e) {
+			} catch (CannotJoinMixChannelException e) {
 				result.setType(IQ.Type.error);
 			}
 			

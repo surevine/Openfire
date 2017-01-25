@@ -1,6 +1,7 @@
 package org.jivesoftware.openfire.mix.model;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.codec.digest.Md5Crypt;
@@ -25,11 +26,28 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 	private ChannelJidVisibilityPreference jvp = ChannelJidVisibilityPreference.ENFORCE_HIDDEN;
 	
 	public LocalMixChannelParticipant(JID proxyJid, JID jid, MixChannel channel, Set<String> subscriptions) {
+		this(proxyJid, jid, channel);
+		
+		// Only retain the subscriptions that are the intersection of both the supplied set and the ones supported by the channel
+		Set<String> intersection = new HashSet<String>(channel.getNodesAsStrings());
+		intersection.retainAll(subscriptions);
+		this.subscriptions = new HashSet<String>(intersection);
+	}
+	
+	/**
+	 * Constructor that allows a participant to subscribe to all supported nodes
+	 * 
+	 * @param proxyJid
+	 * @param jid
+	 * @param channel
+	 */
+	public LocalMixChannelParticipant(JID proxyJid, JID jid, MixChannel channel) {
 		this.proxyJid = proxyJid;
 		this.jid = jid;
 		this.channel = channel;
-		this.subscriptions = subscriptions;
 		this.nick = Md5Crypt.md5Crypt(jid.toBareJID().getBytes()); // Not sure what this should be yet
+		
+		this.subscriptions = new HashSet<String>(channel.getNodesAsStrings());		
 	}
 
 

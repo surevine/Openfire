@@ -314,7 +314,7 @@ public class LocalMixService implements Component, MixService, ServerItemsProvid
 			newChannel = persistenceManager.save(newChannel);
 			// Need to delay adding the owner as a participant until we have a database ID
 			newChannel.addParticipant(owner);
-		} catch (MixPersistenceException e) {
+		} catch (Exception e) {
 			Log.error(e.getMessage());
 			throw new CannotCreateMixChannelException(name);
 		}

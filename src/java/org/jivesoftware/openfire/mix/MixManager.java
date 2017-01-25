@@ -44,7 +44,7 @@ public class MixManager extends BasicModule {
 	private static final int MCP_SUBS_SEQ_TYPE = 502;
 	
     /**
-     * Creates a new MultiUserChatManager instance.
+     * Creates a new MixManager instance.
      */
     public MixManager() {
         super("Mediated Information eXchange (MIX) manager");
@@ -62,7 +62,7 @@ public class MixManager extends BasicModule {
     	List<MixChannelPacketHandler> channelHandlers = Arrays.asList(
     			new MixChannelJoinPacketHandler(),
     			new MixChannelMessagePacketHandler(router),
-    			new MixChannelLeavePacketHandler()
+    			new MixChannelLeavePacketHandler(),
     			new MixChannelNodeItemsGetPacketHandler()
     		);
     	

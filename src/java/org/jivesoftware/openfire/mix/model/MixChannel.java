@@ -7,6 +7,7 @@ import java.util.Set;
 import org.jivesoftware.database.JiveID;
 import org.jivesoftware.openfire.mix.MixChannelNode;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
+import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityMode;
 import org.jivesoftware.openfire.mix.exception.CannotLeaveMixChannelException;
 import org.jivesoftware.util.JiveConstants;
@@ -70,6 +71,8 @@ public interface MixChannel {
 	void destroy() throws MixPersistenceException;
 
 	boolean isDestructable(JID requestor);
+	
+	MixService getMixService();
 
 
 }

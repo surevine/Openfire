@@ -6,6 +6,7 @@ import org.dom4j.Element;
 import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.mix.MixChannelNode;
 import org.jivesoftware.openfire.mix.handler.MixRequestContext;
+import org.jivesoftware.openfire.mix.handler.MixRequestContextImpl;
 import org.jivesoftware.openfire.mix.model.MixChannelNodeItemsProvider.ItemsListener;
 import org.jivesoftware.openfire.mix.policy.AlwaysAllowPermissionPolicy;
 import org.jivesoftware.openfire.mix.policy.PermissionPolicy;
@@ -23,15 +24,15 @@ public class MixChannelNodeImpl<T extends MixChannelNodeItem> implements MixChan
 
 	private PacketRouter packetRouter;
 	
-	private PermissionPolicy<MixChannelParticipant, MixChannelNode<T>> nodePermissionPolicy;	
+	private PermissionPolicy<MixChannelNode<T>> nodePermissionPolicy;	
 	
-	private PermissionPolicy<MixChannelParticipant, T> itemPermissionPolicy;
+	private PermissionPolicy<T> itemPermissionPolicy;
 	
 	public MixChannelNodeImpl(final PacketRouter packetRouter, final MixChannel mixChannel, final String name, MixChannelNodeItemsProvider<T> itemsProvider) {
-		this(packetRouter, mixChannel, name, itemsProvider, new AlwaysAllowPermissionPolicy<MixChannelParticipant, T>(), new AlwaysAllowPermissionPolicy<MixChannelParticipant, MixChannelNode<T>>());
+		this(packetRouter, mixChannel, name, itemsProvider, new AlwaysAllowPermissionPolicy<T>(), new AlwaysAllowPermissionPolicy<MixChannelNode<T>>());
 	}
 	
-	public MixChannelNodeImpl(final PacketRouter packetRouter, final MixChannel mixChannel, final String name, MixChannelNodeItemsProvider<T> itemsProvider, final PermissionPolicy<MixChannelParticipant, T> itemPermissionPolicy, PermissionPolicy<MixChannelParticipant, MixChannelNode<T>> nodePermissionPolicy) {
+	public MixChannelNodeImpl(final PacketRouter packetRouter, final MixChannel mixChannel, final String name, MixChannelNodeItemsProvider<T> itemsProvider, final PermissionPolicy<T> itemPermissionPolicy, PermissionPolicy<MixChannelNode<T>> nodePermissionPolicy) {
 		this.mixChannel = mixChannel;
 		this.name = name;
 		this.itemsProvider = itemsProvider;
@@ -53,7 +54,9 @@ public class MixChannelNodeImpl<T extends MixChannelNodeItem> implements MixChan
 					Set<MixChannelParticipant> subscribers = mixChannel.getNodeSubscribers(name);
 	
 					for(MixChannelParticipant subscriber : subscribers) {
-						if(!itemPermissionPolicy.checkPermission(subscriber, item, Action.VIEW)) {
+						MixRequestContext context = new MixRequestContextImpl(subscriber, mixChannel.getMixService(), mixChannel);
+								
+						if(!itemPermissionPolicy.checkPermission(context, item, Action.VIEW)) {
 							// Skip the notification if they can't see the item
 							continue;
 						}
@@ -114,12 +117,12 @@ public class MixChannelNodeImpl<T extends MixChannelNodeItem> implements MixChan
 	@Override
 	public void appendAllItems(MixRequestContext context, Element parent) {
 		// If they don't have permission on the node then just do nothing
-		if(!nodePermissionPolicy.checkPermission(context.getMixChannelParticipant(), this, Action.VIEW)) {
+		if(!nodePermissionPolicy.checkPermission(context, this, Action.VIEW)) {
 			return;
 		}
 		
 		for(T item : itemsProvider.getItems()) {
-			if((itemPermissionPolicy == null) || (itemPermissionPolicy.checkPermission(context.getMixChannelParticipant(), item, Action.VIEW))) {
+			if((itemPermissionPolicy == null) || (itemPermissionPolicy.checkPermission(context, item, Action.VIEW))) {
 				addItemElement(parent, item);
 			}
 		}

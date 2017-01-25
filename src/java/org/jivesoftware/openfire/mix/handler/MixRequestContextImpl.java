@@ -16,13 +16,21 @@ public class MixRequestContextImpl implements MixRequestContext {
 	
 	private MixChannelParticipant participant = null;
 
-	public MixRequestContextImpl(JID recipient, MixService mixService, MixChannel mixChannel) {
-		this.actor = recipient;
+	public MixRequestContextImpl(JID actor, MixService mixService, MixChannel mixChannel) {
+		this.actor = actor;
 		this.mixService = mixService;
 		this.mixChannel = mixChannel;
 	}
+	
+	public MixRequestContextImpl(MixChannelParticipant recipient, MixService mixService, MixChannel mixChannel) {
+		this.actor = recipient.getRealJid();
+		this.participant = recipient;
+		this.mixService = mixService;
+		this.mixChannel = mixChannel;
+		this.isParticipantChecked = true;
+	}
 
-	public JID getRecipient() {
+	public JID getActor() {
 		return actor;
 	}
 

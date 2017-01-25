@@ -6,7 +6,7 @@ import org.jivesoftware.openfire.mix.model.MixChannelParticipant;
 import org.xmpp.packet.JID;
 
 public interface MixRequestContext {
-	JID getRecipient();
+	JID getActor();
 	
 	MixService getMixService();
 	

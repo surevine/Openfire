@@ -2,12 +2,13 @@ package org.jivesoftware.openfire.mix.policy;
 
 import java.util.List;
 
+import org.jivesoftware.openfire.mix.handler.MixRequestContext;
 import org.jivesoftware.openfire.mix.policy.PermissionVoter.PolicyVoterOutcome;
 
-public class VoterBasedPermissionPolicy<A, T> implements PermissionPolicy<A, T> {
-	List<PermissionVoter<A, T>> voters;
+public class VoterBasedPermissionPolicy<T> implements PermissionPolicy<T> {
+	List<PermissionVoter<T>> voters;
 	
-	public VoterBasedPermissionPolicy(List<PermissionVoter<A, T>> voters) {
+	public VoterBasedPermissionPolicy(List<PermissionVoter<T>> voters) {
 		this.voters = voters;
 	}
 
@@ -20,10 +21,10 @@ public class VoterBasedPermissionPolicy<A, T> implements PermissionPolicy<A, T> 
 	 *   <li>If all voters are evaluated and vote ALLOW then the decision is <code>true</code> for ALLOW
 	 * </ul>
 	 */
-	public boolean checkPermission(A actor, T subject,
+	public boolean checkPermission(MixRequestContext context, T subject,
 			PermissionPolicy.Action action) {
-		for(PermissionVoter<A, T> voter : voters) {
-			PermissionVoter.PolicyVoterOutcome outcome = voter.vote(actor, subject, action);
+		for(PermissionVoter<T> voter : voters) {
+			PermissionVoter.PolicyVoterOutcome outcome = voter.vote(context, subject, action);
 			
 			if(outcome == PolicyVoterOutcome.DENY) {
 				return false;

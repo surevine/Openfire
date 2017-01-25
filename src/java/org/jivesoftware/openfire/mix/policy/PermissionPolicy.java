@@ -1,9 +1,12 @@
 package org.jivesoftware.openfire.mix.policy;
 
-public interface PermissionPolicy<A, T> {
+import org.jivesoftware.openfire.mix.handler.MixRequestContext;
+
+public interface PermissionPolicy<T> {
 	public enum Action {
-		VIEW
+		VIEW,
+		JOIN
 	}
 	
-	boolean checkPermission(A actor, T subject, Action action);
+	boolean checkPermission(MixRequestContext context, T subject, Action action);
 }

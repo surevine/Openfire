@@ -1,6 +1,7 @@
 package org.jivesoftware.openfire.mix.handler.service;
 
 import org.jivesoftware.openfire.mix.MixService;
+import org.jivesoftware.openfire.mix.handler.MixRequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmpp.packet.IQ;
@@ -16,7 +17,7 @@ public class DestroyMixChannelPacketHandler implements MixServicePacketHandler {
 	private static final String DESTROY_ELEM_NAME = "destroy";
 
 	@Override
-	public IQ processIQ(MixService service, IQ iq) throws Exception {
+	public IQ processIQ(MixRequestContext context, MixService service, IQ iq) throws Exception {
 
 		final IQ reply = IQ.createResultIQ(iq);
 		if (DESTROY_ELEM_NAME.equals(iq.getChildElement().getName())) {
@@ -36,14 +37,12 @@ public class DestroyMixChannelPacketHandler implements MixServicePacketHandler {
 	}
 
 	@Override
-	public boolean processPresence(MixService actor, Presence presence) throws Exception {
-		// TODO Auto-generated method stub
+	public boolean processPresence(MixRequestContext context, MixService actor, Presence presence) throws Exception {
 		return false;
 	}
 
 	@Override
-	public boolean processMessage(MixService actor, Message message) throws Exception {
-		// TODO Auto-generated method stub
+	public boolean processMessage(MixRequestContext context, MixService actor, Message message) throws Exception {
 		return false;
 	}
 }

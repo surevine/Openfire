@@ -3,25 +3,24 @@ package org.jivesoftware.openfire.mix.policy;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jivesoftware.openfire.mix.handler.MixRequestContext;
 import org.jivesoftware.openfire.mix.model.MixChannelJidMapNodeItem;
-import org.jivesoftware.openfire.mix.model.MixChannelParticipant;
 
 public class MixChannelJidMapNodeItemPermissionPolicy
-		implements PermissionPolicy<MixChannelParticipant, MixChannelJidMapNodeItem> {
+		implements PermissionPolicy<MixChannelJidMapNodeItem> {
 
-	VoterBasedPermissionPolicy<MixChannelParticipant, MixChannelJidMapNodeItem> delegate;
+	VoterBasedPermissionPolicy<MixChannelJidMapNodeItem> delegate;
 
 	public MixChannelJidMapNodeItemPermissionPolicy() {
-		List<PermissionVoter<MixChannelParticipant, MixChannelJidMapNodeItem>> voters = new ArrayList<>();
+		List<PermissionVoter<MixChannelJidMapNodeItem>> voters = new ArrayList<>();
 
-		voters.add(new AdminCanDoAnythingPermissionVoter<MixChannelParticipant, MixChannelJidMapNodeItem>());
+		voters.add(new AllowAdminPermissionVoter<MixChannelJidMapNodeItem>());
 
 		delegate = new VoterBasedPermissionPolicy<>(voters);
 	}
 
 	@Override
-	public boolean checkPermission(MixChannelParticipant actor, MixChannelJidMapNodeItem subject,
-			org.jivesoftware.openfire.mix.policy.PermissionPolicy.Action action) {
-		return delegate.checkPermission(actor, subject, action);
+	public boolean checkPermission(MixRequestContext context, MixChannelJidMapNodeItem subject, Action action) {
+		return delegate.checkPermission(context, subject, action);
 	}
 }

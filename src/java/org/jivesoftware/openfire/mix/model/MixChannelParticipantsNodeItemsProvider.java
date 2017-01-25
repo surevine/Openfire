@@ -24,7 +24,7 @@ public class MixChannelParticipantsNodeItemsProvider implements MixChannelNodeIt
 
 			@Override
 			public void onParticipantRemoved(MixChannelParticipant leaver) {
-				for(ItemsListener listener : itemsListeners) {
+				for(ItemsListener<MixChannelParticipantNodeItem> listener : itemsListeners) {
 					listener.retractItem(leaver.getJid());
 				}
 			}

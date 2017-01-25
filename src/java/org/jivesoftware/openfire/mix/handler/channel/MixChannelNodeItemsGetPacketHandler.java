@@ -1,5 +1,7 @@
 package org.jivesoftware.openfire.mix.handler.channel;
 
+import java.util.Iterator;
+
 import org.dom4j.Element;
 import org.dom4j.QName;
 import org.jivesoftware.openfire.mix.MixChannelNode;
@@ -16,7 +18,7 @@ public class MixChannelNodeItemsGetPacketHandler implements MixChannelPacketHand
 	public static final QName QNAME = QName.get("pubsub", "http://jabber.org/protocol/pubsub");
 
 	@Override
-	public IQ processIQ(MixRequestContext context, MixChannel actor, IQ iq) throws Exception {
+	public IQ processIQ(MixRequestContext context, MixChannel channel, IQ iq) throws Exception {
 		IQ reply = IQ.createResultIQ(iq);
 		
 		Element el = iq.getChildElement();
@@ -37,27 +39,33 @@ public class MixChannelNodeItemsGetPacketHandler implements MixChannelPacketHand
 		
 		String nodeName = itemsEl.attributeValue("node");
 		
-		MixChannelNode<? extends MixChannelNodeItem> node = actor.getNodeByName(nodeName);
+		MixChannelNode<? extends MixChannelNodeItem> node = channel.getNodeByName(nodeName);
 		
 		if(node == null) {
 			reply.setError(Condition.item_not_found);
 			return reply;
 		}
 		
-		node.appendAllItems(context, replyItemsEl);
+		@SuppressWarnings("unchecked")
+		Iterator<Element> requestedItems = itemsEl.elementIterator("item");
+		
+		if(!requestedItems.hasNext()) {
+			// No requested items means we send all of them
+			node.appendAllItems(context, replyItemsEl);
+		} else {
+			
+		}
 		
 		return reply;
 	}
 
 	@Override
 	public boolean processPresence(MixRequestContext context, MixChannel actor, Presence presence) throws Exception {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean processMessage(MixRequestContext context, MixChannel actor, Message message) throws Exception {
-		// TODO Auto-generated method stub
 		return false;
 	}
 

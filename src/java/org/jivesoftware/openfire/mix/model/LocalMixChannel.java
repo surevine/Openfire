@@ -40,6 +40,8 @@ public class LocalMixChannel implements MixChannel {
 	
 	private Map<JID, MixChannelParticipant> participants;
 
+	private Map<JID, MixChannelParticipant> participantsByProxyJid;
+
 	private Map<String, MixChannelNode<? extends MixChannelNodeItem>> nodes;
 
 	private List<MixChannelParticipantsListener> participantsListeners;
@@ -96,6 +98,7 @@ public class LocalMixChannel implements MixChannel {
 		
 		this.participantsListeners = new ArrayList<>();
 		this.participants = new HashMap<>();
+		this.participantsByProxyJid = new HashMap<>();
 		this.nodes = new HashMap<>();
 		
 		setupNodes();
@@ -106,6 +109,7 @@ public class LocalMixChannel implements MixChannel {
 		for (MixChannelParticipant mcp : fromDB) {
 			mcp.setSubscriptions(mpm.findByParticipant(mcp));
 			participants.put(mcp.getJid(), mcp);
+			participantsByProxyJid.put(mcp.getJid(), mcp);
 		}
 		
 	}
@@ -119,6 +123,7 @@ public class LocalMixChannel implements MixChannel {
 		
 		this.participantsListeners = new ArrayList<>();
 		this.participants = new HashMap<>();
+		this.participantsByProxyJid = new HashMap<>();
 		this.nodes = new HashMap<>();
 		
 		this.setCreationDate(new Date());
@@ -183,6 +188,7 @@ public class LocalMixChannel implements MixChannel {
 		MixChannelParticipant participant = new LocalMixChannelParticipant(proxyJid, jid, this, subscribeNodes);
 
 		this.participants.put(jid, participant);
+		this.participantsByProxyJid.put(proxyJid, participant);
 		
 		// Trigger the participant added event.
 		for (MixChannelParticipantsListener listener : participantsListeners) {
@@ -213,7 +219,8 @@ public class LocalMixChannel implements MixChannel {
 		JID bareJid = jid.asBareJID();
 		
 		if (participants.containsKey(bareJid)) {
-			MixChannelParticipant mcp = participants.get(bareJid);
+			MixChannelParticipant mcp = participants.remove(bareJid);
+			participantsByProxyJid.remove(mcp.getJid());
 			
 			// Let all listeners know that the participant has left
 			for (MixChannelParticipantsListener listener : participantsListeners) {
@@ -259,10 +266,14 @@ public class LocalMixChannel implements MixChannel {
 	}
 
 	@Override
-	public MixChannelParticipant getParticipantByJID(JID from) {
+	public MixChannelParticipant getParticipantByRealJID(JID from) {
 		return participants.get(from);
 	}
-	
+
+	@Override
+	public MixChannelParticipant getParticipantByProxyJID(JID jid) {
+		return participantsByProxyJid.get(jid);
+	}	
 
 	@Override
 	public Collection<MixChannelParticipant> getParticipants() {

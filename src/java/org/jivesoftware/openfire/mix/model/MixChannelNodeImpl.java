@@ -128,4 +128,20 @@ public class MixChannelNodeImpl<T extends MixChannelNodeItem> implements MixChan
 		}
 	}
 
+	@Override
+	public void appendItemByID(MixRequestContext context, Element parent, String itemId) {
+		// If they don't have permission on the node then just do nothing
+		if(!nodePermissionPolicy.checkPermission(context, this, Action.VIEW)) {
+			return;
+		}
+		
+		T item = itemsProvider.getItem(itemId);
+		
+		if(item != null) {
+			if((itemPermissionPolicy == null) || (itemPermissionPolicy.checkPermission(context, item, Action.VIEW))) {
+				addItemElement(parent, item);
+			}
+		}
+	}
+
 }

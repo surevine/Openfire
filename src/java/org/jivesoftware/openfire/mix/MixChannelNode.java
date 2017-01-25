@@ -8,4 +8,6 @@ public interface MixChannelNode<T extends MixChannelNodeItem> {
 	String getName();
 
 	void appendAllItems(MixRequestContext context, Element itemsEl);
+
+	void appendItemByID(MixRequestContext context, Element itemsEl, String itemId);
 }

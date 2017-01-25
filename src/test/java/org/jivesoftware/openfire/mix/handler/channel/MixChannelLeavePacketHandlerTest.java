@@ -7,6 +7,7 @@ import static org.junit.Assert.assertEquals;
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 import org.jivesoftware.openfire.mix.exception.CannotLeaveMixChannelException;
+import org.jivesoftware.openfire.mix.handler.MixRequestContextImpl;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -34,7 +35,7 @@ public class MixChannelLeavePacketHandlerTest {
             one(mockMixChannel).removeParticipant(with(equal(TEST_USERS_JID)));
         }});
 
-        IQ response = fixture.processIQ(mockMixChannel, MixChannelLeavePacketHandlerTest.createLeaveRequest(TEST_USERS_JID));
+        IQ response = fixture.processIQ(new MixRequestContextImpl(TEST_USERS_JID, null, mockMixChannel), mockMixChannel, MixChannelLeavePacketHandlerTest.createLeaveRequest(TEST_USERS_JID));
         
         context.assertIsSatisfied();
         assertEquals(LEAVE_ELEM_NAME, response.getChildElement().getName());
@@ -48,7 +49,7 @@ public class MixChannelLeavePacketHandlerTest {
             will(throwException(new CannotLeaveMixChannelException("", "")));
         }});
 
-        fixture.processIQ(mockMixChannel, MixChannelLeavePacketHandlerTest.createLeaveRequest(TEST_USERS_JID));
+        fixture.processIQ(new MixRequestContextImpl(TEST_USERS_JID, null, mockMixChannel), mockMixChannel, MixChannelLeavePacketHandlerTest.createLeaveRequest(TEST_USERS_JID));
         
         context.assertIsSatisfied();		
 	}

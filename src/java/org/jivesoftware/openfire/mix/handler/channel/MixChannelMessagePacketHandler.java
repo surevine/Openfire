@@ -36,7 +36,7 @@ public class MixChannelMessagePacketHandler implements MixChannelPacketHandler {
 			return false;
 		}
 		
-		MixChannelParticipant participant = channel.getParticipantByJID(message.getFrom().asBareJID());
+		MixChannelParticipant participant = channel.getParticipantByRealJID(message.getFrom().asBareJID());
 		
 		if(participant == null) {
 			Message error = message.createCopy();

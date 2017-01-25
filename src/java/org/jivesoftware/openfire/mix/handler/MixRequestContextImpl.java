@@ -54,8 +54,45 @@ public class MixRequestContextImpl implements MixRequestContext {
 			return null;
 		}
 		
-		participant = mixChannel.getParticipantByJID(actor);
+		participant = mixChannel.getParticipantByRealJID(actor);
 		
 		return participant;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((actor == null) ? 0 : actor.hashCode());
+		result = prime * result + ((mixChannel == null) ? 0 : mixChannel.hashCode());
+		result = prime * result + ((mixService == null) ? 0 : mixService.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		MixRequestContextImpl other = (MixRequestContextImpl) obj;
+		if (actor == null) {
+			if (other.actor != null)
+				return false;
+		} else if (!actor.equals(other.actor))
+			return false;
+		if (mixChannel == null) {
+			if (other.mixChannel != null)
+				return false;
+		} else if (!mixChannel.equals(other.mixChannel))
+			return false;
+		if (mixService == null) {
+			if (other.mixService != null)
+				return false;
+		} else if (!mixService.equals(other.mixService))
+			return false;
+		return true;
 	}
 }

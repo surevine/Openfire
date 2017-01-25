@@ -354,7 +354,7 @@ public class LocalMixServiceTest {
 		final MixChannel newMixChannel = mockery.mock(MixChannel.class);
 		
 		mockery.checking(new Expectations() {{
-			allowing(newMixChannel).getParticipantByJID(TEST_SENDER_JID);
+			allowing(newMixChannel).getParticipantByRealJID(TEST_SENDER_JID);
 			one(mixPersistenceManager).save(with(Matchers.<MixChannel>hasProperty("name", equal("coven"))));
 			will(returnValue(newMixChannel));
 			allowing(newMixChannel).addParticipant(TEST_SENDER_JID);
@@ -363,7 +363,7 @@ public class LocalMixServiceTest {
 		
 		MixChannel result = mixServiceImpl.createChannel(TEST_SENDER_JID, TEST_CHANNEL_NAME);
 		
-		assertNotNull(result.getParticipantByJID(TEST_SENDER_JID));
+		assertNotNull(result.getParticipantByRealJID(TEST_SENDER_JID));
 		assertSame("The new mix channel is returned", newMixChannel, result);
 		
 	}

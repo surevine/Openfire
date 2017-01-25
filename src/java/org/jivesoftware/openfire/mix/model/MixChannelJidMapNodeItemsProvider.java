@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jivesoftware.openfire.mix.model.MixChannel.MixChannelParticipantsListener;
+import org.xmpp.packet.JID;
 
 public class MixChannelJidMapNodeItemsProvider implements MixChannelNodeItemsProvider<MixChannelJidMapNodeItem> {
 
@@ -48,6 +49,17 @@ public class MixChannelJidMapNodeItemsProvider implements MixChannelNodeItemsPro
 	@Override
 	public void addItemsListener(ItemsListener<MixChannelJidMapNodeItem> listener) {
 		itemsListeners.add(listener);
+	}
+
+	@Override
+	public MixChannelJidMapNodeItem getItem(String itemId) {
+		MixChannelParticipant participant = channel.getParticipantByRealJID(new JID(itemId));
+		
+		if(participant != null) {
+			return new MixChannelJidMapNodeItem(participant);
+		}
+		
+		return null;
 	}
 	
 }

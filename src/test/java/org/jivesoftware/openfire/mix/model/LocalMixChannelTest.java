@@ -176,11 +176,11 @@ public class LocalMixChannelTest {
 		
 		fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(PARTIAL_NODE_SET)));
 		
-		assertNotNull(fixture.getParticipantByJID(TEST_USER1_JID));
+		assertNotNull(fixture.getParticipantByRealJID(TEST_USER1_JID));
 		
 		fixture.removeParticipant(TEST_USER1_JID);
 		
-		assertNull(fixture.getParticipantByJID(TEST_USER1_JID));
+		assertNull(fixture.getParticipantByRealJID(TEST_USER1_JID));
 
 	}
 	

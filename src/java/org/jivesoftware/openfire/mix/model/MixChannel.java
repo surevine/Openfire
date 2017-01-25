@@ -56,7 +56,7 @@ public interface MixChannel {
 	
 	Collection<MixChannelParticipant> getParticipants();
 
-	MixChannelParticipant getParticipantByJID(JID from);
+	MixChannelParticipant getParticipantByRealJID(JID from);
 	
 	void receiveMessage(MixChannelMessage mcMessage);
 	
@@ -73,6 +73,8 @@ public interface MixChannel {
 	boolean isDestructable(JID requestor);
 	
 	MixService getMixService();
+
+	MixChannelParticipant getParticipantByProxyJID(JID jid);
 
 
 }

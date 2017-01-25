@@ -14,4 +14,6 @@ public interface MixChannelNodeItemsProvider<T extends MixChannelNodeItem> {
 	List<T> getItems();
 	
 	void addItemsListener(ItemsListener<T> listener);
+
+	T getItem(String itemId);
 }

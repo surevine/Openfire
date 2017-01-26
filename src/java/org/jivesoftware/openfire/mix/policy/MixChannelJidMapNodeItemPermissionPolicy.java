@@ -15,6 +15,15 @@ public class MixChannelJidMapNodeItemPermissionPolicy
 		List<PermissionVoter<MixChannelJidMapNodeItem>> voters = new ArrayList<>();
 
 		voters.add(new AllowAdminPermissionVoter<MixChannelJidMapNodeItem>());
+		
+		voters.add(new PermissionVoter<MixChannelJidMapNodeItem>() {
+			ParticipantJidVisibilityVoter voter = new ParticipantJidVisibilityVoter();
+			
+			@Override
+			public PolicyVoterOutcome vote(MixRequestContext context, MixChannelJidMapNodeItem subject, Action action) {
+				return voter.vote(context, subject.getParticipant(), action);
+			}
+		});
 
 		delegate = new VoterBasedPermissionPolicy<>(voters);
 	}

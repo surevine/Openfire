@@ -53,7 +53,7 @@ public class MixChannelJidMapNodeItemsProvider implements MixChannelNodeItemsPro
 
 	@Override
 	public MixChannelJidMapNodeItem getItem(String itemId) {
-		MixChannelParticipant participant = channel.getParticipantByRealJID(new JID(itemId));
+		MixChannelParticipant participant = channel.getParticipantByProxyJID(new JID(itemId));
 		
 		if(participant != null) {
 			return new MixChannelJidMapNodeItem(participant);

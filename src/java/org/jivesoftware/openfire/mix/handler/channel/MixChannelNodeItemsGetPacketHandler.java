@@ -53,7 +53,10 @@ public class MixChannelNodeItemsGetPacketHandler implements MixChannelPacketHand
 			// No requested items means we send all of them
 			node.appendAllItems(context, replyItemsEl);
 		} else {
-			
+			while(requestedItems.hasNext()) {
+				Element requestedItem = requestedItems.next();
+				node.appendItemByID(context, replyItemsEl, requestedItem.attributeValue("id"));
+			}
 		}
 		
 		return reply;

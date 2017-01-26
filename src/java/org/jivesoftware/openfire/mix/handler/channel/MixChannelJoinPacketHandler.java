@@ -8,7 +8,7 @@ import org.dom4j.Element;
 import org.dom4j.Node;
 import org.dom4j.QName;
 import org.jivesoftware.openfire.mix.MixManager;
-import org.jivesoftware.openfire.mix.MixPersistenceException;
+import org.jivesoftware.openfire.mix.exception.CannotJoinMixChannelException;
 import org.jivesoftware.openfire.mix.handler.MixRequestContext;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannelParticipant;
@@ -22,8 +22,8 @@ public class MixChannelJoinPacketHandler implements MixChannelPacketHandler {
 	public IQ processIQ(MixRequestContext context, MixChannel channel, IQ iq) {
 		// Unpack packet
 		Element joinNode = iq.getChildElement();
-		
-		if((joinNode == null) || (!joinNode.getQName().equals(QName.get("join", MixManager.MIX_NAMESPACE)))) {
+
+		if ((joinNode == null) || (!joinNode.getQName().equals(QName.get("join", MixManager.MIX_NAMESPACE)))) {
 			return null;
 		}
 
@@ -40,23 +40,23 @@ public class MixChannelJoinPacketHandler implements MixChannelPacketHandler {
 		}
 
 		MixChannelParticipant mcp = null;
-		
 
 		IQ result = IQ.createResultIQ(iq);
-		
-		Element joinElement = result.setChildElement("join", "urn:xmpp:mix:0");
-		
+
+		Element joinElement = result.setChildElement("join", MixManager.MIX_NAMESPACE);
+
 		try {
-			mcp = channel.addParticipant(iq.getFrom().asBareJID(), subscriptionRequests);
+			mcp = channel.addParticipant(iq.getFrom(), subscriptionRequests);
 
 			for (String subscription : mcp.getSubscriptions()) {
 				Element current = joinElement.addElement("node");
 				current.addAttribute("node", subscription);
 			}
-		} catch (MixPersistenceException e) {
+		} catch (CannotJoinMixChannelException e) {
 			result.setType(IQ.Type.error);
+
 		}
-		
+
 		return result;
 	}
 

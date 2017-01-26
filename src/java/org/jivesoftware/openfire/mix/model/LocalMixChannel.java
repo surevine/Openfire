@@ -17,8 +17,9 @@ import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityMode;
-import org.jivesoftware.openfire.mix.policy.AlwaysAllowPermissionPolicy;
+import org.jivesoftware.openfire.mix.exception.CannotJoinMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotLeaveMixChannelException;
+import org.jivesoftware.openfire.mix.policy.AlwaysAllowPermissionPolicy;
 import org.jivesoftware.openfire.mix.policy.MixChannelJidMapNodeItemPermissionPolicy;
 import org.jivesoftware.openfire.mix.policy.MixChannelStandardPermissionPolicy;
 import org.jivesoftware.openfire.mix.policy.PermissionPolicy;
@@ -31,7 +32,6 @@ public class LocalMixChannel implements MixChannel {
 	private static final Logger LOG = LoggerFactory.getLogger(LocalMixChannel.class);
 
 	public static final String NODE_PARTICIPANTS = "urn:xmpp:mix:nodes:participants";
-
 	public static final String NODE_MESSAGES = "urn:xmpp:mix:nodes:messages";
 	
 	public static final String NODE_JIDMAP = "urn:xmpp:mix:nodes:jidmap";
@@ -87,22 +87,10 @@ public class LocalMixChannel implements MixChannel {
 	 * @throws MixPersistenceException 
 	 */
 	public LocalMixChannel(long id, MixService service, String name, JID owner, PacketRouter packetRouter, MixPersistenceManager mpm, Date creationDate) throws MixPersistenceException {
-
+		initialise(service, name, owner, packetRouter, mpm);
+		
 		this.id = id;
 		this.creationDate = new Date(creationDate.getTime());
-		this.packetRouter = packetRouter;
-		this.mixService = service;
-		this.channelRepository = mpm;
-		this.owner = owner;
-		this.name = name;
-		
-		this.participantsListeners = new ArrayList<>();
-		this.participants = new HashMap<>();
-		this.participantsByProxyJid = new HashMap<>();
-		this.nodes = new HashMap<>();
-		
-		setupNodes();
-		setupPermissionPolicy();
 		
 		Collection<MixChannelParticipant> fromDB = mpm.findByChannel(this);
 		
@@ -115,6 +103,13 @@ public class LocalMixChannel implements MixChannel {
 	}
 
 	public LocalMixChannel(MixService service, String name, JID owner, PacketRouter packetRouter, MixPersistenceManager mpm) {
+		initialise(service, name, owner, packetRouter, mpm);
+
+		this.setCreationDate(new Date());
+	}
+
+	private void initialise(MixService service, String name, JID owner, PacketRouter packetRouter,
+			MixPersistenceManager mpm) {
 		this.packetRouter = packetRouter;
 		this.mixService = service;
 		this.channelRepository = mpm;
@@ -183,34 +178,40 @@ public class LocalMixChannel implements MixChannel {
 	}
 
 	@Override
-	public MixChannelParticipant addParticipant(JID jid, Set<String> subscribeNodes) throws MixPersistenceException {
-		JID proxyJid = this.getNewProxyJID();
-		MixChannelParticipant participant = new LocalMixChannelParticipant(proxyJid, jid, this, subscribeNodes);
+	public MixChannelParticipant addParticipant(JID jid, Set<String> subscribeNodes) throws CannotJoinMixChannelException {
 
-		this.participants.put(jid, participant);
-		this.participantsByProxyJid.put(proxyJid, participant);
+		JID joiner = jid.asBareJID();
 		
-		// Trigger the participant added event.
-		for (MixChannelParticipantsListener listener : participantsListeners) {
-			listener.onParticipantAdded(participant);
+		if (!this.participants.containsKey(joiner)) {
+			JID proxyJid = this.getNewProxyJID();
+			
+			MixChannelParticipant participant = null;
+			
+			if (subscribeNodes.isEmpty()) {
+				participant = new LocalMixChannelParticipant(proxyJid, joiner, this);
+			} else {
+				participant = new LocalMixChannelParticipant(proxyJid, joiner, this, subscribeNodes);				
+			}
+
+
+			this.participants.put(joiner, participant);
+			
+			// Trigger the participant added event.
+			for (MixChannelParticipantsListener listener : participantsListeners) {
+				listener.onParticipantAdded(participant);
+			}
+			
+			try {
+				channelRepository.save(participant);
+			} catch (MixPersistenceException e) {
+				LOG.error("Persistence exception adding participant " + jid + " to " + this.getName(), e);
+				throw new CannotJoinMixChannelException(this.getName(), e.getMessage());
+			}
+			
+			return participant;
+		} else {
+			throw new CannotJoinMixChannelException(this.getName(), "Already a member");
 		}
-		
-		channelRepository.save(participant);
-
-		return participant;
-	}
-	
-
-	/**
-	 * Add the participant and subscribe to all nodes
-	 * 
-	 * @param owner
-	 * @return
-	 * @throws MixPersistenceException 
-	 */
-	@Override
-	public MixChannelParticipant addParticipant(JID owner) throws MixPersistenceException {
-		return this.addParticipant(owner, this.nodes.keySet());
 	}
 	
 	@Override
@@ -256,6 +257,11 @@ public class LocalMixChannel implements MixChannel {
 	@Override
 	public Collection<MixChannelNode<? extends MixChannelNodeItem>> getNodes() {
 		return Collections.unmodifiableCollection(nodes.values());
+	}
+
+	@Override
+	public Set<String> getNodesAsStrings() {
+		return nodes.keySet();
 	}
 
 	private int proxyNodeNamePart = 0;

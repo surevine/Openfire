@@ -1,16 +1,18 @@
 package org.jivesoftware.openfire.mix.model;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.Arrays;
 import java.util.HashSet;
 
-import org.dom4j.DocumentFactory;
 import org.hamcrest.Matchers;
 import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
+import org.jivesoftware.openfire.mix.exception.CannotJoinMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotLeaveMixChannelException;
 import org.jivesoftware.openfire.testutil.ElementMatchers;
 import org.jivesoftware.openfire.testutil.PacketMatchers;
@@ -19,7 +21,6 @@ import org.jmock.Mockery;
 import org.jmock.States;
 import org.jmock.internal.State;
 import org.jmock.lib.legacy.ClassImposteriser;
-import org.junit.Before;
 import org.junit.Test;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
@@ -44,7 +45,7 @@ public class LocalMixChannelTest {
     private static final JID TEST_USER2_JID = new JID(TEST_USER + 6, TEST_SERVICE_DOMAIN, null);
     private static final JID TEST_USER3_JID = new JID(TEST_USER + 66, TEST_SERVICE_DOMAIN, null);
     
-	private static final String []PARTIAL_NODE_SET = {"urn:xmpp:mix:nodes:messages", "urn:xmpp:mix:nodes:participants", "urn:xmpp:mix:nodes:subject", "urn:xmpp:mix:nodes:config"};
+	private static final String []EXTENDED_NODE_SET = {"urn:xmpp:mix:nodes:messages", "urn:xmpp:mix:nodes:participants", "urn:xmpp:mix:nodes:subject", "urn:xmpp:mix:nodes:config"};
 	
 	Mockery context = new Mockery() {{
         setImposteriser(ClassImposteriser.INSTANCE);
@@ -86,40 +87,40 @@ public class LocalMixChannelTest {
 	}
 	
 	@Test
-	public void thatFirstUserCanJoinChannelAndSubscribeToNodes() throws MixPersistenceException {	    
+	public void thatFirstUserCanJoinChannelAndSubscribeToNodes() throws CannotJoinMixChannelException {	    
 		
 		// Expect that a single message is sent to the participant that has just signed up 
 	    context.checking(new Expectations() {{
 	    	one(mockRouter);
 	    }});
 		
-		MixChannelParticipant mcp = fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(PARTIAL_NODE_SET)));
+		MixChannelParticipant mcp = fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)));
 		
 		assertEquals(mcp.getRealJid(), TEST_USER1_JID);
 
 	}
 	
 	@Test
-	public void thatSecondUserJoiningTriggersTwoParticipantUpdates() throws MixPersistenceException {
+	public void thatSecondUserJoiningTriggersTwoParticipantUpdates() throws CannotJoinMixChannelException {
 		
 		context.checking(new Expectations() {{
 			// One for the first participant, and two for the second participant
 	    	exactly(3).of(mockRouter).route(with(any(Message.class)));
 	    }});
 		
-		fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(PARTIAL_NODE_SET)));
-		fixture.addParticipant(TEST_USER2_JID, new HashSet<String>(Arrays.asList(PARTIAL_NODE_SET)));
+		fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)));
+		fixture.addParticipant(TEST_USER2_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)));
 		
 	}
 	
 	@Test
-	public void testMessageToGroupIsReflectedToOtherParticipants() throws MixPersistenceException {
+	public void testMessageToGroupIsReflectedToOtherParticipants() throws CannotJoinMixChannelException {
 		settingUp.activate();
 		
 		// We have three participants
-		final MixChannelParticipant sender = fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(PARTIAL_NODE_SET)));
-		fixture.addParticipant(TEST_USER2_JID, new HashSet<String>(Arrays.asList(PARTIAL_NODE_SET)));
-		fixture.addParticipant(TEST_USER3_JID, new HashSet<String>(Arrays.asList(PARTIAL_NODE_SET)));
+		final MixChannelParticipant sender = fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)));
+		fixture.addParticipant(TEST_USER2_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)));
+		fixture.addParticipant(TEST_USER3_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)));
 		
 		// Particiant 1 sends a message to the channel
 		final String testMessageID = "1234ABCD";
@@ -166,7 +167,7 @@ public class LocalMixChannelTest {
 	}
 	
 	@Test
-	public void testParticipantSuccessfullyLeavesChannel() throws MixPersistenceException, CannotLeaveMixChannelException {
+	public void testParticipantSuccessfullyLeavesChannel() throws CannotJoinMixChannelException, CannotLeaveMixChannelException, MixPersistenceException {
 		context.checking(new Expectations() {{
 			one(mockPersistenceManager).save(with(any(MixChannelParticipant.class)));
 			allowing(mockRouter).route(with(any(Message.class)));
@@ -174,7 +175,7 @@ public class LocalMixChannelTest {
 			one(mockPersistenceManager).delete(with(any(MixChannelParticipant.class)));
 	    }});
 		
-		fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(PARTIAL_NODE_SET)));
+		fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)));
 		
 		assertNotNull(fixture.getParticipantByRealJID(TEST_USER1_JID));
 		
@@ -187,5 +188,18 @@ public class LocalMixChannelTest {
 	@Test(expected=CannotLeaveMixChannelException.class)
 	public void testExceptionThrownWhenLeaveNotChannelParticipant() throws CannotLeaveMixChannelException {
 		fixture.removeParticipant(new JID("not_participant", TEST_SERVICE_DOMAIN, null));
+	}
+	
+	@Test(expected=CannotJoinMixChannelException.class)
+	public void testRepeatedJoinRequestThrowsException() throws CannotJoinMixChannelException, MixPersistenceException {
+		
+		context.checking(new Expectations() {{
+			one(mockPersistenceManager).save(with(any(MixChannelParticipant.class)));
+			allowing(mockRouter).route(with(any(Message.class)));
+			one(mockRouter).route(with(any(IQ.class)));
+	    }});
+		
+		fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)));
+		fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)));
 	}
 }

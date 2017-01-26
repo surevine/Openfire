@@ -12,6 +12,7 @@ public class MixChannelParticipantNodeItem implements MixChannelNodeItem {
 	@Override
 	public String getUID() {
 		return participant.getJid().toBareJID();
+
 	}
 
 	@Override

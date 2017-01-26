@@ -1,12 +1,12 @@
 package org.jivesoftware.openfire.mix.handler.service;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.dom4j.Element;
 import org.jivesoftware.openfire.auth.UnauthorizedException;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.TestConstants;
-import org.jivesoftware.openfire.mix.exception.CannotDestroyMixChannelException;
+import org.jivesoftware.openfire.mix.handler.MixRequestContextImpl;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.junit.Before;
@@ -41,7 +41,7 @@ public class DestroyMixChannelPacketHandlerTest {
 			one(mockMixService).destroyChannel(TestConstants.TEST_USERS_JID, TestConstants.TEST_MIX_CHANNEL_NAME);
 		}});
 		
-		IQ result = fixture.processIQ(mockMixService, destroyRequest);
+		IQ result = fixture.processIQ(new MixRequestContextImpl(TestConstants.TEST_USERS_JID, mockMixService, null), mockMixService, destroyRequest);
 		
 		assertEquals("IQ result is sent", Type.result, result.getType());
 		assertEquals("Result is sent to the originator", destroyRequest.getFrom(), result.getTo());
@@ -59,7 +59,7 @@ public class DestroyMixChannelPacketHandlerTest {
 			will(throwException(new UnauthorizedException()));
 		}});
 		
-		IQ result = fixture.processIQ(mockMixService, destroyRequest);
+		IQ result = fixture.processIQ(new MixRequestContextImpl(TestConstants.TEST_USERS_JID, mockMixService, null), mockMixService, destroyRequest);
 		
 		assertEquals("IQ result is error", Type.error, result.getType());
 		

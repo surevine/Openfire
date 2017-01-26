@@ -143,18 +143,21 @@ public class LocalMixChannelTest {
 	    	one(mockRouter).route(with(Matchers.<Message>allOf(
 	    			Matchers.hasProperty("body", equal(testBody)),
 	    			Matchers.hasProperty("to", equal(TEST_USER1_JID)),
+	    			Matchers.hasProperty("type", equal(Type.groupchat)),
 	    			PacketMatchers.element(ElementMatchers.hasTextChild("submission-id", equal(testMessageID))),
 	    			PacketMatchers.element(ElementMatchers.hasTextChild("jid", equal(sender.getJid().toBareJID())))
-	    			)));
+	    		)));
 	    	one(mockRouter).route(with(Matchers.<Message>allOf(
 	    			Matchers.hasProperty("body", equal(testBody)),
 	    			Matchers.hasProperty("to", equal(TEST_USER2_JID)),
+	    			Matchers.hasProperty("type", equal(Type.groupchat)),
 	    			PacketMatchers.element(ElementMatchers.hasTextChild("jid", equal(sender.getJid().toBareJID()))),
 	    			PacketMatchers.element(ElementMatchers.hasNoChild("submission-id"))
 	    		)));
 	    	one(mockRouter).route(with(Matchers.<Message>allOf(
 	    			Matchers.hasProperty("body", equal(testBody)),
 	    			Matchers.hasProperty("to", equal(TEST_USER3_JID)),
+	    			Matchers.hasProperty("type", equal(Type.groupchat)),
 	    			PacketMatchers.element(ElementMatchers.hasTextChild("jid", equal(sender.getJid().toBareJID()))),
 	    			PacketMatchers.element(ElementMatchers.hasNoChild("submission-id"))
 	    		)));
@@ -174,11 +177,11 @@ public class LocalMixChannelTest {
 		
 		fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)));
 		
-		assertNotNull(fixture.getParticipantByJID(TEST_USER1_JID));
+		assertNotNull(fixture.getParticipantByRealJID(TEST_USER1_JID));
 		
 		fixture.removeParticipant(TEST_USER1_JID);
 		
-		assertNull(fixture.getParticipantByJID(TEST_USER1_JID));
+		assertNull(fixture.getParticipantByRealJID(TEST_USER1_JID));
 
 	}
 	

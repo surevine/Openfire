@@ -19,27 +19,39 @@ import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityMode;
 import org.jivesoftware.openfire.mix.exception.CannotJoinMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotLeaveMixChannelException;
+import org.jivesoftware.openfire.mix.policy.AlwaysAllowPermissionPolicy;
+import org.jivesoftware.openfire.mix.policy.MixChannelJidMapNodeItemPermissionPolicy;
+import org.jivesoftware.openfire.mix.policy.MixChannelStandardPermissionPolicy;
+import org.jivesoftware.openfire.mix.policy.PermissionPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 
 public class LocalMixChannel implements MixChannel {
-
-	public static final String NODE_MESSAGES = "urn:xmpp:mix:nodes:messages";
-	public static final String NODE_PARTICIPANTS = "urn:xmpp:mix:nodes:participants";
-	
 	private static final Logger LOG = LoggerFactory.getLogger(LocalMixChannel.class);
+
+	public static final String NODE_PARTICIPANTS = "urn:xmpp:mix:nodes:participants";
+	public static final String NODE_MESSAGES = "urn:xmpp:mix:nodes:messages";
+	
+	public static final String NODE_JIDMAP = "urn:xmpp:mix:nodes:jidmap";
 
 	private PacketRouter packetRouter;
 	
 	private Map<JID, MixChannelParticipant> participants;
 
-	private Map<String, MixChannelNode> nodes;
+	private Map<JID, MixChannelParticipant> participantsByProxyJid;
+
+	private Map<String, MixChannelNode<? extends MixChannelNodeItem>> nodes;
 
 	private List<MixChannelParticipantsListener> participantsListeners;
 
 	private Long id;
+	
+	/**
+	 * The {@link PermissionPolicy} to apply to this channel
+	 */
+	private PermissionPolicy<MixChannel> permissionPolicy;
 
 	/**
 	 * This {@link MixService} to which this channel is attached.
@@ -79,12 +91,13 @@ public class LocalMixChannel implements MixChannel {
 		
 		this.id = id;
 		this.creationDate = new Date(creationDate.getTime());
-
+		
 		Collection<MixChannelParticipant> fromDB = mpm.findByChannel(this);
 		
 		for (MixChannelParticipant mcp : fromDB) {
 			mcp.setSubscriptions(mpm.findByParticipant(mcp));
 			participants.put(mcp.getJid(), mcp);
+			participantsByProxyJid.put(mcp.getJid(), mcp);
 		}
 		
 	}
@@ -105,15 +118,30 @@ public class LocalMixChannel implements MixChannel {
 		
 		this.participantsListeners = new ArrayList<>();
 		this.participants = new HashMap<>();
+		this.participantsByProxyJid = new HashMap<>();
 		this.nodes = new HashMap<>();
 		
-		nodes.put(NODE_PARTICIPANTS, new MixChannelNodeImpl(packetRouter, this, NODE_PARTICIPANTS,
-				new MixChannelParticipantsNodeItemsProvider(this)));
-
-		nodes.put(NODE_MESSAGES, new MixChannelNodeImpl(packetRouter, this, NODE_MESSAGES,
-				null));
+		this.setCreationDate(new Date());
+		
+		setupNodes();
+		setupPermissionPolicy();
 	}
 
+	private void setupNodes() {
+		nodes.put(NODE_PARTICIPANTS, new MixChannelNodeImpl<>(packetRouter, this, NODE_PARTICIPANTS,
+				new MixChannelParticipantsNodeItemsProvider(this)));
+
+		nodes.put(NODE_MESSAGES, new MixChannelNodeImpl<>(packetRouter, this, NODE_MESSAGES,
+				null));
+
+		nodes.put(NODE_JIDMAP, new MixChannelNodeImpl<>(packetRouter, this, NODE_JIDMAP,
+				new MixChannelJidMapNodeItemsProvider(this), new MixChannelJidMapNodeItemPermissionPolicy(), new AlwaysAllowPermissionPolicy<MixChannelNode<MixChannelJidMapNodeItem>>()));
+	}
+	
+	private void setupPermissionPolicy() {
+		permissionPolicy = new MixChannelStandardPermissionPolicy();
+	}
+	
 	@Override
 	public JID getJID() {
 		return new JID(getName(), mixService.getServiceDomain(), null);
@@ -192,7 +220,8 @@ public class LocalMixChannel implements MixChannel {
 		JID bareJid = jid.asBareJID();
 		
 		if (participants.containsKey(bareJid)) {
-			MixChannelParticipant mcp = participants.get(bareJid);
+			MixChannelParticipant mcp = participants.remove(bareJid);
+			participantsByProxyJid.remove(mcp.getJid());
 			
 			// Let all listeners know that the participant has left
 			for (MixChannelParticipantsListener listener : participantsListeners) {
@@ -226,7 +255,7 @@ public class LocalMixChannel implements MixChannel {
 	}
 	
 	@Override
-	public Collection<MixChannelNode> getNodes() {
+	public Collection<MixChannelNode<? extends MixChannelNodeItem>> getNodes() {
 		return Collections.unmodifiableCollection(nodes.values());
 	}
 
@@ -243,10 +272,14 @@ public class LocalMixChannel implements MixChannel {
 	}
 
 	@Override
-	public MixChannelParticipant getParticipantByJID(JID from) {
+	public MixChannelParticipant getParticipantByRealJID(JID from) {
 		return participants.get(from);
 	}
-	
+
+	@Override
+	public MixChannelParticipant getParticipantByProxyJID(JID jid) {
+		return participantsByProxyJid.get(jid);
+	}	
 
 	@Override
 	public Collection<MixChannelParticipant> getParticipants() {
@@ -321,4 +354,15 @@ public class LocalMixChannel implements MixChannel {
 		return this.getOwner().toBareJID().equals(requestor.toBareJID()) && this.getParticipants().size() == 1 ? true : false;
 
 	}
+
+	@Override
+	public MixService getMixService() {
+		return mixService;
+	}
+
+	@Override
+	public MixChannelNode<?> getNodeByName(String nodeName) {
+		return nodes.get(nodeName);
+	}
+
 }

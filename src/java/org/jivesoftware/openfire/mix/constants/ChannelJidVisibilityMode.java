@@ -4,7 +4,7 @@ package org.jivesoftware.openfire.mix.constants;
  * The JID Visibility Mode for the channel.
  */
 public enum ChannelJidVisibilityMode {
-	VISIBLE(0), HIDDEN(1);
+	VISIBLE(0), HIDDEN(1), MANDATORY_VISIBLE(2), MANDATORY_HIDDEN(3);
 
 	private int id;
 

@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.mix.handler.MixPacketHandler;
+import org.jivesoftware.openfire.mix.handler.MixRequestContext;
+import org.jivesoftware.openfire.mix.handler.MixRequestContextImpl;
 import org.jivesoftware.openfire.mix.handler.channel.MixChannelPacketHandler;
 import org.jivesoftware.openfire.mix.handler.service.MixServicePacketHandler;
 import org.jivesoftware.openfire.mix.model.MixChannel;
@@ -39,21 +41,21 @@ public class MixXmppServiceImpl implements MixXmppService {
 
 		try {
 			if (packet.getTo().getNode() == null) {
-				handlePacket(mixService, packet);
+				handlePacket(new MixRequestContextImpl(packet.getFrom(), mixService, null), mixService, packet);
 			} else {
 				// The packet is a normal packet that should possibly be sent to
 				// the node
 				String channelName = packet.getTo().getNode();
 				MixChannel channel = mixService.getChannel(channelName);
 				
-				handlePacket(channel, packet);
+				handlePacket(new MixRequestContextImpl(packet.getFrom(), mixService, channel), channel, packet);
 			}
 		} catch (Exception e) {
 			LOG.error(LocaleUtils.getLocalizedString("admin.error"), e);
 		}
 	}
 
-	private <T> void handlePacket(T object, Packet packet) {
+	private <T> void handlePacket(MixRequestContext context, T object, Packet packet) {
 		if(object == null) {
 			if (packet instanceof IQ) {
 				replyWithError((IQ) packet, new PacketError(PacketError.Condition.item_not_found));
@@ -82,7 +84,7 @@ public class MixXmppServiceImpl implements MixXmppService {
 					@SuppressWarnings("unchecked")
 					MixPacketHandler<T> handler = (MixPacketHandler<T>) handlerObj;
 					
-					IQ result = handler.processIQ(object, (IQ) packet);
+					IQ result = handler.processIQ(context, object, (IQ) packet);
 	
 					if (result != null) {
 						router.route(result);
@@ -99,7 +101,7 @@ public class MixXmppServiceImpl implements MixXmppService {
 					@SuppressWarnings("unchecked")
 					MixPacketHandler<T> handler = (MixPacketHandler<T>) handlerObj;
 					
-					if(handler.processMessage(object, (Message) packet)) {
+					if(handler.processMessage(context, object, (Message) packet)) {
 						break;
 					}
 				}

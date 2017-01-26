@@ -25,13 +25,13 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 	// TODO - Defaulting to ENFORCE_HIDDEN in the short-term, this will need to be fixed.
 	private ChannelJidVisibilityPreference jvp = ChannelJidVisibilityPreference.ENFORCE_HIDDEN;
 	
-	public LocalMixChannelParticipant(JID proxyJid, JID jid, MixChannel channel, Set<String> subscriptions) {
+	public LocalMixChannelParticipant(JID proxyJid, JID jid, MixChannel channel, Set<String> requestedSubscriptions) {
 		this(proxyJid, jid, channel);
 		
-		// Only retain the subscriptions that are the intersection of both the supplied set and the ones supported by the channel
-		Set<String> intersection = new HashSet<String>(channel.getNodesAsStrings());
-		intersection.retainAll(subscriptions);
-		this.subscriptions = new HashSet<String>(intersection);
+		this.subscriptions = new HashSet<String>(requestedSubscriptions);
+
+		// Only retain the subscriptions in the request that are in the supported set
+		this.subscriptions.retainAll(channel.getNodesAsStrings());
 	}
 	
 	/**
@@ -100,6 +100,15 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 	@Override
 	public JID getJid() {
 		return proxyJid;
+	}
+	
+	@Override
+	public Role getRole() {
+		if(getRealJid().asBareJID().equals(channel.getOwner().asBareJID())) {
+			return Role.OWNER;
+		}
+		
+		return Role.PARTICIPANT;
 	}
 
 	@Override

@@ -1,6 +1,7 @@
 package org.jivesoftware.openfire.mix.handler.channel;
 
 import org.jivesoftware.openfire.mix.exception.CannotLeaveMixChannelException;
+import org.jivesoftware.openfire.mix.handler.MixRequestContext;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.slf4j.Logger;
@@ -17,7 +18,7 @@ public class MixChannelLeavePacketHandler implements MixChannelPacketHandler {
 	private static final String LEAVE_ELEM_NAME = "leave";
 
 	@Override
-	public IQ processIQ(MixChannel channel, IQ leaveRequest) {
+	public IQ processIQ(MixRequestContext context, MixChannel channel, IQ leaveRequest) {
 
 		if (LEAVE_ELEM_NAME.equals(leaveRequest.getChildElement().getName())) {
 			IQ leaveResponse = IQ.createResultIQ(leaveRequest);
@@ -38,14 +39,12 @@ public class MixChannelLeavePacketHandler implements MixChannelPacketHandler {
 	}
 
 	@Override
-	public boolean processPresence(MixChannel actor, Presence presence) throws Exception {
-		// TODO Auto-generated method stub
+	public boolean processPresence(MixRequestContext context, MixChannel actor, Presence presence) throws Exception {
 		return false;
 	}
 
 	@Override
-	public boolean processMessage(MixChannel actor, Message message) throws Exception {
-		// TODO Auto-generated method stub
+	public boolean processMessage(MixRequestContext context, MixChannel actor, Message message) throws Exception {
 		return false;
 	}
 }

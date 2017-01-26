@@ -7,7 +7,7 @@ public class MixChannelMessageNodeItem implements MixChannelNodeItem {
 	Element payload;
 	
 	@Override
-	public String getId() {
+	public String getUID() {
 		return "0";
 	}
 

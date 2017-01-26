@@ -4,14 +4,16 @@ import java.util.List;
 
 import org.xmpp.packet.JID;
 
-public interface MixChannelNodeItemsProvider {
-	public interface ItemsListener {
-		void publishItem(MixChannelNodeItem item);
+public interface MixChannelNodeItemsProvider<T extends MixChannelNodeItem> {
+	public interface ItemsListener<T extends MixChannelNodeItem> {
+		void publishItem(T item);
 		
 		void retractItem(JID jid);
 	}
 	
-	List<MixChannelNodeItem> getItems();
+	List<T> getItems();
 	
-	void addItemsListener(ItemsListener listener);
+	void addItemsListener(ItemsListener<T> listener);
+
+	T getItem(String itemId);
 }

@@ -6,7 +6,8 @@ import java.util.List;
 import org.dom4j.Element;
 import org.hamcrest.Matchers;
 import org.jivesoftware.openfire.PacketRouter;
-import org.jivesoftware.openfire.auth.UnauthorizedException;
+import org.jivesoftware.openfire.mix.handler.MixRequestContext;
+import org.jivesoftware.openfire.mix.handler.MixRequestContextImpl;
 import org.jivesoftware.openfire.mix.handler.channel.MixChannelPacketHandler;
 import org.jivesoftware.openfire.mix.handler.service.MixServicePacketHandler;
 import org.jivesoftware.openfire.testutil.PacketMatchers;
@@ -43,6 +44,8 @@ public class MixXmppServiceImplTest {
 
 	MixService mockMixService;
 	
+	MixRequestContext testContext;
+	
 	/**
 	 * The class under test
 	 */
@@ -70,6 +73,8 @@ public class MixXmppServiceImplTest {
 		mockery.checking(new Expectations() {{
 			allowing(mockMixService).isServiceEnabled(); will(returnValue(true));
 		}});
+		
+		testContext = new MixRequestContextImpl(TEST_SENDER, mockMixService, null);
 	}
 
 	@Test
@@ -126,8 +131,8 @@ public class MixXmppServiceImplTest {
 		final IQ response = IQ.createResultIQ(request);
 		
 		mockery.checking(new Expectations() {{
-			one(mockServiceHandler1).processIQ(mockMixService, request); will(returnValue(null));
-			one(mockServiceHandler2).processIQ(mockMixService, request); will(returnValue(response));
+			one(mockServiceHandler1).processIQ(testContext, mockMixService, request); will(returnValue(null));
+			one(mockServiceHandler2).processIQ(testContext, mockMixService, request); will(returnValue(response));
 			
 			one(mockRouter).route(response);
 		}});
@@ -144,8 +149,8 @@ public class MixXmppServiceImplTest {
 		final IQ response = IQ.createResultIQ(request);
 		
 		mockery.checking(new Expectations() {{
-			one(mockServiceHandler1).processIQ(mockMixService, request); will(returnValue(response));
-			never(mockServiceHandler2).processIQ(mockMixService, request);
+			one(mockServiceHandler1).processIQ(testContext, mockMixService, request); will(returnValue(response));
+			never(mockServiceHandler2).processIQ(testContext, mockMixService, request);
 			
 			one(mockRouter).route(response);
 		}});
@@ -167,7 +172,7 @@ public class MixXmppServiceImplTest {
 		createElement.addAttribute("channel", TEST_CHANNEL_NAME);
 		
 		mockery.checking(new Expectations() {{
-			one(mockServiceHandler1).processIQ(mockMixService, request); will(returnValue(response));
+			one(mockServiceHandler1).processIQ(testContext, mockMixService, request); will(returnValue(response));
 			one(mockMixService).destroyChannel(TEST_SENDER, TEST_CHANNEL_NAME);
 			one(mockRouter).route(response);
 		}});
@@ -180,8 +185,8 @@ public class MixXmppServiceImplTest {
 		request.setTo(TEST_SERVICE_JID);
 		
 		mockery.checking(new Expectations() {{
-			one(mockServiceHandler1).processMessage(mockMixService, request); will(returnValue(false));
-			one(mockServiceHandler2).processMessage(mockMixService, request); will(returnValue(true));
+			one(mockServiceHandler1).processMessage(testContext, mockMixService, request); will(returnValue(false));
+			one(mockServiceHandler2).processMessage(testContext, mockMixService, request); will(returnValue(true));
 		}});
 		
 		xmppService.processReceivedPacket(mockMixService, request);
@@ -194,8 +199,8 @@ public class MixXmppServiceImplTest {
 		request.setTo(TEST_SERVICE_JID);
 		
 		mockery.checking(new Expectations() {{
-			one(mockServiceHandler1).processMessage(mockMixService, request); will(returnValue(true));
-			never(mockServiceHandler2).processMessage(mockMixService, request);
+			one(mockServiceHandler1).processMessage(testContext, mockMixService, request); will(returnValue(true));
+			never(mockServiceHandler2).processMessage(testContext, mockMixService, request);
 		}});
 		
 		xmppService.processReceivedPacket(mockMixService, request);
@@ -213,7 +218,7 @@ public class MixXmppServiceImplTest {
         final IQ response = IQ.createResultIQ(request);
         
         mockery.checking(new Expectations() {{
-            one(mockServiceHandler1).processIQ(mockMixService, request); will(returnValue(response));
+            one(mockServiceHandler1).processIQ(testContext, mockMixService, request); will(returnValue(response));
             one(mockMixService).createChannel(TEST_SENDER, TEST_CHANNEL_NAME);
             one(mockRouter).route(response);
         }});
@@ -236,7 +241,7 @@ public class MixXmppServiceImplTest {
 		createElement.addAttribute("channel", TEST_CHANNEL_NAME);
 		
 		mockery.checking(new Expectations() {{
-			one(mockServiceHandler1).processIQ(mockMixService, request); will(returnValue(response));
+			one(mockServiceHandler1).processIQ(testContext, mockMixService, request); will(returnValue(response));
 			one(mockRouter).route(response);
 		}});
 		
@@ -251,7 +256,7 @@ public class MixXmppServiceImplTest {
 		request.setTo(TEST_SERVICE_JID);
 		
 		mockery.checking(new Expectations() {{
-			one(mockServiceHandler1).processIQ(mockMixService, request);  will(throwException(new Exception()));
+			one(mockServiceHandler1).processIQ(testContext, mockMixService, request);  will(throwException(new Exception()));
 			
 			one(mockRouter).route(with(Matchers.allOf(
 					PacketMatchers.isType(IQ.Type.error),
@@ -269,7 +274,7 @@ public class MixXmppServiceImplTest {
 		request.setTo(TEST_SERVICE_JID);
 		
 		mockery.checking(new Expectations() {{
-			one(mockServiceHandler1).processMessage(mockMixService, request);  will(throwException(new Exception()));
+			one(mockServiceHandler1).processMessage(testContext, mockMixService, request);  will(throwException(new Exception()));
 			
 			one(mockRouter).route(with(Matchers.allOf(
 					PacketMatchers.isType(Message.Type.error),

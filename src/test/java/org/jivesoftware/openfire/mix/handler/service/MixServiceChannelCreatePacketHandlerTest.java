@@ -6,6 +6,7 @@ import org.dom4j.Element;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.TestConstants;
 import org.jivesoftware.openfire.mix.exception.MixChannelAlreadyExistsException;
+import org.jivesoftware.openfire.mix.handler.MixRequestContextImpl;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.junit.Before;
@@ -20,8 +21,6 @@ public class MixServiceChannelCreatePacketHandlerTest {
     private static final String TEST_DOMAIN = "somedomain.example";
     
 	private static final String TEST_SUBDOMAIN = "mixservice";
-	
-	private static final String TEST_DESCRIPTION = "Some kind of MIX service";
 	
 	private static final JID TEST_SENDER = new JID("name@server.com");
 
@@ -55,7 +54,7 @@ public class MixServiceChannelCreatePacketHandlerTest {
 			one(mockMixService).createChannel(TestConstants.TEST_USERS_JID, TestConstants.TEST_MIX_CHANNEL_NAME);
 		}});
 		
-		IQ result = handler.processIQ(mockMixService, createRequest);
+		IQ result = handler.processIQ(new MixRequestContextImpl(TestConstants.TEST_USERS_JID, mockMixService, null), mockMixService, createRequest);
 		
 		assertEquals("IQ result is sent", Type.result, result.getType());
 		assertEquals("Result is sent to the originator", createRequest.getFrom(), result.getTo());
@@ -77,7 +76,7 @@ public class MixServiceChannelCreatePacketHandlerTest {
 			one(mockMixService).createChannel(TEST_SENDER, "coven"); will(throwException(new MixChannelAlreadyExistsException("coven")));
 		}});
 		
-		IQ result = handler.processIQ(mockMixService, createRequest);
+		IQ result = handler.processIQ(new MixRequestContextImpl(TestConstants.TEST_USERS_JID, mockMixService, null), mockMixService, createRequest);
 		
 		assertEquals("IQ error is sent", Type.error, result.getType());
 		assertEquals("Result is sent to the originator", createRequest.getFrom(), result.getTo());

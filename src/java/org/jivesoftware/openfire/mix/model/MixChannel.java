@@ -7,6 +7,7 @@ import java.util.Set;
 import org.jivesoftware.database.JiveID;
 import org.jivesoftware.openfire.mix.MixChannelNode;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
+import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityMode;
 import org.jivesoftware.openfire.mix.exception.CannotJoinMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotLeaveMixChannelException;
@@ -50,14 +51,14 @@ public interface MixChannel {
 	
 	void removeParticipant(JID jid) throws CannotLeaveMixChannelException;
 
-	Collection<MixChannelNode> getNodes();
+	Collection<MixChannelNode<? extends MixChannelNodeItem>> getNodes();
 	
 	Set<String> getNodesAsStrings();
 	
 	Collection<MixChannelParticipant> getParticipants();
 
-	MixChannelParticipant getParticipantByJID(JID from);
-
+	MixChannelParticipant getParticipantByRealJID(JID from);
+	
 	void receiveMessage(MixChannelMessage mcMessage);
 	
 	Set<MixChannelParticipant> getNodeSubscribers(String node);
@@ -66,9 +67,15 @@ public interface MixChannel {
 
 	JID getOwner();
 
+	MixChannelNode<? extends MixChannelNodeItem> getNodeByName(String nodeName);
+	
 	void destroy() throws MixPersistenceException;
 
 	boolean isDestructable(JID requestor);
+	
+	MixService getMixService();
+
+	MixChannelParticipant getParticipantByProxyJID(JID jid);
 
 
 }

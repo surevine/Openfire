@@ -1,6 +1,7 @@
 package org.jivesoftware.openfire.mix.handler.channel;
 
 import org.jivesoftware.openfire.PacketRouter;
+import org.jivesoftware.openfire.mix.handler.MixRequestContext;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannelMessage;
 import org.jivesoftware.openfire.mix.model.MixChannelMessageImpl;
@@ -19,23 +20,23 @@ public class MixChannelMessagePacketHandler implements MixChannelPacketHandler {
 	}
 	
 	@Override
-	public IQ processIQ(MixChannel channel, IQ iq) {
+	public IQ processIQ(MixRequestContext context, MixChannel channel, IQ iq) {
 		return null;
 	}
 
 	@Override
-	public boolean processPresence(MixChannel channel, Presence presence) {
+	public boolean processPresence(MixRequestContext context, MixChannel channel, Presence presence) {
 		return false;
 	}
 
 	@Override
-	public boolean processMessage(MixChannel channel, Message message) {
+	public boolean processMessage(MixRequestContext context, MixChannel channel, Message message) {
 		if(message.getType() != Message.Type.groupchat) {
 			// We only deal with groupchat messages
 			return false;
 		}
 		
-		MixChannelParticipant participant = channel.getParticipantByJID(message.getFrom().asBareJID());
+		MixChannelParticipant participant = channel.getParticipantByRealJID(message.getFrom().asBareJID());
 		
 		if(participant == null) {
 			Message error = message.createCopy();

@@ -1,11 +1,13 @@
 package org.jivesoftware.openfire.mix.handler.channel;
 
+import static org.jivesoftware.openfire.mix.TestConstants.TEST_USERS_JID;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.hamcrest.Matchers;
 import org.jivesoftware.openfire.PacketRouter;
+import org.jivesoftware.openfire.mix.handler.MixRequestContextImpl;
 import org.jivesoftware.openfire.mix.handler.channel.MixChannelMessagePacketHandler;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannelMessage;
@@ -60,14 +62,14 @@ public class MixChannelMessagePacketHandlerTest {
 
 	@Test
 	public void testProcessIQReturnsNull() {
-		IQ result = handler.processIQ(channel, new IQ());
+		IQ result = handler.processIQ(new MixRequestContextImpl(TEST_USERS_JID, null, channel), channel, new IQ());
 		
 		assertNull("processIQ always returns null", result);
 	}
 
 	@Test
 	public void testProcessPresence() {
-		boolean result = handler.processPresence(channel, new Presence());
+		boolean result = handler.processPresence(new MixRequestContextImpl(TEST_USERS_JID, null, channel), channel, new Presence());
 		
 		assertFalse("processPresence always returns false", result);
 	}
@@ -77,7 +79,7 @@ public class MixChannelMessagePacketHandlerTest {
 		Message message = getTestMessage();
 		message.setType(Type.chat);
 		
-		boolean result = handler.processMessage(channel, message);
+		boolean result = handler.processMessage(new MixRequestContextImpl(message.getFrom(), null, channel), channel, message);
 		
 		assertFalse("Non-groupchat returns false", result);		
 	}
@@ -88,14 +90,14 @@ public class MixChannelMessagePacketHandlerTest {
 
 		context.checking(new Expectations() {{
 			{
-				one(channel).getParticipantByJID(with(equal(message.getFrom().asBareJID())));
+				one(channel).getParticipantByRealJID(with(equal(message.getFrom().asBareJID())));
 				will(returnValue(null));
 			}
 			
 			one(router).route(with(PacketMatchers.<Message>hasErrorCondition(PacketError.Condition.not_acceptable)));
 		}});
 		
-		boolean result = handler.processMessage(channel, message);
+		boolean result = handler.processMessage(new MixRequestContextImpl(message.getFrom(), null, channel), channel, message);
 		
 		assertTrue("Not participant returns true", result);
 	}
@@ -107,7 +109,7 @@ public class MixChannelMessagePacketHandlerTest {
 		
 		context.checking(new Expectations() {{
 			{
-				one(channel).getParticipantByJID(with(equal(message.getFrom().asBareJID())));
+				one(channel).getParticipantByRealJID(with(equal(message.getFrom().asBareJID())));
 				will(returnValue(sender));
 			}
 			
@@ -117,7 +119,7 @@ public class MixChannelMessagePacketHandlerTest {
 				)));
 		}});
 		
-		boolean result = handler.processMessage(channel, message);
+		boolean result = handler.processMessage(new MixRequestContextImpl(message.getFrom(), null, channel), channel, message);
 		
 		assertTrue("Success returns true", result);
 	}

@@ -3,6 +3,7 @@ package org.jivesoftware.openfire.mix.handler.service;
 import org.dom4j.Element;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.mix.MixService;
+import org.jivesoftware.openfire.mix.handler.MixRequestContext;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Presence;
@@ -22,7 +23,7 @@ public class DiscoMixServicePacketHandler implements MixServicePacketHandler {
 	}
 
 	@Override
-	public IQ processIQ(MixService actor, IQ iq) throws Exception {
+	public IQ processIQ(MixRequestContext context, MixService actor, IQ iq) throws Exception {
 		Element childElement = iq.getChildElement();
 		String namespace = null;
 		// Ignore IQs of type ERROR
@@ -44,12 +45,12 @@ public class DiscoMixServicePacketHandler implements MixServicePacketHandler {
 	}
 
 	@Override
-	public boolean processPresence(MixService actor, Presence presence) throws Exception {
+	public boolean processPresence(MixRequestContext context, MixService actor, Presence presence) throws Exception {
 		return false;
 	}
 
 	@Override
-	public boolean processMessage(MixService actor, Message message) throws Exception {
+	public boolean processMessage(MixRequestContext context, MixService actor, Message message) throws Exception {
 		return false;
 	}
 

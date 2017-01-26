@@ -1,32 +1,25 @@
 package org.jivesoftware.openfire.mix.handler.channel;
 
-import org.dom4j.DocumentFactory;
-import org.dom4j.Element;
-import org.hamcrest.Description;
-import org.hamcrest.Factory;
-import org.hamcrest.Matcher;
-import org.hamcrest.TypeSafeMatcher;
-import org.jivesoftware.openfire.mix.MixPersistenceException;
-import org.jivesoftware.openfire.mix.exception.CannotJoinMixChannelException;
-import org.jivesoftware.openfire.mix.handler.channel.MixChannelJoinPacketHandler;
-import org.jivesoftware.openfire.mix.model.LocalMixChannelParticipant;
-import org.jivesoftware.openfire.mix.model.MixChannel;
-import org.jivesoftware.openfire.mix.model.MixChannelParticipant;
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.xmpp.packet.IQ;
-import org.xmpp.packet.JID;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.dom4j.DocumentFactory;
+import org.dom4j.Element;
+import org.jivesoftware.openfire.mix.MixPersistenceException;
+import org.jivesoftware.openfire.mix.exception.CannotJoinMixChannelException;
+import org.jivesoftware.openfire.mix.handler.MixRequestContextImpl;
+import org.jivesoftware.openfire.mix.model.LocalMixChannelParticipant;
+import org.jivesoftware.openfire.mix.model.MixChannel;
+import org.jivesoftware.openfire.mix.model.MixChannelParticipant;
+import org.jmock.Expectations;
+import org.jmock.Mockery;
+import org.junit.Test;
+import org.xmpp.packet.IQ;
+import org.xmpp.packet.JID;
 
 public class MixChannelJoinPacketHandlerTest {
 
@@ -42,10 +35,8 @@ public class MixChannelJoinPacketHandlerTest {
 	private static final JID MIX_CHANNEL_JID = new JID(TEST_MIX_CHANNEL_NAME, TEST_MIX_DOMAIN, null);
 
 	// Not all of these are currently supported.
-	private static final String[] SUPPORTED_NODE_SET = { "urn:xmpp:mix:nodes:messages",
-			"urn:xmpp:mix:nodes:participants" };
-	private static final String[] EXTENDED_NODE_SET = { "urn:xmpp:mix:nodes:messages",
-			"urn:xmpp:mix:nodes:participants", "urn:xmpp:mix:nodes:subject", "urn:xmpp:mix:nodes:config" };
+	private static final String[] SUPPORTED_NODE_SET = { "urn:xmpp:mix:nodes:messages", "urn:xmpp:mix:nodes:participants" };
+	private static final String[] EXTENDED_NODE_SET = { "urn:xmpp:mix:nodes:messages", "urn:xmpp:mix:nodes:participants", "urn:xmpp:mix:nodes:subject", "urn:xmpp:mix:nodes:config" };
 
 	private static final DocumentFactory docFactory = DocumentFactory.getInstance();
 
@@ -67,42 +58,34 @@ public class MixChannelJoinPacketHandlerTest {
 
 	@Test
 	public void testSuccessfulJoinRequest() throws MixPersistenceException, CannotJoinMixChannelException {
-
-		final Set<String> subscriptions = new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET));
-
+		
+		final Set<String> requestedSubscriptions = new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET));
+		IQ join = createJoinRequest(EXTENDED_NODE_SET);
 		final MixChannelParticipant mcp = new LocalMixChannelParticipant(null, TEST_USERS_JID, mockMixChannel,
-				subscriptions);
+				requestedSubscriptions);
 		
 		context.checking(new Expectations() {{
 				allowing(mockMixChannel).getJID();
 
-				one(mockMixChannel).addParticipant(with(equal(TEST_USERS_JID)), with(equal(subscriptions)));
+				one(mockMixChannel).addParticipant(with(equal(TEST_USERS_JID)), with(equal(requestedSubscriptions)));
 				will(returnValue(mcp));
 		}});
 
+		IQ response = fixture.processIQ(new MixRequestContextImpl(mcp, null, mockMixChannel), mockMixChannel, join);
 
-		// Create valid ID, with subscriptions
-		IQ join = createJoinRequest(EXTENDED_NODE_SET);
-
-		IQ response = fixture.processIQ(mockMixChannel, join);
-
-		// There should be the same number of subscribe elements in the response
-		// as there were in the request.
 		assertEquals(MixChannelJoinPacketHandlerTest.SUPPORTED_NODE_SET.length,
 				response.getChildElement().elements().size());
 
 	}
 
 	@Test
-	@Ignore
 	public void processPresence() {
-		assertFalse(fixture.processPresence(mockMixChannel, null));
+		assertFalse(fixture.processPresence(new MixRequestContextImpl(TEST_USERS_JID, null, mockMixChannel), mockMixChannel, null));
 	}
 
 	@Test
-	@Ignore
 	public void processMessage() {
-		assertFalse(fixture.processMessage(mockMixChannel, null));
+		assertFalse(fixture.processMessage(new MixRequestContextImpl(TEST_USERS_JID, null, mockMixChannel), mockMixChannel, null));
 	}
 
 	private IQ createJoinRequest(String[] nodes) {

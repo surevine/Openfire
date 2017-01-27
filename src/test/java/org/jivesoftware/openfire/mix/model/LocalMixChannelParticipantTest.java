@@ -48,7 +48,7 @@ public class LocalMixChannelParticipantTest {
 	    	will(returnValue(new HashSet<String>(Arrays.asList(SUPPORTED_SUBSCRIPTIONS))));
 	    }});
 		
-		LocalMixChannelParticipant fixture = new LocalMixChannelParticipant(PROXY_CHANNEL_JID, TEST_USERS_JID, mockMixChannel);
+		LocalMixChannelParticipant fixture = new LocalMixChannelParticipant(PROXY_CHANNEL_JID, TEST_USERS_JID, mockMixChannel, null);
 		
 		assertEquals(PROXY_CHANNEL_JID, fixture.getJid());
 	}
@@ -61,7 +61,7 @@ public class LocalMixChannelParticipantTest {
 	    	will(returnValue(new HashSet<String>(Arrays.asList(SUPPORTED_SUBSCRIPTIONS))));
 	    }});
 		
-		LocalMixChannelParticipant fixture = new LocalMixChannelParticipant(PROXY_CHANNEL_JID, TEST_USERS_JID, mockMixChannel, new HashSet<String>(Arrays.asList(EXTENDED_SUBSCRIPTIONS)));
+		LocalMixChannelParticipant fixture = new LocalMixChannelParticipant(PROXY_CHANNEL_JID, TEST_USERS_JID, mockMixChannel, new HashSet<String>(Arrays.asList(EXTENDED_SUBSCRIPTIONS)), null);
 		
 		assertEquals(1, fixture.getSubscriptions().size());
 	}

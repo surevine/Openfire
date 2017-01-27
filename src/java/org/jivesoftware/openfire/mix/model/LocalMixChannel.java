@@ -19,6 +19,7 @@ import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityMode;
 import org.jivesoftware.openfire.mix.exception.CannotJoinMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotLeaveMixChannelException;
+import org.jivesoftware.openfire.mix.exception.CannotUpdateMixChannelSubscriptionException;
 import org.jivesoftware.openfire.mix.policy.AlwaysAllowPermissionPolicy;
 import org.jivesoftware.openfire.mix.policy.MixChannelJidMapNodeItemPermissionPolicy;
 import org.jivesoftware.openfire.mix.policy.MixChannelStandardPermissionPolicy;
@@ -188,9 +189,9 @@ public class LocalMixChannel implements MixChannel {
 			MixChannelParticipant participant = null;
 			
 			if (subscribeNodes.isEmpty()) {
-				participant = new LocalMixChannelParticipant(proxyJid, joiner, this);
+				participant = new LocalMixChannelParticipant(proxyJid, joiner, this, this.channelRepository);
 			} else {
-				participant = new LocalMixChannelParticipant(proxyJid, joiner, this, subscribeNodes);				
+				participant = new LocalMixChannelParticipant(proxyJid, joiner, this, subscribeNodes, this.channelRepository);				
 			}
 
 
@@ -212,6 +213,21 @@ public class LocalMixChannel implements MixChannel {
 		} else {
 			throw new CannotJoinMixChannelException(this.getName(), "Already a member");
 		}
+	}
+	
+
+	@Override
+	public void updateSubscriptions(JID from, Set<String> subscriptionRequests)
+			throws CannotUpdateMixChannelSubscriptionException {
+		JID requestorBareJid = from.asBareJID();
+		
+		if (participants.containsKey(requestorBareJid)) {
+			MixChannelParticipant participant = participants.get(requestorBareJid);
+			participant.updateSubscriptions(subscriptionRequests);
+		} else {
+			throw new CannotUpdateMixChannelSubscriptionException(this.getName(), "Not a participant");
+		}
+		
 	}
 	
 	@Override
@@ -364,5 +380,4 @@ public class LocalMixChannel implements MixChannel {
 	public MixChannelNode<?> getNodeByName(String nodeName) {
 		return nodes.get(nodeName);
 	}
-
 }

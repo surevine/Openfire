@@ -5,7 +5,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.codec.digest.Md5Crypt;
+import org.jivesoftware.openfire.mix.MixPersistenceException;
+import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityPreference;
+import org.jivesoftware.openfire.mix.exception.CannotUpdateMixChannelSubscriptionException;
 import org.xmpp.packet.JID;
 
 public class LocalMixChannelParticipant implements MixChannelParticipant {
@@ -24,9 +27,11 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 	
 	// TODO - Defaulting to ENFORCE_HIDDEN in the short-term, this will need to be fixed.
 	private ChannelJidVisibilityPreference jvp = ChannelJidVisibilityPreference.ENFORCE_HIDDEN;
+
+	private MixPersistenceManager subscriptionsRepository;
 	
-	public LocalMixChannelParticipant(JID proxyJid, JID jid, MixChannel channel, Set<String> requestedSubscriptions) {
-		this(proxyJid, jid, channel);
+	public LocalMixChannelParticipant(JID proxyJid, JID jid, MixChannel channel, Set<String> requestedSubscriptions, MixPersistenceManager mpm) {
+		this(proxyJid, jid, channel, mpm);
 		
 		this.subscriptions = new HashSet<String>(requestedSubscriptions);
 
@@ -41,11 +46,12 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 	 * @param jid
 	 * @param channel
 	 */
-	public LocalMixChannelParticipant(JID proxyJid, JID jid, MixChannel channel) {
+	public LocalMixChannelParticipant(JID proxyJid, JID jid, MixChannel channel, MixPersistenceManager mpm) {
 		this.proxyJid = proxyJid;
 		this.jid = jid;
 		this.channel = channel;
 		this.nick = Md5Crypt.md5Crypt(jid.toBareJID().getBytes()); // Not sure what this should be yet
+		this.subscriptionsRepository = mpm;
 		
 		this.subscriptions = new HashSet<String>(channel.getNodesAsStrings());		
 	}
@@ -140,6 +146,31 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 	@Override
 	public void setSubscriptions(Set<String> subs) {
 		this.subscriptions = subs;
+	}
+
+	/**
+	 * Allows a user to update the nodes they subscribe to.
+	 * 
+	 * @see org.jivesoftware.openfire.mix.model.MixChannelParticipant#updateSubscriptions(java.util.Set)
+	 */
+	@Override
+	public void updateSubscriptions(Set<String> subs) throws CannotUpdateMixChannelSubscriptionException {
+		
+		Set<String> tmpCopy = new HashSet<String>(subs);
+
+		// Only retain the subscriptions in the request that are in the supported set
+		tmpCopy.retainAll(channel.getNodesAsStrings());
+		
+		if (tmpCopy.isEmpty()) {
+			throw new CannotUpdateMixChannelSubscriptionException(channel.getName(), "Not valid subscription list");
+		} else {
+			this.setSubscriptions(tmpCopy);
+			try {
+				subscriptionsRepository.update(this);
+			} catch (MixPersistenceException e) {
+				throw new CannotUpdateMixChannelSubscriptionException(channel.getName(), e.getMessage());
+			}
+		}
 	}
 
 }

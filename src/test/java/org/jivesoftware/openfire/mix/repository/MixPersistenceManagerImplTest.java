@@ -210,7 +210,7 @@ public class MixPersistenceManagerImplTest {
 
 		// Save a participant
 		MixChannelParticipant toPersist = new LocalMixChannelParticipant(TEST_USER_PROXY_JID, TEST_USER_JID, mc,
-				subscriptions);
+				subscriptions, null);
 		toPersist = mixPersistenceManager.save(toPersist);
 
 		Connection conn = DbConnectionManager.getConnection();

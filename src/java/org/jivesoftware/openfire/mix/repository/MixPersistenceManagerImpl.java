@@ -337,5 +337,46 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 		
 		return subscriptions;
 	}
+	
+	private static final String REMOVE_SUBSCRIPTIONS = "DELETE FROM " + CHANNEL_PARTICIPANT_SUBSCRIPTIONS_TABLE + " WHERE participantID_fk=?";
+
+	@Override
+	public MixChannelParticipant update(MixChannelParticipant mcp) throws MixPersistenceException {
+		Connection con = null;
+		PreparedStatement pstmt = null;
+
+		try {
+
+			con = DbConnectionManager.getConnection();
+
+			pstmt = con.prepareStatement(REMOVE_SUBSCRIPTIONS);
+
+			// Set the PK for the MCP
+			mcp.setID(this.mcpKeys.nextUniqueID());
+			pstmt.setLong(1, mcp.getID());
+
+            pstmt.executeUpdate();
+            DbConnectionManager.fastcloseStmt(pstmt);
+
+			// Now deal with the subscriptions
+			for (String sub : mcp.getSubscriptions()) {
+				pstmt = con.prepareStatement(ADD_NODE_SUBSCRIPTIONS);
+
+				pstmt.setLong(1, this.mcpSubsKeys.nextUniqueID());
+				pstmt.setLong(2, mcp.getID());
+				pstmt.setString(3, sub);
+
+				pstmt.executeUpdate();
+			}
+
+		} catch (SQLException sqle) {
+			Log.error(sqle.getMessage(), sqle);
+			throw new MixPersistenceException(sqle);
+		} finally {
+			DbConnectionManager.closeConnection(pstmt, con);
+		}
+
+		return mcp;
+	}
 
 }

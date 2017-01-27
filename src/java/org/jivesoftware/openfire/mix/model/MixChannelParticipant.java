@@ -3,6 +3,7 @@ package org.jivesoftware.openfire.mix.model;
 import java.util.Set;
 
 import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityPreference;
+import org.jivesoftware.openfire.mix.exception.CannotUpdateMixChannelSubscriptionException;
 import org.xmpp.packet.JID;
 
 public interface MixChannelParticipant {
@@ -47,4 +48,6 @@ public interface MixChannelParticipant {
 	void setSubscriptions(Set<String> subs);
 
 	Role getRole();
+
+	void updateSubscriptions(Set<String> subs) throws CannotUpdateMixChannelSubscriptionException;
 }

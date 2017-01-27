@@ -11,6 +11,7 @@ import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityMode;
 import org.jivesoftware.openfire.mix.exception.CannotJoinMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotLeaveMixChannelException;
+import org.jivesoftware.openfire.mix.exception.CannotUpdateMixChannelSubscriptionException;
 import org.jivesoftware.util.JiveConstants;
 import org.xmpp.packet.JID;
 
@@ -76,6 +77,8 @@ public interface MixChannel {
 	MixService getMixService();
 
 	MixChannelParticipant getParticipantByProxyJID(JID jid);
+
+	void updateSubscriptions(JID from, Set<String> subscriptionRequests) throws CannotUpdateMixChannelSubscriptionException;
 
 
 }

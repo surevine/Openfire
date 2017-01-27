@@ -62,7 +62,7 @@ public class MixChannelJoinPacketHandlerTest {
 		final Set<String> requestedSubscriptions = new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET));
 		IQ join = createJoinRequest(EXTENDED_NODE_SET);
 		final MixChannelParticipant mcp = new LocalMixChannelParticipant(null, TEST_USERS_JID, mockMixChannel,
-				requestedSubscriptions);
+				requestedSubscriptions, null);
 		
 		context.checking(new Expectations() {{
 				allowing(mockMixChannel).getJID();

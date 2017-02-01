@@ -350,9 +350,6 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 			con = DbConnectionManager.getConnection();
 
 			pstmt = con.prepareStatement(REMOVE_SUBSCRIPTIONS);
-
-			// Set the PK for the MCP
-			mcp.setID(this.mcpKeys.nextUniqueID());
 			pstmt.setLong(1, mcp.getID());
 
             pstmt.executeUpdate();
@@ -378,5 +375,43 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 
 		return mcp;
 	}
+//	
+//	private static final String FIND_PARTICIPANT_BY_ID = "SELECT * FROM "
+//	
+//	public MixChannelParticipant findParticipantById(long find) throws MixPersistenceException {
+//		Connection con = null;
+//		PreparedStatement pstmt = null;
+//
+//		try {
+//
+//			con = DbConnectionManager.getConnection();
+//
+//			pstmt = con.prepareStatement(REMOVE_SUBSCRIPTIONS);
+//			pstmt.setLong(1, mcp.getID());
+//
+//            pstmt.executeUpdate();
+//            DbConnectionManager.fastcloseStmt(pstmt);
+//
+//			// Now deal with the subscriptions
+//			for (String sub : mcp.getSubscriptions()) {
+//				pstmt = con.prepareStatement(ADD_NODE_SUBSCRIPTIONS);
+//
+//				pstmt.setLong(1, this.mcpSubsKeys.nextUniqueID());
+//				pstmt.setLong(2, mcp.getID());
+//				pstmt.setString(3, sub);
+//
+//				pstmt.executeUpdate();
+//			}
+//
+//		} catch (SQLException sqle) {
+//			Log.error(sqle.getMessage(), sqle);
+//			throw new MixPersistenceException(sqle);
+//		} finally {
+//			DbConnectionManager.closeConnection(pstmt, con);
+//		}
+//		
+//		return null;
+//		
+//	}
 
 }

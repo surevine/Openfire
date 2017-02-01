@@ -29,6 +29,7 @@ import org.jivesoftware.database.EmbeddedConnectionProvider;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.MixXmppServiceImpl;
+import org.jivesoftware.openfire.mix.exception.CannotUpdateMixChannelSubscriptionException;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.model.LocalMixChannelParticipant;
 import org.jivesoftware.openfire.mix.model.MixChannel;
@@ -45,6 +46,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
+
+import static org.jivesoftware.openfire.mix.TestConstants.*;
 
 public class MixPersistenceManagerImplTest {
 
@@ -166,8 +169,8 @@ public class MixPersistenceManagerImplTest {
 	@Test
 	public void testSavingAndDeletingMixChannel() throws MixPersistenceException, SQLException {
 
-		MixChannel mc = new LocalMixChannel(mockMixService, TEST_CHANNEL_NAME,
-				new JID(TEST_OWNER_NODE, TEST_SERVICE_DOMAIN, null), mockXmppService, mixPersistenceManager);
+		MixChannel mc = new LocalMixChannel(mockMixService, TEST_MIX_CHANNEL_NAME,
+				TEST_USERS_JID, mockXmppService, mixPersistenceManager);
 		mc = mixPersistenceManager.save(mc);
 		assertNotNull(mc);
 		assertNotNull(mc.getID());
@@ -189,34 +192,30 @@ public class MixPersistenceManagerImplTest {
 		
 	}
 
-	private static final String TEST_OWNER_NODE = "hag66";
-	private static final String TEST_USER_NODE = "hecate";
-	private static final String TEST_SERVICE_DOMAIN = "shakespeare.example";
-	private static final String TEST_MIX_SERVICE_DOMAIN = "mix." + TEST_SERVICE_DOMAIN;
-	private static final String TEST_CHANNEL_NAME = "coven";
 
-	private static final JID TEST_USER_JID = new JID(TEST_USER_NODE, TEST_SERVICE_DOMAIN, null);
+	private static final String TEST_USER_NODE = "hecate";
+
 	private static final JID TEST_USER_PROXY_JID = new JID("123456", TEST_SERVICE_DOMAIN, null);
 
 	@Test
 	public void thatParticipantSavingAndDeletion() throws MixPersistenceException, SQLException {
 
 		// Create a channel
-		MixChannel mc = mixPersistenceManager.save(new LocalMixChannel(mockMixService, TEST_CHANNEL_NAME,
-				new JID(TEST_OWNER_NODE, TEST_SERVICE_DOMAIN, null), mockXmppService, mixPersistenceManager));
+		MixChannel mc = mixPersistenceManager.save(new LocalMixChannel(mockMixService, TEST_MIX_CHANNEL_NAME,
+				new JID(TEST_USER, TEST_SERVICE_DOMAIN, null), mockXmppService, mixPersistenceManager));
 
 		Set<String> subscriptions = new HashSet<String>(
 				Arrays.asList("urn:xmpp:mix:nodes:messages", "urn:xmpp:mix:nodes:presence"));
 
 		// Save a participant
-		MixChannelParticipant toPersist = new LocalMixChannelParticipant(TEST_USER_PROXY_JID, TEST_USER_JID, mc,
+		MixChannelParticipant toPersist = new LocalMixChannelParticipant(TEST_USER_PROXY_JID, TEST_USERS_JID, mc,
 				subscriptions, null);
 		toPersist = mixPersistenceManager.save(toPersist);
 
 		Connection conn = DbConnectionManager.getConnection();
 		PreparedStatement stmt = conn.prepareStatement(
 				"SELECT * FROM " + MixPersistenceManagerImpl.CHANNEL_PARTICIPANT_TABLE_NAME + "  WHERE realJid=?");
-		stmt.setString(1, TEST_USER_JID.toString());
+		stmt.setString(1, TEST_USERS_JID.toString());
 
 		ResultSet rs = stmt.executeQuery();
 		
@@ -229,6 +228,33 @@ public class MixPersistenceManagerImplTest {
 		
 		assertFalse(rs.next());
 
+	}
+	
+	@Test
+	public void thatParticipantsSubscriptionsAreUpdated() throws MixPersistenceException, CannotUpdateMixChannelSubscriptionException {
+		// Create a channel
+		MixChannel mc = mixPersistenceManager.save(new LocalMixChannel(mockMixService, TEST_MIX_CHANNEL_NAME,
+				new JID(TEST_USER, TEST_SERVICE_DOMAIN, null), mockXmppService, mixPersistenceManager));
+		
+		Set<String> subscriptions = new HashSet<String>(
+				Arrays.asList("urn:xmpp:mix:nodes:messages", "urn:xmpp:mix:nodes:participants"));
+
+		// Save a participant
+		MixChannelParticipant toPersist = new LocalMixChannelParticipant(TEST_USER_PROXY_JID, TEST_USERS_JID, mc,
+				subscriptions, null);
+		toPersist = mixPersistenceManager.save(toPersist);
+		
+		assertEquals(2, toPersist.getSubscriptions().size());
+		
+		toPersist.setSubscriptions(new HashSet<String>(Arrays.asList("urn:xmpp:mix:nodes:presence")));
+		
+		// Update subscriptions with reduced set
+		toPersist = mixPersistenceManager.update(toPersist);
+		
+		assertEquals(1, toPersist.getSubscriptions().size());
+		
+		// Tidy up
+		mixPersistenceManager.delete(toPersist);
 	}
 
 	public static void deleteFilesInFolder(final File folder) {

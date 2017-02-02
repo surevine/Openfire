@@ -246,7 +246,7 @@ public class MixPersistenceManagerImplTest {
 		
 		assertEquals(2, toPersist.getSubscriptions().size());
 		
-		toPersist.setSubscriptions(new HashSet<String>(Arrays.asList("urn:xmpp:mix:nodes:presence")));
+		toPersist.setSubscriptions(new HashSet<String>(Arrays.asList("urn:xmpp:mix:nodes:participants")));
 		
 		// Update subscriptions with reduced set
 		toPersist = mixPersistenceManager.update(toPersist);

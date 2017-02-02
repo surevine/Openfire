@@ -286,10 +286,11 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 
 			while (resultSet.next()) {
 				try {
+					
 					JID proxyJid = new JID(resultSet.getString(3));
 					JID realJid = new JID(resultSet.getString(2));
 					
-					LocalMixChannelParticipant mcp = new LocalMixChannelParticipant(proxyJid, realJid, channel, null);
+					LocalMixChannelParticipant mcp = new LocalMixChannelParticipant(resultSet.getLong(1), proxyJid, realJid, channel, this);
 					
 					participantsByChannel.add(mcp);
 					

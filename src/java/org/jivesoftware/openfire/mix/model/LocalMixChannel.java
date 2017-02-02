@@ -33,13 +33,12 @@ public class LocalMixChannel implements MixChannel {
 	private static final Logger LOG = LoggerFactory.getLogger(LocalMixChannel.class);
 
 	public static final String NODE_PARTICIPANTS = "urn:xmpp:mix:nodes:participants";
-	public static final String NODE_MESSAGES = "urn:xmpp:mix:nodes:messages";
-	
+	public static final String NODE_MESSAGES = "urn:xmpp:mix:nodes:messages";	
 	public static final String NODE_JIDMAP = "urn:xmpp:mix:nodes:jidmap";
 
 	private PacketRouter packetRouter;
 	
-	private Map<JID, MixChannelParticipant> participants;
+	private Map<JID, MixChannelParticipant> participantsByRealJID;
 
 	private Map<JID, MixChannelParticipant> participantsByProxyJid;
 
@@ -97,7 +96,7 @@ public class LocalMixChannel implements MixChannel {
 		
 		for (MixChannelParticipant mcp : fromDB) {
 			mcp.setSubscriptions(mpm.findByParticipant(mcp));
-			participants.put(mcp.getJid(), mcp);
+			participantsByRealJID.put(mcp.getRealJid(), mcp);
 			participantsByProxyJid.put(mcp.getJid(), mcp);
 		}
 		
@@ -118,7 +117,7 @@ public class LocalMixChannel implements MixChannel {
 		this.name = name;
 		
 		this.participantsListeners = new ArrayList<>();
-		this.participants = new HashMap<>();
+		this.participantsByRealJID = new HashMap<>();
 		this.participantsByProxyJid = new HashMap<>();
 		this.nodes = new HashMap<>();
 		
@@ -181,21 +180,21 @@ public class LocalMixChannel implements MixChannel {
 	@Override
 	public MixChannelParticipant addParticipant(JID jid, Set<String> subscribeNodes) throws CannotJoinMixChannelException {
 
-		JID joiner = jid.asBareJID();
+		JID bareJoinerJID = jid.asBareJID();
 		
-		if (!this.participants.containsKey(joiner)) {
+		if (!this.participantsByRealJID.containsKey(bareJoinerJID)) {
 			JID proxyJid = this.getNewProxyJID();
 			
 			MixChannelParticipant participant = null;
 			
 			if (subscribeNodes.isEmpty()) {
-				participant = new LocalMixChannelParticipant(proxyJid, joiner, this, this.channelRepository);
+				participant = new LocalMixChannelParticipant(proxyJid, bareJoinerJID, this, this.channelRepository);
 			} else {
-				participant = new LocalMixChannelParticipant(proxyJid, joiner, this, subscribeNodes, this.channelRepository);				
+				participant = new LocalMixChannelParticipant(proxyJid, bareJoinerJID, this, subscribeNodes, this.channelRepository);				
 			}
 
 
-			this.participants.put(joiner, participant);
+			this.participantsByRealJID.put(bareJoinerJID, participant);
 			
 			// Trigger the participant added event.
 			for (MixChannelParticipantsListener listener : participantsListeners) {
@@ -221,8 +220,8 @@ public class LocalMixChannel implements MixChannel {
 			throws CannotUpdateMixChannelSubscriptionException {
 		JID requestorBareJid = from.asBareJID();
 		
-		if (participants.containsKey(requestorBareJid)) {
-			MixChannelParticipant participant = participants.get(requestorBareJid);
+		if (participantsByRealJID.containsKey(requestorBareJid)) {
+			MixChannelParticipant participant = participantsByRealJID.get(requestorBareJid);
 			participant.updateSubscriptions(subscriptionRequests);
 		} else {
 			throw new CannotUpdateMixChannelSubscriptionException(this.getName(), "Not a participant");
@@ -235,8 +234,8 @@ public class LocalMixChannel implements MixChannel {
 
 		JID bareJid = jid.asBareJID();
 		
-		if (participants.containsKey(bareJid)) {
-			MixChannelParticipant mcp = participants.remove(bareJid);
+		if (participantsByRealJID.containsKey(bareJid)) {
+			MixChannelParticipant mcp = participantsByRealJID.remove(bareJid);
 			participantsByProxyJid.remove(mcp.getJid());
 			
 			// Let all listeners know that the participant has left
@@ -245,7 +244,7 @@ public class LocalMixChannel implements MixChannel {
 			}
 			try {
 				this.channelRepository.delete(mcp);
-				this.participants.remove(bareJid);
+				this.participantsByRealJID.remove(bareJid);
 			} catch (MixPersistenceException e) {
 				LOG.error(e.getMessage());
 				throw new CannotLeaveMixChannelException(this.getName(), e.getMessage());
@@ -257,6 +256,7 @@ public class LocalMixChannel implements MixChannel {
 		
 		return;
 	}
+	
 
 	private JID getNewProxyJID() {
 		return new JID(this.name + "+" + this.getNextProxyNodePart(), this.getJID().getDomain(), "", false);
@@ -289,17 +289,17 @@ public class LocalMixChannel implements MixChannel {
 
 	@Override
 	public MixChannelParticipant getParticipantByRealJID(JID from) {
-		return participants.get(from);
+		return participantsByRealJID.get(from.asBareJID());
 	}
 
 	@Override
 	public MixChannelParticipant getParticipantByProxyJID(JID jid) {
-		return participantsByProxyJid.get(jid);
+		return participantsByProxyJid.get(jid.asBareJID());
 	}	
 
 	@Override
 	public Collection<MixChannelParticipant> getParticipants() {
-		return Collections.unmodifiableCollection(participants.values());
+		return Collections.unmodifiableCollection(participantsByRealJID.values());
 	}
 
 	@Override
@@ -327,7 +327,7 @@ public class LocalMixChannel implements MixChannel {
 	}
 	
 	public Set<MixChannelParticipant> getNodeSubscribers(String node) {
-		Collection<MixChannelParticipant> allParticipants = participants.values();
+		Collection<MixChannelParticipant> allParticipants = participantsByRealJID.values();
 
 		if (!nodes.containsKey(node)) {
 			return Collections.emptySet();
@@ -359,7 +359,7 @@ public class LocalMixChannel implements MixChannel {
 	 */
 	@Override
 	public void destroy() throws MixPersistenceException {
-		for (MixChannelParticipant participant : participants.values()) {
+		for (MixChannelParticipant participant : participantsByRealJID.values()) {
 			this.channelRepository.delete(participant);	
 		}
 		

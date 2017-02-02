@@ -57,6 +57,20 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 	}
 
 
+	/**
+	 * Constructor to be used when serialising form the database.
+	 * 
+	 * @param id
+	 * @param proxyJid2
+	 * @param realJid
+	 * @param channel2
+	 * @param mpm
+	 */
+	public LocalMixChannelParticipant(long id, JID proxyJid, JID realJid, MixChannel channel, MixPersistenceManager mpm) {
+		this(proxyJid, realJid, channel, mpm);
+		this.id = id;
+	}
+
 	public long getID() {
 		return id;
 	}

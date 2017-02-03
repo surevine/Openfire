@@ -185,7 +185,7 @@ public class LocalMixChannel implements MixChannel {
 		if (!this.participantsByRealJID.containsKey(bareJoinerJID)) {
 			JID proxyJid = this.getNewProxyJID();
 			
-			MixChannelParticipant participant = null;
+			MixChannelParticipant participant;
 			
 			if (subscribeNodes.isEmpty()) {
 				participant = new LocalMixChannelParticipant(proxyJid, bareJoinerJID, this, this.channelRepository);

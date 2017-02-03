@@ -33,7 +33,7 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 	public LocalMixChannelParticipant(JID proxyJid, JID jid, MixChannel channel, Set<String> requestedSubscriptions, MixPersistenceManager mpm) {
 		this(proxyJid, jid, channel, mpm);
 		
-		this.subscriptions = new HashSet<String>(requestedSubscriptions);
+		this.subscriptions = new HashSet<>(requestedSubscriptions);
 
 		// Only retain the subscriptions in the request that are in the supported set
 		this.subscriptions.retainAll(channel.getNodesAsStrings());
@@ -53,7 +53,7 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 		this.nick = Md5Crypt.md5Crypt(jid.toBareJID().getBytes()); // Not sure what this should be yet
 		this.subscriptionsRepository = mpm;
 		
-		this.subscriptions = new HashSet<String>(channel.getNodesAsStrings());		
+		this.subscriptions = new HashSet<>(channel.getNodesAsStrings());		
 	}
 
 
@@ -170,7 +170,7 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 	@Override
 	public void updateSubscriptions(Set<String> subs) throws CannotUpdateMixChannelSubscriptionException {
 		
-		Set<String> tmpCopy = new HashSet<String>(subs);
+		Set<String> tmpCopy = new HashSet<>(subs);
 
 		// Only retain the subscriptions in the request that are in the supported set
 		tmpCopy.retainAll(channel.getNodesAsStrings());

@@ -22,6 +22,7 @@ import org.jivesoftware.openfire.mix.model.LocalMixChannelParticipant;
 import org.jivesoftware.openfire.mix.model.LocalMixService;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannelParticipant;
+import org.jivesoftware.openfire.pubsub.PubSubEngine;
 import org.jivesoftware.util.JiveProperties;
 import org.jivesoftware.util.StringUtils;
 import org.slf4j.Logger;
@@ -47,14 +48,17 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 	private IdentityManager mcpKeys;
 
 	private IdentityManager mcpSubsKeys;
+	
+	private PubSubEngine engine;
 
 	public MixPersistenceManagerImpl(JiveProperties jiveProperties, MixXmppService xmppService,
-			IdentityManager channelKeys, IdentityManager mcpKeys, IdentityManager mcpSubsKeys) {
+			IdentityManager channelKeys, IdentityManager mcpKeys, IdentityManager mcpSubsKeys, PubSubEngine engine) {
 		this.jiveProperties = jiveProperties;
 		this.xmppService = xmppService;
 		this.channelKeys = channelKeys;
 		this.mcpKeys = mcpKeys;
 		this.mcpSubsKeys = mcpSubsKeys;
+		this.engine = engine;
 	}
 
 	@Override
@@ -72,7 +76,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 				Long id = rs.getLong(1);
 				String subdomain = rs.getString(2);
 				String description = rs.getString(3);
-				MixService newSerivce = new LocalMixService(xmppServer, jiveProperties, subdomain, description, this.xmppService, this);
+				MixService newSerivce = new LocalMixService(xmppServer, jiveProperties, subdomain, description, this.xmppService, this, engine);
 				newSerivce.setId(id);
 				mixServices.add(newSerivce);
 			}

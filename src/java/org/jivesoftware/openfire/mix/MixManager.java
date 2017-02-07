@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.dom4j.Namespace;
 import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.container.BasicModule;
@@ -20,6 +21,7 @@ import org.jivesoftware.openfire.mix.handler.service.MixServiceChannelCreatePack
 import org.jivesoftware.openfire.mix.handler.service.MixServicePacketHandler;
 import org.jivesoftware.openfire.mix.repository.MixIdentityManager;
 import org.jivesoftware.openfire.mix.repository.MixPersistenceManagerImpl;
+import org.jivesoftware.openfire.pubsub.PubSubEngine;
 import org.jivesoftware.util.JiveProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,13 +33,17 @@ public class MixManager extends BasicModule {
 
 	public static final String MIX_VERSION = "0.6.1";
 	
-	public static final String MIX_NAMESPACE = "urn:xmpp:mix:0";
+	public static final String MIX_NAMESPACE_STR = "urn:xmpp:mix:0";
+	
+	public static final Namespace MIX_NAMESPACE = Namespace.get(MIX_NAMESPACE_STR);
 	
 	private XMPPServer xmppServer;
 	
 	private MixPersistenceManager persistenceManager;
 	
 	private ConcurrentHashMap<String, MixService> mixServices = new ConcurrentHashMap<>();
+	
+	private PubSubEngine engine;
 	
 	// Keep these statics here, rather than update the static collection in sequence manager
 	private static final int CHANNEL_SEQ_TYPE = 500;
@@ -51,8 +57,10 @@ public class MixManager extends BasicModule {
         super("Mediated Information eXchange (MIX) manager");
 
         this.xmppServer = XMPPServer.getInstance();
-
+        
         PacketRouter router = XMPPServer.getInstance().getPacketRouter();
+
+        engine = new PubSubEngine(router);
     	
     	List<MixServicePacketHandler> serviceHandlers = Arrays.asList(
     			new DiscoMixServicePacketHandler(xmppServer),
@@ -68,10 +76,10 @@ public class MixManager extends BasicModule {
     			new MixChannelUpdateSubscriptionPacketHandler()
     		);
     	
-    	MixXmppServiceImpl xmppService = new MixXmppServiceImpl(router, serviceHandlers, channelHandlers);
+    	MixXmppServiceImpl xmppService = new MixXmppServiceImpl(router, serviceHandlers, channelHandlers, engine);
     	
     	this.persistenceManager = new MixPersistenceManagerImpl(JiveProperties.getInstance(), xmppService, 
-    			new MixIdentityManager(CHANNEL_SEQ_TYPE, 5), new MixIdentityManager(MCP_SEQ_TYPE, 5), new MixIdentityManager(MCP_SUBS_SEQ_TYPE, 5));
+    			new MixIdentityManager(CHANNEL_SEQ_TYPE, 5), new MixIdentityManager(MCP_SEQ_TYPE, 5), new MixIdentityManager(MCP_SUBS_SEQ_TYPE, 5), engine);
     }
     
     public MixManager(XMPPServer xmppServer, MixPersistenceManager persistenceManager) {
@@ -127,6 +135,7 @@ public class MixManager extends BasicModule {
         try {
             ComponentManagerFactory.getComponentManager().addComponent(service.getServiceName(), service);
             mixServices.put(service.getServiceName(), service);
+            
         }
         catch (ComponentException e) {
             Log.error("MixManager: Unable to add "+service.getServiceName()+" as component.", e);

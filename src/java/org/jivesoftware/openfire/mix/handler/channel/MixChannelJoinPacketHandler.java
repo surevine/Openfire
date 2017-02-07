@@ -23,7 +23,7 @@ public class MixChannelJoinPacketHandler implements MixChannelPacketHandler {
 		// Unpack packet
 		Element joinNode = iq.getChildElement();
 
-		if ((joinNode == null) || (!joinNode.getQName().equals(QName.get("join", MixManager.MIX_NAMESPACE)))) {
+		if ((joinNode == null) || (!joinNode.getQName().equals(QName.get("join", MixManager.MIX_NAMESPACE_STR)))) {
 			return null;
 		}
 
@@ -43,7 +43,7 @@ public class MixChannelJoinPacketHandler implements MixChannelPacketHandler {
 
 		IQ result = IQ.createResultIQ(iq);
 
-		Element joinElement = result.setChildElement("join", MixManager.MIX_NAMESPACE);
+		Element joinElement = result.setChildElement("join", MixManager.MIX_NAMESPACE_STR);
 
 		try {
 			mcp = channel.addParticipant(iq.getFrom(), subscriptionRequests);

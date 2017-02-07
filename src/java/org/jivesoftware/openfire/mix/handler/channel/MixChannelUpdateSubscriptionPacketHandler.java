@@ -20,7 +20,7 @@ import org.xmpp.packet.Presence;
 public class MixChannelUpdateSubscriptionPacketHandler implements MixChannelPacketHandler  {
 	
 	private static final String TARGET_ELEM_NAME = "update-subscription";
-	private static final QName TARGET_QNAME = QName.get(TARGET_ELEM_NAME, MixManager.MIX_NAMESPACE);
+	private static final QName TARGET_QNAME = QName.get(TARGET_ELEM_NAME, MixManager.MIX_NAMESPACE_STR);
 	
 	private static final String SUBSCRIBE_ELEM_NAME = "subscribe";
 	private static final String NODE_ATTR_NAME = "node";
@@ -50,7 +50,7 @@ public class MixChannelUpdateSubscriptionPacketHandler implements MixChannelPack
 
 		IQ result = IQ.createResultIQ(iq);
 
-		Element joinElement = result.setChildElement(TARGET_ELEM_NAME, MixManager.MIX_NAMESPACE);
+		Element joinElement = result.setChildElement(TARGET_ELEM_NAME, MixManager.MIX_NAMESPACE_STR);
 
 		try {
 			channel.updateSubscriptions(iq.getFrom(), subscriptionRequests);

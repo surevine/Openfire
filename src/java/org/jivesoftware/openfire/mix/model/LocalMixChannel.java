@@ -1,6 +1,7 @@
 package org.jivesoftware.openfire.mix.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -9,8 +10,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
+import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
+import org.dom4j.QName;
+import org.dom4j.tree.BaseElement;
+import org.dom4j.tree.DefaultElement;
 import org.jivesoftware.openfire.PacketRouter;
+import org.jivesoftware.openfire.SessionManager;
+import org.jivesoftware.openfire.XMPPServer;
+import org.jivesoftware.openfire.commands.AdHocCommandManager;
+import org.jivesoftware.openfire.entitycaps.EntityCapabilities;
+import org.jivesoftware.openfire.entitycaps.EntityCapabilitiesManager;
 import org.jivesoftware.openfire.mix.MixChannelNode;
 import org.jivesoftware.openfire.mix.MixManager;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
@@ -20,16 +33,33 @@ import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityMode;
 import org.jivesoftware.openfire.mix.exception.CannotJoinMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotLeaveMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotUpdateMixChannelSubscriptionException;
+import org.jivesoftware.openfire.mix.model.MixChannel.MixChannelParticipantsListener;
 import org.jivesoftware.openfire.mix.policy.AlwaysAllowPermissionPolicy;
 import org.jivesoftware.openfire.mix.policy.MixChannelJidMapNodeItemPermissionPolicy;
 import org.jivesoftware.openfire.mix.policy.MixChannelStandardPermissionPolicy;
 import org.jivesoftware.openfire.mix.policy.PermissionPolicy;
+import org.jivesoftware.openfire.pubsub.CollectionNode;
+import org.jivesoftware.openfire.pubsub.DefaultNodeConfiguration;
+import org.jivesoftware.openfire.pubsub.LeafNode;
+import org.jivesoftware.openfire.pubsub.Node;
+import org.jivesoftware.openfire.pubsub.NodeSubscription;
+import org.jivesoftware.openfire.pubsub.NodeSubscription.State;
+import org.jivesoftware.openfire.pubsub.PubSubPersistenceManager;
+import org.jivesoftware.openfire.pubsub.PubSubService;
+import org.jivesoftware.openfire.pubsub.PublishedItem;
+import org.jivesoftware.openfire.pubsub.models.AccessModel;
+import org.jivesoftware.openfire.pubsub.models.PublisherModel;
+import org.jivesoftware.openfire.session.ClientSession;
+import org.jivesoftware.openfire.user.UserNotFoundException;
+import org.jivesoftware.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
+import org.xmpp.packet.Packet;
+import org.xmpp.packet.PacketExtension;
 
-public class LocalMixChannel implements MixChannel {
+public class LocalMixChannel implements MixChannel, PubSubService {
 	private static final Logger LOG = LoggerFactory.getLogger(LocalMixChannel.class);
 
 	public static final String NODE_PARTICIPANTS = "urn:xmpp:mix:nodes:participants";
@@ -42,11 +72,14 @@ public class LocalMixChannel implements MixChannel {
 
 	private Map<JID, MixChannelParticipant> participantsByProxyJid;
 
-	private Map<String, MixChannelNode<? extends MixChannelNodeItem>> nodes;
-
 	private List<MixChannelParticipantsListener> participantsListeners;
 
 	private Long id;
+
+    /**
+     * Used to handle filtered-notifications.
+     */
+    private EntityCapabilitiesManager entityCapsManager = EntityCapabilitiesManager.getInstance();
 	
 	/**
 	 * The {@link PermissionPolicy} to apply to this channel
@@ -75,6 +108,11 @@ public class LocalMixChannel implements MixChannel {
 
 	private JID owner;
 	
+	/**
+     * Collection node that acts as the root node of the entire node hierarchy.
+     */
+    private CollectionNode rootCollectionNode = null;
+    
 	/**
 	 * Constructor to be used when serialising from the database.  The id on the constructor is key as it will be known when constructing as part of a query.
 	 * @param id
@@ -119,14 +157,29 @@ public class LocalMixChannel implements MixChannel {
 		this.participantsListeners = new ArrayList<>();
 		this.participantsByRealJID = new HashMap<>();
 		this.participantsByProxyJid = new HashMap<>();
-		this.nodes = new HashMap<>();
-		
+
 		this.setCreationDate(new Date());
 		
-		setupNodes();
-		setupPermissionPolicy();
-	}
+        // Create root collection node
+        rootCollectionNode = new CollectionNode(this, null, "/", getJID());
+        // Add the creator as the node owner
+        rootCollectionNode.addOwner(getJID());
+        // Save new root node
+        rootCollectionNode.saveToDB();
 
+        xnodes.put("/", rootCollectionNode);
+		
+        MixChannelParticipantsNode participantsNode = new MixChannelParticipantsNode(this);      
+        xnodes.put(MixChannelParticipantsNode.NODE_ID, participantsNode);
+        
+        MixChannelJidMapNode jidMapNode = new MixChannelJidMapNode(this);      
+        xnodes.put(MixChannelJidMapNode.NODE_ID, jidMapNode);
+
+        MixChannelMessagesNode messagesNode = new MixChannelMessagesNode(this);      
+        xnodes.put(MixChannelMessagesNode.NODE_ID, messagesNode);
+
+	}
+/*
 	private void setupNodes() {
 		nodes.put(NODE_PARTICIPANTS, new MixChannelNodeImpl<>(packetRouter, this, NODE_PARTICIPANTS,
 				new MixChannelParticipantsNodeItemsProvider(this)));
@@ -137,11 +190,7 @@ public class LocalMixChannel implements MixChannel {
 		nodes.put(NODE_JIDMAP, new MixChannelNodeImpl<>(packetRouter, this, NODE_JIDMAP,
 				new MixChannelJidMapNodeItemsProvider(this), new MixChannelJidMapNodeItemPermissionPolicy(), new AlwaysAllowPermissionPolicy<MixChannelNode<MixChannelJidMapNodeItem>>()));
 	}
-	
-	private void setupPermissionPolicy() {
-		permissionPolicy = new MixChannelStandardPermissionPolicy();
-	}
-	
+*/	
 	@Override
 	public JID getJID() {
 		return new JID(getName(), mixService.getServiceDomain(), null);
@@ -208,6 +257,11 @@ public class LocalMixChannel implements MixChannel {
 				throw new CannotJoinMixChannelException(this.getName(), e.getMessage());
 			}
 			
+			for(String nodeId : participant.getSubscriptions()) {
+				Node node = xnodes.get(nodeId);
+				node.addSubscription(new NodeSubscription(node, jid.asBareJID(), getJID(), State.subscribed, participant.getJid().toBareJID()));
+			}
+			
 			return participant;
 		} else {
 			throw new CannotJoinMixChannelException(this.getName(), "Already a member");
@@ -269,15 +323,16 @@ public class LocalMixChannel implements MixChannel {
 	public void setCreationDate(Date date) {
 		this.creationDate = new Date(date.getTime());
 	}
-	
+/*	
 	@Override
 	public Collection<MixChannelNode<? extends MixChannelNodeItem>> getNodes() {
 		return Collections.unmodifiableCollection(nodes.values());
 	}
-
+*/
+	
 	@Override
 	public Set<String> getNodesAsStrings() {
-		return nodes.keySet();
+		return xnodes.keySet();
 	}
 
 	private int proxyNodeNamePart = 0;
@@ -311,25 +366,29 @@ public class LocalMixChannel implements MixChannel {
 		Message templateMessage = mcMessage.getMessage().createCopy();
 		templateMessage.setFrom(getJID()); // Message is from the channel
 		templateMessage.setID(mcMessage.getId());
-		templateMessage.addChildElement("nick", MixManager.MIX_NAMESPACE).addText(sender.getNick());
-		templateMessage.addChildElement("jid", MixManager.MIX_NAMESPACE).addText(sender.getJid().toBareJID());
+		templateMessage.addChildElement("nick", MixManager.MIX_NAMESPACE_STR).addText(sender.getNick());
+		templateMessage.addChildElement("jid", MixManager.MIX_NAMESPACE_STR).addText(sender.getJid().toBareJID());
 		
 		for(MixChannelParticipant subscriber : subscribers) {
 			Message thisMessage = templateMessage.createCopy();
 			thisMessage.setTo(subscriber.getRealJid());
 			
 			if(subscriber.equals(sender)) {
-				thisMessage.addChildElement("submission-id", MixManager.MIX_NAMESPACE).addText(mcMessage.getMessage().getID());
+				thisMessage.addChildElement("submission-id", MixManager.MIX_NAMESPACE_STR).addText(mcMessage.getMessage().getID());
 			}
 			
 			packetRouter.route(thisMessage);
 		}
+		
+		for (MixChannelParticipantsListener listener : participantsListeners) {
+			listener.onMessageReceived(mcMessage);
+		}		
 	}
 	
 	public Set<MixChannelParticipant> getNodeSubscribers(String node) {
 		Collection<MixChannelParticipant> allParticipants = participantsByRealJID.values();
 
-		if (!nodes.containsKey(node)) {
+		if (!xnodes.containsKey(node)) {
 			return Collections.emptySet();
 		} else {
 			Set<MixChannelParticipant> subscribers = new HashSet<>();
@@ -378,6 +437,168 @@ public class LocalMixChannel implements MixChannel {
 
 	@Override
 	public MixChannelNode<?> getNodeByName(String nodeName) {
-		return nodes.get(nodeName);
+		return null;
+	}
+
+	private Map<String, Node> xnodes = new ConcurrentHashMap<>();
+	
+	@Override
+	public JID getAddress() {
+		return getJID();
+	}
+
+	@Override
+	public String getServiceID() {
+		return getJID().toBareJID();
+	}
+
+	@Override
+	public Map<String, Map<String, String>> getBarePresences() {
+		return null;
+	}
+
+	@Override
+	public boolean canCreateNode(JID creator) {
+		return false;
+	}
+
+	@Override
+	public boolean isServiceAdmin(JID user) {
+		// TODO Auto-generated method stub
+		return user.asBareJID().equals(owner.toBareJID());
+	}
+
+	@Override
+	public boolean isInstantNodeSupported() {
+		return false;
+	}
+
+	@Override
+	public boolean isCollectionNodesSupported() {
+		return false;
+	}
+
+	@Override
+	public CollectionNode getRootCollectionNode() {
+		return null;
+	}
+
+	@Override
+	public Node getNode(String nodeID) {
+		return xnodes.get(nodeID);
+	}
+
+	@Override
+	public void addNode(Node node) {
+		xnodes.put(node.getNodeID(), node);
+	}
+
+	@Override
+	public void removeNode(String nodeID) {
+		xnodes.remove(nodeID);
+	}
+
+	@Override
+	public void broadcast(Node node, Message msg, Collection<JID> jids) {
+        for (JID jid : jids) {
+        	Message message = msg.createCopy();
+        	message.setFrom(getAddress());
+            message.setTo(jid);
+            message.setID(UUID.randomUUID().toString());
+            packetRouter.route(message);
+        }
+	}
+
+	@Override
+	public void send(Packet packet) {
+        packetRouter.route(packet);
+	}
+
+	@Override
+	public void sendNotification(Node node, Message msg, JID recipientJID) {
+		Message message = msg.createCopy();
+		
+        message.setTo(recipientJID);
+        message.setFrom(getAddress());
+        message.setID(UUID.randomUUID().toString());
+
+        packetRouter.route(message);
+	}
+
+ 	@Override
+	public DefaultNodeConfiguration getDefaultNodeConfiguration(boolean leafType) {
+		if(leafType) {
+			DefaultNodeConfiguration leafDefaultConfiguration = new DefaultNodeConfiguration(true);
+            leafDefaultConfiguration.setAccessModel(AccessModel.open);
+            leafDefaultConfiguration.setPublisherModel(PublisherModel.publishers);
+            leafDefaultConfiguration.setDeliverPayloads(true);
+            leafDefaultConfiguration.setLanguage("English");
+            leafDefaultConfiguration.setMaxPayloadSize(5120);
+            leafDefaultConfiguration.setNotifyConfigChanges(true);
+            leafDefaultConfiguration.setNotifyDelete(true);
+            leafDefaultConfiguration.setNotifyRetract(true);
+            leafDefaultConfiguration.setPersistPublishedItems(false);
+            leafDefaultConfiguration.setMaxPublishedItems(1);
+            leafDefaultConfiguration.setPresenceBasedDelivery(false);
+            leafDefaultConfiguration.setSendItemSubscribe(true);
+            leafDefaultConfiguration.setSubscriptionEnabled(true);
+            leafDefaultConfiguration.setReplyPolicy(null);
+            return leafDefaultConfiguration;
+		} else {
+			DefaultNodeConfiguration collectionDefaultConfiguration = new DefaultNodeConfiguration(false);
+            collectionDefaultConfiguration.setAccessModel(AccessModel.open);
+            collectionDefaultConfiguration.setPublisherModel(PublisherModel.publishers);
+            collectionDefaultConfiguration.setDeliverPayloads(false);
+            collectionDefaultConfiguration.setLanguage("English");
+            collectionDefaultConfiguration.setNotifyConfigChanges(true);
+            collectionDefaultConfiguration.setNotifyDelete(true);
+            collectionDefaultConfiguration.setNotifyRetract(true);
+            collectionDefaultConfiguration.setPresenceBasedDelivery(false);
+            collectionDefaultConfiguration.setSubscriptionEnabled(true);
+            collectionDefaultConfiguration.setReplyPolicy(null);
+            collectionDefaultConfiguration.setAssociationPolicy(CollectionNode.LeafNodeAssociationPolicy.all);
+            collectionDefaultConfiguration.setMaxLeafNodes(-1);
+            return collectionDefaultConfiguration;
+		}
+	}
+
+	@Override
+	public Collection<String> getShowPresences(JID subscriber) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void presenceSubscriptionRequired(Node node, JID user) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void presenceSubscriptionNotRequired(Node node, JID user) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean isMultipleSubscriptionsEnabled() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public AdHocCommandManager getManager() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+/*
+	@Override
+	public Collection<MixChannelNode<? extends MixChannelNodeItem>> getNodes() {
+		return nodes.values();
+	}
+*/
+
+	@Override
+	public Collection<Node> getNodes() {
+		return xnodes.values();
 	}
 }

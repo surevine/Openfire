@@ -9,6 +9,7 @@ import org.jivesoftware.openfire.mix.handler.MixRequestContextImpl;
 import org.jivesoftware.openfire.mix.handler.channel.MixChannelPacketHandler;
 import org.jivesoftware.openfire.mix.handler.service.MixServicePacketHandler;
 import org.jivesoftware.openfire.mix.model.MixChannel;
+import org.jivesoftware.openfire.pubsub.PubSubEngine;
 import org.jivesoftware.util.LocaleUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,11 +27,14 @@ public class MixXmppServiceImpl implements MixXmppService {
 	
 	private PacketRouter router;
 	
+	PubSubEngine engine;
+	
 	public MixXmppServiceImpl(PacketRouter router, List<MixServicePacketHandler> servicePacketHandlers,
-			List<MixChannelPacketHandler> channelPacketHandlers) {
+			List<MixChannelPacketHandler> channelPacketHandlers, PubSubEngine engine) {
 		this.router = router;
 		this.servicePacketHandlers = servicePacketHandlers;
 		this.channelPacketHandlers = channelPacketHandlers;
+		this.engine = engine;
 	}
 
 	@Override
@@ -79,6 +83,10 @@ public class MixXmppServiceImpl implements MixXmppService {
 		}
 		
 		if (packet instanceof IQ) {
+			if(engine.process(context.getMixChannel(), (IQ) packet)) {
+				return;
+			}
+			
 			try {
 				for (Object handlerObj : packetHandlers) {
 					@SuppressWarnings("unchecked")

@@ -254,20 +254,22 @@ public class LeafNode extends Node {
             }
         }
 
-        // Build event notification packet to broadcast to subscribers
-        Message message = new Message();
-        Element event = message.addChildElement("event", "http://jabber.org/protocol/pubsub#event");
-        // Broadcast event notification to subscribers and parent node subscribers
-        Set<NodeAffiliate> affiliatesToNotify = new HashSet<>(affiliates);
-        // Get affiliates that are subscribed to a parent in the hierarchy of parent nodes
-        for (CollectionNode parentNode : getParents()) {
-            for (NodeSubscription subscription : parentNode.getSubscriptions()) {
-                affiliatesToNotify.add(subscription.getAffiliate());
-            }
-        }
-        // TODO Use another thread for this (if # of subscribers is > X)????
-        for (NodeAffiliate affiliate : affiliatesToNotify) {
-            affiliate.sendPublishedNotifications(message, event, this, newPublishedItems);
+        if(notifyPublish) {
+	        // Build event notification packet to broadcast to subscribers
+	        Message message = new Message();
+	        Element event = message.addChildElement("event", "http://jabber.org/protocol/pubsub#event");
+	        // Broadcast event notification to subscribers and parent node subscribers
+	        Set<NodeAffiliate> affiliatesToNotify = new HashSet<>(affiliates);
+	        // Get affiliates that are subscribed to a parent in the hierarchy of parent nodes
+	        for (CollectionNode parentNode : getParents()) {
+	            for (NodeSubscription subscription : parentNode.getSubscriptions()) {
+	                affiliatesToNotify.add(subscription.getAffiliate());
+	            }
+	        }
+	        // TODO Use another thread for this (if # of subscribers is > X)????
+	        for (NodeAffiliate affiliate : affiliatesToNotify) {
+	            affiliate.sendPublishedNotifications(message, event, this, newPublishedItems);
+	        }
         }
     }
 
@@ -406,7 +408,7 @@ public class LeafNode extends Node {
         this.maxPayloadSize = maxPayloadSize;
     }
 
-    void setPersistPublishedItems(boolean persistPublishedItems) {
+    protected void setPersistPublishedItems(boolean persistPublishedItems) {
         this.persistPublishedItems = persistPublishedItems;
     }
 
@@ -434,4 +436,18 @@ public class LeafNode extends Node {
         // Send notification that the node configuration has changed
         broadcastNodeEvent(message, false);
     }
+    
+
+
+	private boolean notifyPublish = true;
+    
+    protected boolean isNotifyPublish() {
+		return notifyPublish;
+	}
+
+    protected void setNotifyPublish(boolean notifyPublish) {
+		this.notifyPublish = notifyPublish;
+	}
+
+    
 }

@@ -12,15 +12,18 @@ import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityMode;
 import org.jivesoftware.openfire.mix.exception.CannotJoinMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotLeaveMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotUpdateMixChannelSubscriptionException;
+import org.jivesoftware.openfire.pubsub.PubSubService;
 import org.jivesoftware.util.JiveConstants;
 import org.xmpp.packet.JID;
 
 @JiveID(JiveConstants.MIX_CHANNEL)
-public interface MixChannel {
+public interface MixChannel extends PubSubService {
 	public interface MixChannelParticipantsListener {
 		void onParticipantAdded(MixChannelParticipant participant);
 
 		void onParticipantRemoved(MixChannelParticipant mcp);
+
+		void onMessageReceived(MixChannelMessage mcMessage);
 	}
 
 	/**
@@ -52,7 +55,7 @@ public interface MixChannel {
 	
 	void removeParticipant(JID jid) throws CannotLeaveMixChannelException;
 
-	Collection<MixChannelNode<? extends MixChannelNodeItem>> getNodes();
+//	Collection<MixChannelNode<? extends MixChannelNodeItem>> getNodes();
 	
 	Set<String> getNodesAsStrings();
 	

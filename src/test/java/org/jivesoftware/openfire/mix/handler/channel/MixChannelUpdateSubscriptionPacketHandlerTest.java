@@ -87,7 +87,7 @@ public class MixChannelUpdateSubscriptionPacketHandlerTest {
 		updateSubscriptionRequest.setTo(TestConstants.MIX_CHANNEL_JID);
 		updateSubscriptionRequest.setFrom(TestConstants.TEST_USERS_JID);
 
-		Element join = docFactory.createElement("update-subscription", MixManager.MIX_NAMESPACE);
+		Element join = docFactory.createElement("update-subscription", MixManager.MIX_NAMESPACE_STR);
 
 		for (int i = 0; i < nodes.length; i++) {
 			Element sub = join.addElement("subscribe");

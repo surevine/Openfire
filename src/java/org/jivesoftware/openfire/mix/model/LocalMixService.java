@@ -27,6 +27,7 @@ import org.jivesoftware.openfire.mix.MixXmppService;
 import org.jivesoftware.openfire.mix.exception.CannotCreateMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotDestroyMixChannelException;
 import org.jivesoftware.openfire.mix.exception.MixChannelAlreadyExistsException;
+import org.jivesoftware.openfire.pubsub.PubSubEngine;
 import org.jivesoftware.util.JiveProperties;
 import org.jivesoftware.util.LocaleUtils;
 import org.slf4j.Logger;
@@ -72,6 +73,8 @@ public class LocalMixService implements Component, MixService, ServerItemsProvid
 	private boolean serviceEnabled = true;
 
 	private Map<String, MixChannel> channels;
+	
+	PubSubEngine engine;
 
 	/**
 	 * Create a new group chat server.
@@ -90,13 +93,15 @@ public class LocalMixService implements Component, MixService, ServerItemsProvid
 	 *             if the provided subdomain is an invalid, according to the JID
 	 *             domain definition.
 	 */
-	public LocalMixService(XMPPServer xmppServer, JiveProperties jiveProperties, String subdomain, String description, MixXmppService xmppService, MixPersistenceManager mixPersistenceManagerImpl) {
+	public LocalMixService(XMPPServer xmppServer, JiveProperties jiveProperties, String subdomain, String description, MixXmppService xmppService, MixPersistenceManager mixPersistenceManagerImpl, PubSubEngine engine) {
 		this.xmppServer = xmppServer;
 		this.jiveProperties = jiveProperties;
 		this.xmppService = xmppService;
 		this.persistenceManager = mixPersistenceManagerImpl;
 
 		channels = new HashMap<>();
+		
+		this.engine = engine;
 
 		// Check subdomain and throw an IllegalArgumentException if its invalid
 		new JID(null, subdomain + "." + xmppServer.getServerInfo().getXMPPDomain(), null);
@@ -141,10 +146,12 @@ public class LocalMixService implements Component, MixService, ServerItemsProvid
 		xmppServer.getIQDiscoItemsHandler().addServerItemsProvider(this);
 		xmppServer.getIQDiscoInfoHandler().setServerNodeInfoProvider(this.getServiceDomain(), this);
 
+
 		// Load all the persistent rooms to memory
 		try {
 			for (MixChannel channel : persistenceManager.loadChannels(this)) {
 				channels.put(channel.getName().toLowerCase(), channel);
+				engine.start(channel);
 			}
 		} catch (MixPersistenceException e) {
 			Log.error("Could not load MIX Channels for service " + getServiceDomain(), e);
@@ -193,11 +200,12 @@ public class LocalMixService implements Component, MixService, ServerItemsProvid
             if(channel == null) {
             	return null;
             }
-            
+/*            
             for(MixChannelNode<?> channelNode : channel.getNodes()) {
             	answer.add(new DiscoItem(channel.getJID(),
     					null, channelNode.getName(), null));
             }
+*/
         }
         return answer.iterator();
 	}

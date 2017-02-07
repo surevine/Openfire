@@ -32,6 +32,12 @@ public class MixChannelJidMapNodeItemsProvider implements MixChannelNodeItemsPro
 					listener.retractItem(mcp.getJid());
 				}
 			}
+
+			@Override
+			public void onMessageReceived(MixChannelMessage mcMessage) {
+				// TODO Auto-generated method stub
+				
+			}
 		});
 	}
 	

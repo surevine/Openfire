@@ -5,6 +5,8 @@ import java.util.Set;
 import org.dom4j.Element;
 import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.mix.MixChannelNode;
+import org.jivesoftware.openfire.mix.exception.MixException;
+import org.jivesoftware.openfire.mix.exception.NotAuthorisedMixException;
 import org.jivesoftware.openfire.mix.handler.MixRequestContext;
 import org.jivesoftware.openfire.mix.handler.MixRequestContextImpl;
 import org.jivesoftware.openfire.mix.model.MixChannelNodeItemsProvider.ItemsListener;
@@ -142,6 +144,15 @@ public class MixChannelNodeImpl<T extends MixChannelNodeItem> implements MixChan
 				addItemElement(parent, item);
 			}
 		}
+	}
+
+	@Override
+	public T publishPayload(MixRequestContext context, Element itemElement) throws MixException {
+		if(!nodePermissionPolicy.checkPermission(context, this, Action.PUBLISH)) {
+			throw new NotAuthorisedMixException("You do not have permission to publish to " + getName());
+		}
+		
+		return itemsProvider.receiveItem(itemElement);
 	}
 
 }

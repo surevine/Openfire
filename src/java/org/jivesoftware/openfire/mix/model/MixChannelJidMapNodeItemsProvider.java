@@ -3,6 +3,7 @@ package org.jivesoftware.openfire.mix.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.dom4j.Element;
 import org.jivesoftware.openfire.mix.model.MixChannel.MixChannelParticipantsListener;
 import org.xmpp.packet.JID;
 
@@ -59,6 +60,12 @@ public class MixChannelJidMapNodeItemsProvider implements MixChannelNodeItemsPro
 			return new MixChannelJidMapNodeItem(participant);
 		}
 		
+		return null;
+	}
+
+	@Override
+	public MixChannelJidMapNodeItem receiveItem(Element itemElement) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 	

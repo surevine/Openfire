@@ -117,7 +117,11 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 	}
 
 	private static final String ADD_CHANNEL = "INSERT INTO " + CHANNEL_TABLE_NAME
-			+ " (channelID, creationDate, name, jidVisibility, modificationDate, owner)" + " VALUES (?,?,?,?,?,?)";
+			+ " (creationDate, name, jidVisibility, modificationDate, owner, channelID)" + " VALUES (?,?,?,?,?,?)";
+
+	private static final String UPDATE_CHANNEL = "UPDATE " + CHANNEL_TABLE_NAME
+			+ " SET creationDate = ?, name = ?, jidVisibility = ?, modificationDate = ?, owner = ?"
+			+ " WHERE channelID = ?";
 
 	@Override
 	public MixChannel save(MixChannel toPersist) throws MixPersistenceException {
@@ -128,17 +132,21 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 
 			con = DbConnectionManager.getConnection();
 
-			pstmt = con.prepareStatement(ADD_CHANNEL);
-
-			// Get PK for the channel
-			toPersist.setID(this.channelKeys.nextUniqueID());
-			pstmt.setLong(1, toPersist.getID());
-
-			pstmt.setString(2, StringUtils.dateToMillis(toPersist.getCreationDate()));
-			pstmt.setString(3, toPersist.getName());
-			pstmt.setInt(4, toPersist.getJidVisibilityMode().getId());
-			pstmt.setString(5, StringUtils.dateToMillis(toPersist.getCreationDate()));
-			pstmt.setString(6, toPersist.getOwner().getNode());
+			if(toPersist.getID() == null) {
+				pstmt = con.prepareStatement(ADD_CHANNEL);
+				
+				// Get PK for the channel
+				toPersist.setID(this.channelKeys.nextUniqueID());
+			} else {
+				pstmt = con.prepareStatement(UPDATE_CHANNEL);
+			}
+			
+			pstmt.setString(1, StringUtils.dateToMillis(toPersist.getCreationDate()));
+			pstmt.setString(2, toPersist.getName());
+			pstmt.setInt(3, toPersist.getJidVisibilityMode().getId());
+			pstmt.setString(4, StringUtils.dateToMillis(toPersist.getCreationDate()));
+			pstmt.setString(5, toPersist.getOwner().getNode());
+			pstmt.setLong(6, toPersist.getID());
 
 			pstmt.executeUpdate();
 

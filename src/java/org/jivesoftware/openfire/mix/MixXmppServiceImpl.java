@@ -3,6 +3,7 @@ package org.jivesoftware.openfire.mix;
 import java.util.List;
 
 import org.jivesoftware.openfire.PacketRouter;
+import org.jivesoftware.openfire.mix.exception.MixException;
 import org.jivesoftware.openfire.mix.handler.MixPacketHandler;
 import org.jivesoftware.openfire.mix.handler.MixRequestContext;
 import org.jivesoftware.openfire.mix.handler.MixRequestContextImpl;
@@ -91,6 +92,9 @@ public class MixXmppServiceImpl implements MixXmppService {
 						break;
 					}
 				}
+			} catch (MixException e) {
+				LOG.error(LocaleUtils.getLocalizedString("admin.error"), e);
+				replyWithError((IQ) packet, e.getPacketError());
 			} catch (Exception e) {
 				LOG.error(LocaleUtils.getLocalizedString("admin.error"), e);
 				replyWithError((IQ) packet, new PacketError(PacketError.Condition.internal_server_error));
@@ -105,6 +109,9 @@ public class MixXmppServiceImpl implements MixXmppService {
 						break;
 					}
 				}
+			} catch (MixException e) {
+				LOG.error(LocaleUtils.getLocalizedString("admin.error"), e);
+				replyWithError((Message) packet, e.getPacketError());
 			} catch (Exception e) {
 				LOG.error(LocaleUtils.getLocalizedString("admin.error"), e);
 				replyWithError((Message) packet, new PacketError(PacketError.Condition.internal_server_error));

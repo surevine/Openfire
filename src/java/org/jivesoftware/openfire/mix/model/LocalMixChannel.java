@@ -21,6 +21,7 @@ import org.jivesoftware.openfire.mix.exception.CannotJoinMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotLeaveMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotUpdateMixChannelSubscriptionException;
 import org.jivesoftware.openfire.mix.policy.AlwaysAllowPermissionPolicy;
+import org.jivesoftware.openfire.mix.policy.MixChannelConfigurationNodePermissionPolicy;
 import org.jivesoftware.openfire.mix.policy.MixChannelJidMapNodeItemPermissionPolicy;
 import org.jivesoftware.openfire.mix.policy.MixChannelStandardPermissionPolicy;
 import org.jivesoftware.openfire.mix.policy.PermissionPolicy;
@@ -28,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
+import org.xmpp.packet.Message.Type;
 
 public class LocalMixChannel implements MixChannel {
 	private static final Logger LOG = LoggerFactory.getLogger(LocalMixChannel.class);
@@ -35,6 +37,7 @@ public class LocalMixChannel implements MixChannel {
 	public static final String NODE_PARTICIPANTS = "urn:xmpp:mix:nodes:participants";
 	public static final String NODE_MESSAGES = "urn:xmpp:mix:nodes:messages";	
 	public static final String NODE_JIDMAP = "urn:xmpp:mix:nodes:jidmap";
+	public static final String NODE_CONFIGURATION = "urn:xmpp:mix:nodes:config";
 
 	private PacketRouter packetRouter;
 	
@@ -135,7 +138,14 @@ public class LocalMixChannel implements MixChannel {
 				null));
 
 		nodes.put(NODE_JIDMAP, new MixChannelNodeImpl<>(packetRouter, this, NODE_JIDMAP,
-				new MixChannelJidMapNodeItemsProvider(this), new MixChannelJidMapNodeItemPermissionPolicy(), new AlwaysAllowPermissionPolicy<MixChannelNode<MixChannelJidMapNodeItem>>()));
+				new MixChannelJidMapNodeItemsProvider(this),
+				new MixChannelJidMapNodeItemPermissionPolicy(),
+				new AlwaysAllowPermissionPolicy<MixChannelNode<MixChannelJidMapNodeItem>>()));
+
+		nodes.put(NODE_CONFIGURATION, new MixChannelNodeImpl<>(packetRouter, this, NODE_CONFIGURATION,
+				new MixChannelConfigurationNodeItemsProvider(this, channelRepository),
+				new AlwaysAllowPermissionPolicy<MixChannelConfigurationNodeItem>(),
+				new MixChannelConfigurationNodePermissionPolicy()));
 	}
 	
 	private void setupPermissionPolicy() {
@@ -311,6 +321,7 @@ public class LocalMixChannel implements MixChannel {
 		Message templateMessage = mcMessage.getMessage().createCopy();
 		templateMessage.setFrom(getJID()); // Message is from the channel
 		templateMessage.setID(mcMessage.getId());
+		templateMessage.setType(Type.groupchat);
 		templateMessage.addChildElement("nick", MixManager.MIX_NAMESPACE).addText(sender.getNick());
 		templateMessage.addChildElement("jid", MixManager.MIX_NAMESPACE).addText(sender.getJid().toBareJID());
 		

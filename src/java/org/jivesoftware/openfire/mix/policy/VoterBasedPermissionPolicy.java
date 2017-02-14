@@ -1,5 +1,7 @@
 package org.jivesoftware.openfire.mix.policy;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.jivesoftware.openfire.mix.handler.MixRequestContext;
@@ -8,8 +10,16 @@ import org.jivesoftware.openfire.mix.policy.PermissionVoter.PolicyVoterOutcome;
 public class VoterBasedPermissionPolicy<T> implements PermissionPolicy<T> {
 	List<PermissionVoter<T>> voters;
 	
+	public VoterBasedPermissionPolicy() {
+		this.voters = new ArrayList<>();
+	}
+	
 	public VoterBasedPermissionPolicy(List<PermissionVoter<T>> voters) {
 		this.voters = voters;
+	}
+	
+	public void addVoter(PermissionVoter<T> voter) {
+		voters.add(voter);
 	}
 
 	@Override

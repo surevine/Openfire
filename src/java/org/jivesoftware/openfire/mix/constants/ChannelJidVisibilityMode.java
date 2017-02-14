@@ -4,16 +4,25 @@ package org.jivesoftware.openfire.mix.constants;
  * The JID Visibility Mode for the channel.
  */
 public enum ChannelJidVisibilityMode {
-	VISIBLE(0), HIDDEN(1), MANDATORY_VISIBLE(2), MANDATORY_HIDDEN(3);
+	HIDDEN(0, "jid-hidden"),
+	VISIBLE(1, "jid-visible"),
+	MANDATORY_HIDDEN(2, "jid-mandatory-hidden"),
+	MANDATORY_VISIBLE(3, "jid-mandatory-visible");
 
 	private int id;
+	private String xmppValue;
 
-	private ChannelJidVisibilityMode(final int id) {
+	private ChannelJidVisibilityMode(final int id, final String xmppValue) {
 		this.id = id;
+		this.xmppValue = xmppValue;
 	}
 
 	public int getId() {
 		return id;
+	}
+
+	public String getXmppValue() {
+		return xmppValue;
 	}
 	
 	public static ChannelJidVisibilityMode fromId(int id) {
@@ -23,5 +32,15 @@ public enum ChannelJidVisibilityMode {
 			}
 		}
 		throw new IndexOutOfBoundsException("ID " + id + " not found");
+	}
+	
+	public static ChannelJidVisibilityMode fromXmppValue(String xmppValue) {
+		for(ChannelJidVisibilityMode jvm : values()) {
+			if(jvm.xmppValue.equals(xmppValue)) {
+				return jvm;
+			}
+		}
+		throw new IndexOutOfBoundsException("XMPP Value " + xmppValue + " not found");
+		
 	}
 }

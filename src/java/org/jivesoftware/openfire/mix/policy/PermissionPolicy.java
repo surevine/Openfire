@@ -5,7 +5,8 @@ import org.jivesoftware.openfire.mix.handler.MixRequestContext;
 public interface PermissionPolicy<T> {
 	public enum Action {
 		VIEW,
-		JOIN
+		JOIN,
+		PUBLISH;
 	}
 	
 	boolean checkPermission(MixRequestContext context, T subject, Action action);

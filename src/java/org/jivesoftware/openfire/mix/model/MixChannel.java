@@ -43,6 +43,8 @@ public interface MixChannel {
 	String getName();
 	
 	ChannelJidVisibilityMode getJidVisibilityMode();
+	
+	void setJidVisibilityMode(ChannelJidVisibilityMode mode);
 
 	Date getCreationDate();
 

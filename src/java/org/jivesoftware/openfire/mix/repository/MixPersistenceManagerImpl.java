@@ -17,6 +17,7 @@ import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.MixXmppService;
+import org.jivesoftware.openfire.mix.mam.MessageArchiveService;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.model.LocalMixChannelParticipant;
 import org.jivesoftware.openfire.mix.model.LocalMixService;
@@ -27,6 +28,7 @@ import org.jivesoftware.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmpp.packet.JID;
+import org.xmpp.packet.Message;
 
 public class MixPersistenceManagerImpl implements MixPersistenceManager {
 	private static final Logger Log = LoggerFactory.getLogger(MixPersistenceManager.class);
@@ -48,13 +50,16 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 
 	private IdentityManager mcpSubsKeys;
 
+	private MessageArchiveService archive;
+
 	public MixPersistenceManagerImpl(JiveProperties jiveProperties, MixXmppService xmppService,
-			IdentityManager channelKeys, IdentityManager mcpKeys, IdentityManager mcpSubsKeys) {
+									 IdentityManager channelKeys, IdentityManager mcpKeys, IdentityManager mcpSubsKeys, MessageArchiveService archive) {
 		this.jiveProperties = jiveProperties;
 		this.xmppService = xmppService;
 		this.channelKeys = channelKeys;
 		this.mcpKeys = mcpKeys;
 		this.mcpSubsKeys = mcpSubsKeys;
+		this.archive = archive;
 	}
 
 	@Override
@@ -72,9 +77,9 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 				Long id = rs.getLong(1);
 				String subdomain = rs.getString(2);
 				String description = rs.getString(3);
-				MixService newSerivce = new LocalMixService(xmppServer, jiveProperties, subdomain, description, this.xmppService, this);
-				newSerivce.setId(id);
-				mixServices.add(newSerivce);
+				MixService newService = new LocalMixService(xmppServer, jiveProperties, subdomain, description, this.xmppService, this, archive);
+				newService.setId(id);
+				mixServices.add(newService);
 			}
 		} catch (Exception e) {
 			Log.error(e.getMessage(), e);
@@ -100,7 +105,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 			while (resultSet.next()) {
 				try {
 					LocalMixChannel channel = new LocalMixChannel(resultSet.getLong(1), mixService, resultSet.getString(4),
-							new JID(resultSet.getString(6), mixService.getServiceDomain(), null), xmppService, this, new Date(Long.parseLong(resultSet.getString(2).trim())));
+							new JID(resultSet.getString(6), mixService.getServiceDomain(), null), xmppService, this, mixService.getArchive(), new Date(Long.parseLong(resultSet.getString(2).trim())));
 
 					channels.add(channel);
 				} catch (SQLException e) {

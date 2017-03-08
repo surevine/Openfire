@@ -11,6 +11,7 @@ import org.jivesoftware.openfire.mix.exception.CannotCreateMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotDestroyMixChannelException;
 import org.jivesoftware.openfire.mix.exception.MixChannelAlreadyExistsException;
 import org.jivesoftware.openfire.mix.model.MixChannel;
+import org.jivesoftware.openfire.mix.mam.MessageArchiveService;
 
 @JiveID(JiveConstants.MIX_SERVICE)
 public interface MixService extends Component {
@@ -32,7 +33,9 @@ public interface MixService extends Component {
      * @return the subdomain of the MIX service.
      */
     String getServiceName();
-    
+
+    MessageArchiveService getArchive();
+
     Collection<MixChannel> getChannels();
     
     boolean isServiceEnabled();

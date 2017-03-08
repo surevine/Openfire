@@ -11,6 +11,6 @@ public interface MessageArchiveService {
 	
 	IQ query(IQ query);
 	
-	void archive(MixChannelMessage archive);
+	String archive(MixChannelMessage archive);
 
 }

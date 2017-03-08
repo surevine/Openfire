@@ -14,10 +14,11 @@ public class MixServiceChannelCreatePacketHandler implements MixServicePacketHan
 	@Override
 	public IQ processIQ(MixRequestContext context, MixService service, IQ iq) throws Exception {
 
-		final IQ reply = IQ.createResultIQ(iq);
-		reply.setChildElement(iq.getChildElement().createCopy());
 
 		if ("create".equals(iq.getChildElement().getName())) {
+			final IQ reply = IQ.createResultIQ(iq);
+			reply.setChildElement(iq.getChildElement().createCopy());
+
 			try {
 				service.createChannel(iq.getFrom(), iq.getChildElement().attributeValue("channel"));
 			} catch(MixChannelAlreadyExistsException e) {

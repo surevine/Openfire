@@ -8,15 +8,20 @@ import org.dom4j.Element;
 import org.dom4j.Node;
 import org.dom4j.QName;
 import org.jivesoftware.openfire.mix.MixManager;
+import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.exception.CannotJoinMixChannelException;
 import org.jivesoftware.openfire.mix.handler.MixRequestContext;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannelParticipant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Presence;
 
 public class MixChannelJoinPacketHandler implements MixChannelPacketHandler {
+
+	private static final Logger Log = LoggerFactory.getLogger(MixChannelJoinPacketHandler.class);
 
 	@Override
 	public IQ processIQ(MixRequestContext context, MixChannel channel, IQ iq) {
@@ -52,9 +57,11 @@ public class MixChannelJoinPacketHandler implements MixChannelPacketHandler {
 				Element current = joinElement.addElement("node");
 				current.addAttribute("node", subscription);
 			}
-		} catch (CannotJoinMixChannelException e) {
-			result.setType(IQ.Type.error);
 
+			//joinElement.addAttribute("jid", mcp.getJid().toBareJID());
+		} catch (CannotJoinMixChannelException e) {
+		    Log.error(e.toString());
+			result.setType(IQ.Type.error);
 		}
 
 		return result;

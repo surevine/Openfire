@@ -71,15 +71,18 @@ public class MixXmppServiceImpl implements MixXmppService {
 		List<?> packetHandlers;
 		
 		if(object instanceof MixService) {
+			LOG.info("Service packet handlers");
 			packetHandlers = servicePacketHandlers;
 		} else if(object instanceof MixChannel) {
+			LOG.info("Channel packet handlers");
 			packetHandlers = channelPacketHandlers;
 		} else {
 			return;
 		}
-		
+
 		if (packet instanceof IQ) {
 			try {
+				LOG.info("Handle IQ", packet.toString());
 				for (Object handlerObj : packetHandlers) {
 					@SuppressWarnings("unchecked")
 					MixPacketHandler<T> handler = (MixPacketHandler<T>) handlerObj;

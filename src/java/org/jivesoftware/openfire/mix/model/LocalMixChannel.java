@@ -20,6 +20,7 @@ import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityMode;
 import org.jivesoftware.openfire.mix.exception.CannotJoinMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotLeaveMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotUpdateMixChannelSubscriptionException;
+import org.jivesoftware.openfire.mix.mam.MessageArchiveService;
 import org.jivesoftware.openfire.mix.policy.AlwaysAllowPermissionPolicy;
 import org.jivesoftware.openfire.mix.policy.MixChannelJidMapNodeItemPermissionPolicy;
 import org.jivesoftware.openfire.mix.policy.MixChannelStandardPermissionPolicy;
@@ -60,6 +61,8 @@ public class LocalMixChannel implements MixChannel {
 	
 	private MixPersistenceManager channelRepository;
 
+	private MessageArchiveService archive;
+
 	/**
 	 * The name of the channel.
 	 */
@@ -86,8 +89,8 @@ public class LocalMixChannel implements MixChannel {
 	 * @param creationDate
 	 * @throws MixPersistenceException 
 	 */
-	public LocalMixChannel(long id, MixService service, String name, JID owner, PacketRouter packetRouter, MixPersistenceManager mpm, Date creationDate) throws MixPersistenceException {
-		initialise(service, name, owner, packetRouter, mpm);
+	public LocalMixChannel(long id, MixService service, String name, JID owner, PacketRouter packetRouter, MixPersistenceManager mpm, MessageArchiveService archive, Date creationDate) throws MixPersistenceException {
+		initialise(service, name, owner, packetRouter, mpm, archive);
 		
 		this.id = id;
 		this.creationDate = new Date(creationDate.getTime());
@@ -102,19 +105,20 @@ public class LocalMixChannel implements MixChannel {
 		
 	}
 
-	public LocalMixChannel(MixService service, String name, JID owner, PacketRouter packetRouter, MixPersistenceManager mpm) {
-		initialise(service, name, owner, packetRouter, mpm);
+	public LocalMixChannel(MixService service, String name, JID owner, PacketRouter packetRouter, MixPersistenceManager mpm, MessageArchiveService archive) {
+		initialise(service, name, owner, packetRouter, mpm, archive);
 
 		this.setCreationDate(new Date());
 	}
 
 	private void initialise(MixService service, String name, JID owner, PacketRouter packetRouter,
-			MixPersistenceManager mpm) {
+							MixPersistenceManager mpm, MessageArchiveService archive) {
 		this.packetRouter = packetRouter;
 		this.mixService = service;
 		this.channelRepository = mpm;
 		this.owner = owner;
 		this.name = name;
+		this.archive = archive;
 		
 		this.participantsListeners = new ArrayList<>();
 		this.participantsByRealJID = new HashMap<>();
@@ -305,6 +309,8 @@ public class LocalMixChannel implements MixChannel {
 	@Override
 	public void receiveMessage(MixChannelMessage mcMessage) {
 		Set<MixChannelParticipant> subscribers = getNodeSubscribers(NODE_MESSAGES);
+
+		String mamId = archive.archive(mcMessage);
 		
 		MixChannelParticipant sender = mcMessage.getSender();
 		

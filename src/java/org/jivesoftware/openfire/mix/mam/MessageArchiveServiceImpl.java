@@ -31,6 +31,9 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
 
 	public IQ query(IQ queryIQ) {
 		IQ response = queryIQ.createCopy();
+		response.setFrom(queryIQ.getTo());
+		response.setTo(queryIQ.getFrom());
+
 		if (isValid(queryIQ)) {
 
 			Query query = queryFactory.create(repository, queryIQ);
@@ -68,8 +71,12 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
 			response.setType(Type.result);
 			Element fin = response.setChildElement("fin", MessageArchiveService.MAM_NAMESPACE);
 			Element set = fin.addElement("set", MessageArchiveService.RSM_NAMESPACE);
-			set.addElement("first").addText(first);
-			set.addElement("last").addText(last);
+			if (first != null) {
+				set.addElement("first").addText(first);
+			}
+			if (last != null) {
+				set.addElement("last").addText(last);
+			}
 
 			router.route(response);
 
@@ -91,7 +98,8 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
 		}
 	}
 
-	public void archive(MixChannelMessage archive) {
+	public String archive(MixChannelMessage message) {
+		return repository.archive(message.getMessage());
 		// TODO
 	}
 

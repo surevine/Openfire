@@ -8,16 +8,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.container.BasicModule;
-import org.jivesoftware.openfire.mix.handler.channel.MixChannelJoinPacketHandler;
-import org.jivesoftware.openfire.mix.handler.channel.MixChannelLeavePacketHandler;
-import org.jivesoftware.openfire.mix.handler.channel.MixChannelMessagePacketHandler;
-import org.jivesoftware.openfire.mix.handler.channel.MixChannelNodeItemsGetPacketHandler;
-import org.jivesoftware.openfire.mix.handler.channel.MixChannelPacketHandler;
-import org.jivesoftware.openfire.mix.handler.channel.MixChannelUpdateSubscriptionPacketHandler;
-import org.jivesoftware.openfire.mix.handler.service.DestroyMixChannelPacketHandler;
-import org.jivesoftware.openfire.mix.handler.service.DiscoMixServicePacketHandler;
-import org.jivesoftware.openfire.mix.handler.service.MixServiceChannelCreatePacketHandler;
-import org.jivesoftware.openfire.mix.handler.service.MixServicePacketHandler;
+import org.jivesoftware.openfire.mix.handler.channel.*;
+import org.jivesoftware.openfire.mix.handler.service.*;
+import org.jivesoftware.openfire.mix.mam.MessageArchiveService;
+import org.jivesoftware.openfire.mix.mam.MessageArchiveServiceImpl;
+import org.jivesoftware.openfire.mix.mam.repository.JpaMixChannelArchiveRepositoryImpl;
+import org.jivesoftware.openfire.mix.mam.repository.MamQueryFactory;
+import org.jivesoftware.openfire.mix.mam.repository.MixChannelArchiveRepository;
+import org.jivesoftware.openfire.mix.mam.repository.QueryFactory;
 import org.jivesoftware.openfire.mix.repository.MixIdentityManager;
 import org.jivesoftware.openfire.mix.repository.MixPersistenceManagerImpl;
 import org.jivesoftware.util.JiveProperties;
@@ -57,7 +55,8 @@ public class MixManager extends BasicModule {
     	List<MixServicePacketHandler> serviceHandlers = Arrays.asList(
     			new DiscoMixServicePacketHandler(xmppServer),
     			new MixServiceChannelCreatePacketHandler(),
-    			new DestroyMixChannelPacketHandler()
+    			new DestroyMixChannelPacketHandler(),
+				new MamQueryPacketHandler()
     		);
     	
     	List<MixChannelPacketHandler> channelHandlers = Arrays.asList(
@@ -65,13 +64,18 @@ public class MixManager extends BasicModule {
     			new MixChannelMessagePacketHandler(router),
     			new MixChannelLeavePacketHandler(),
     			new MixChannelNodeItemsGetPacketHandler(),
-    			new MixChannelUpdateSubscriptionPacketHandler()
+    			new MixChannelUpdateSubscriptionPacketHandler(),
+				new MixChannelMamQueryPacketHandler()
     		);
     	
     	MixXmppServiceImpl xmppService = new MixXmppServiceImpl(router, serviceHandlers, channelHandlers);
+
+		MixChannelArchiveRepository mar = new JpaMixChannelArchiveRepositoryImpl("mam");
+		QueryFactory queryFactory = new MamQueryFactory();
+		MessageArchiveService archive = new MessageArchiveServiceImpl(mar, router, queryFactory);
     	
     	this.persistenceManager = new MixPersistenceManagerImpl(JiveProperties.getInstance(), xmppService, 
-    			new MixIdentityManager(CHANNEL_SEQ_TYPE, 5), new MixIdentityManager(MCP_SEQ_TYPE, 5), new MixIdentityManager(MCP_SUBS_SEQ_TYPE, 5));
+    			new MixIdentityManager(CHANNEL_SEQ_TYPE, 5), new MixIdentityManager(MCP_SEQ_TYPE, 5), new MixIdentityManager(MCP_SUBS_SEQ_TYPE, 5), archive);
     }
     
     public MixManager(XMPPServer xmppServer, MixPersistenceManager persistenceManager) {

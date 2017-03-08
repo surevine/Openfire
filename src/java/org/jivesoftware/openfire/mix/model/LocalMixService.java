@@ -27,6 +27,10 @@ import org.jivesoftware.openfire.mix.MixXmppService;
 import org.jivesoftware.openfire.mix.exception.CannotCreateMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotDestroyMixChannelException;
 import org.jivesoftware.openfire.mix.exception.MixChannelAlreadyExistsException;
+import org.jivesoftware.openfire.mix.mam.MessageArchiveService;
+import org.jivesoftware.openfire.mix.mam.MessageArchiveServiceImpl;
+import org.jivesoftware.openfire.mix.mam.repository.JpaMixChannelArchiveRepositoryImpl;
+import org.jivesoftware.openfire.mix.mam.repository.MixChannelArchiveRepository;
 import org.jivesoftware.util.JiveProperties;
 import org.jivesoftware.util.LocaleUtils;
 import org.slf4j.Logger;
@@ -50,6 +54,8 @@ public class LocalMixService implements Component, MixService, ServerItemsProvid
 	private MixPersistenceManager persistenceManager;
 	
 	private MixXmppService xmppService;
+
+	private MessageArchiveService archive;
 
 	/**
 	 * The ID of the service in the database
@@ -90,11 +96,13 @@ public class LocalMixService implements Component, MixService, ServerItemsProvid
 	 *             if the provided subdomain is an invalid, according to the JID
 	 *             domain definition.
 	 */
-	public LocalMixService(XMPPServer xmppServer, JiveProperties jiveProperties, String subdomain, String description, MixXmppService xmppService, MixPersistenceManager mixPersistenceManagerImpl) {
+	public LocalMixService(XMPPServer xmppServer, JiveProperties jiveProperties, String subdomain, String description, MixXmppService xmppService, MixPersistenceManager mixPersistenceManagerImpl, MessageArchiveService archive) {
 		this.xmppServer = xmppServer;
 		this.jiveProperties = jiveProperties;
 		this.xmppService = xmppService;
 		this.persistenceManager = mixPersistenceManagerImpl;
+
+		this.archive = archive;
 
 		channels = new HashMap<>();
 
@@ -117,6 +125,8 @@ public class LocalMixService implements Component, MixService, ServerItemsProvid
 		return serviceName;
 	}
 
+	public MessageArchiveService getArchive() { return archive; }
+
 	public void initialize(JID jid, ComponentManager componentManager) throws ComponentException {
 		initializeSettings();
 	}
@@ -133,6 +143,7 @@ public class LocalMixService implements Component, MixService, ServerItemsProvid
 		// TODO Auto-generated method stub
 
 	}
+
 
 	public void start() {
 		xmppServer.addServerListener(this);
@@ -310,7 +321,7 @@ public class LocalMixService implements Component, MixService, ServerItemsProvid
 			throw new MixChannelAlreadyExistsException(name);
 		}
 		
-		MixChannel newChannel = new LocalMixChannel(this, name, owner, xmppService, persistenceManager);
+		MixChannel newChannel = new LocalMixChannel(this, name, owner, xmppService, persistenceManager, archive);
 		try {
 			newChannel = persistenceManager.save(newChannel);
 			// Need to delay adding the owner as a participant until we have a database ID

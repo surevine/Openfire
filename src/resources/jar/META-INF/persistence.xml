@@ -9,13 +9,9 @@ http://www.oracle.com/webfolder/technetwork/jsc/xml/ns/persistence/persistence_2
         <provider>org.hibernate.ejb.HibernatePersistence</provider>
         <class>org.jivesoftware.openfire.mix.mam.ArchivedMixChannelMessage</class>
         <properties>
-            <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver" />
-            <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/openfire" />
-            <property name="javax.persistence.jdbc.user" value="philr" />
-            <property name="javax.persistence.jdbc.password" value="" />
             <property name="hibernate.show_sql" value="true" />
             <property name="hibernate.format_sql" value="true" />
-            <property name="hibernate.hbm2ddl.auto" value="create" />
+            <property name="hibernate.hbm2ddl.auto" value="update" />
         </properties>
 
     </persistence-unit>

@@ -2,6 +2,7 @@ package org.jivesoftware.openfire.mix.mam.repository;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -12,6 +13,7 @@ import javax.persistence.TypedQuery;
 
 import org.jivesoftware.openfire.mix.mam.ArchivedMixChannelMessage;
 import org.xmpp.packet.Message;
+import org.jivesoftware.database.DbConnectionManager;
 
 public class JpaMixChannelArchiveRepositoryImpl implements MixChannelArchiveRepository {
 	
@@ -30,13 +32,12 @@ public class JpaMixChannelArchiveRepositoryImpl implements MixChannelArchiveRepo
 	private EntityManager entityManager;
 	private EntityTransaction tx;
 	
-	public JpaMixChannelArchiveRepositoryImpl() {
-		this("mam");
+	public JpaMixChannelArchiveRepositoryImpl(Map<String,String> config) {
+		this("mam", config);
 	}
 
-
-	public JpaMixChannelArchiveRepositoryImpl(String pu) {
-		EntityManagerFactory emf = Persistence.createEntityManagerFactory(pu);
+	public JpaMixChannelArchiveRepositoryImpl(String pu, Map<String,String> config) {
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory(pu, config);
 		entityManager = emf.createEntityManager();
 		tx = entityManager.getTransaction();
 		

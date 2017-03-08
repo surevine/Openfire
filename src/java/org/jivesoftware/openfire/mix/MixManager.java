@@ -1,10 +1,12 @@
 package org.jivesoftware.openfire.mix;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.sql.Connection;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.jivesoftware.database.ConnectionProvider;
+import org.jivesoftware.database.DbConnectionManager;
+import org.jivesoftware.database.DefaultConnectionProvider;
 import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.container.BasicModule;
@@ -70,20 +72,35 @@ public class MixManager extends BasicModule {
     	
     	MixXmppServiceImpl xmppService = new MixXmppServiceImpl(router, serviceHandlers, channelHandlers);
 
-		MixChannelArchiveRepository mar = new JpaMixChannelArchiveRepositoryImpl("mam");
+		MixChannelArchiveRepository mar = new JpaMixChannelArchiveRepositoryImpl("mam", this.getDbConfig());
 		QueryFactory queryFactory = new MamQueryFactory();
 		MessageArchiveService archive = new MessageArchiveServiceImpl(mar, router, queryFactory);
     	
     	this.persistenceManager = new MixPersistenceManagerImpl(JiveProperties.getInstance(), xmppService, 
     			new MixIdentityManager(CHANNEL_SEQ_TYPE, 5), new MixIdentityManager(MCP_SEQ_TYPE, 5), new MixIdentityManager(MCP_SUBS_SEQ_TYPE, 5), archive);
     }
-    
+
+
     public MixManager(XMPPServer xmppServer, MixPersistenceManager persistenceManager) {
         super("Mediated Information eXchange (MIX) manager");
 
         this.xmppServer = xmppServer;
     	this.persistenceManager = persistenceManager;
     }
+
+	private Map<String, String> getDbConfig() {
+		Map<String, String> config = new HashMap<String, String>();
+		try {
+			DefaultConnectionProvider connectionProvider = (DefaultConnectionProvider)DbConnectionManager.getConnectionProvider();
+			config.put("javax.persistence.jdbc.driver", connectionProvider.getDriver());
+			config.put("javax.persistence.jdbc.url", connectionProvider.getServerURL());
+			config.put("javax.persistence.jdbc.user", connectionProvider.getUsername());
+			config.put("javax.persistence.jdbc.password", connectionProvider.getPassword());
+			return config;
+		} catch (Exception e) {
+			return config;
+		}
+	}
 
 	/**
 	 * Called when manager starts up, to initialize things.

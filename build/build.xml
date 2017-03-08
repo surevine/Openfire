@@ -207,6 +207,7 @@
     <path id="compile.dependencies">
         <path refid="ant.dependencies"/>
         <path refid="javadoc.dependencies"/>
+    	<fileset dir="${lib.dist.dir}" includes="*.jar"/>
     </path>
 
     <path id="jspc.dependencies">
@@ -222,6 +223,8 @@
         <fileset dir="${lib.build.dir}" includes="hamcrest-core.jar"/>
         <fileset dir="${lib.dist.dir}" includes="slf4j-log4j12.jar"/>
     	<fileset dir="${lib.dist.dir}" includes="hsqldb.jar"/>
+    	<fileset dir="${lib.dist.dir}" includes="*.jar"/>
+
         <!-- <fileset dir="${ant.home}/lib" includes="clover.jar" /> -->
     </path>
 

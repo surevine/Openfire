@@ -38,7 +38,7 @@ public class ArchivedMixChannelMessage {
 	
 	@Column(columnDefinition = "text")
 	private String body;
-	
+
 	private String channel;
 	
 	@Temporal(TemporalType.TIMESTAMP)
@@ -118,9 +118,15 @@ public class ArchivedMixChannelMessage {
 		Message msg = new Message();
 		msg.setType(Message.Type.groupchat);
 		msg.setTo(queryIQ.getFrom());
-		
+
 		Element result = msg.addChildElement("result", MessageArchiveService.MAM_NAMESPACE);
 		result.addAttribute("id", this.id);
+
+		String queryid = queryIQ.getChildElement().attributeValue("queryid");
+
+		if (queryid != null) {
+			result.addAttribute("queryid", queryid);
+		}
 		Element forwarded = result.addElement("forwarded", "urn:xmpp:forward:0");
 		Element delay = forwarded.addElement("delay", "urn:xmpp:delay");
 		delay.addAttribute("stamp", sdf.format(this.getArchiveTimestamp()));

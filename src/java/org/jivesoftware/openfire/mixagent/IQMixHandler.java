@@ -53,17 +53,17 @@ public class IQMixHandler extends IQHandler {
         Log.info("Handling mix IQ");
         Log.info("Got packet: " + packet.toString());
 
+        Boolean isSet = packet.getType() == IQ.Type.set;
         Boolean isJoin = packet.getChildElement().getName().equals("join");
         Boolean isLeave = packet.getChildElement().getName().equals("leave");
 
-        if (!isJoin && !isLeave) {
+        if (isSet && !isJoin && !isLeave) {
             Log.error("Not join or not leave, ignoring");
             IQ errorResult = IQ.createResultIQ(packet);
             errorResult.setType(IQ.Type.error);
             return errorResult;
         }
 
-        Boolean isSet = packet.getType() == IQ.Type.set;
         Boolean isFromMixService = packet.getFrom().getDomain().startsWith("mix.");
         Boolean isToSelf = packet.getFrom().toBareJID().equals(packet.getTo().toBareJID());
 
@@ -94,6 +94,11 @@ public class IQMixHandler extends IQHandler {
             Log.info("Got response from mix service, forwarding to client: " + packet.toString());
             try {
                 String key = packet.getTo() + "!" + packet.getID();
+                if (!requests.containsKey(key)) {
+                    Log.info("No outbound request, so ignoring");
+                    return null;
+                }
+
                 JID clientJID = new JID(requests.get(key));
                 JID channelJID = new JID(packet.getFrom().toBareJID());
 

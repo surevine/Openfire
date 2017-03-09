@@ -17,9 +17,6 @@ public class MixChannelMamQueryPacketHandler implements MixChannelPacketHandler 
 
 	@Override
 	public IQ processIQ(MixRequestContext context, MixChannel channel, IQ iq) {
-
-		Log.info("MCMQPH Got IQ: " + iq.toString());
-
 		if (iq.getType() != IQ.Type.set) {
 			Log.info("Not a set query for mam");
 			return null;
@@ -27,14 +24,14 @@ public class MixChannelMamQueryPacketHandler implements MixChannelPacketHandler 
 
 		Element iqChild = iq.getChildElement();
 
-		Log.info("Channel query");
-		Log.info("Got IQ: " + iq.toString());
-		Log.info("Qname: " + iqChild.getQName() + " " + QName.get("query", "urn:xmpp:mam:2"));
-
 		if ((iqChild == null) || (!iqChild.getQName().equals(QName.get("query", "urn:xmpp:mam:2")))) {
 			Log.info("Not a query for mam");
 			return null;
 		}
+
+		Log.info("Channel query");
+		Log.info("Got IQ: " + iq.toString());
+		Log.info("Qname: " + iqChild.getQName() + " " + QName.get("query", "urn:xmpp:mam:2"));
 
 		Log.info("Querying mam");
 		return context.getMixService().getArchive().query(iq);

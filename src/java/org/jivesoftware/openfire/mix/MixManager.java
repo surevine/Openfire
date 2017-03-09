@@ -154,6 +154,11 @@ public class MixManager extends BasicModule {
         }
     }
 
+    public MixService getMixService(String subdomain) {
+		MixService service = mixServices.get(subdomain);
+		return service;
+	}
+
     /**
      * Unregisters a MultiUserChatService from the manager.  It can be used
      * to explicitly unregister services, and is also used internally to unregister

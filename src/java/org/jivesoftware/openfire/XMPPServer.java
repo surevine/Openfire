@@ -1070,6 +1070,8 @@ public class XMPPServer {
         return (IQPEPHandler) modules.get(IQPEPHandler.class);
     }
 
+    public MixManager getMixManager() { return (MixManager)modules.get(MixManager.class); }
+
     /**
      * Returns the <code>PluginManager</code> instance registered with this server.
      *

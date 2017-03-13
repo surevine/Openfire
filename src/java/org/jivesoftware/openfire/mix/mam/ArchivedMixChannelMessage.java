@@ -130,7 +130,7 @@ public class ArchivedMixChannelMessage {
 		Element forwarded = result.addElement("forwarded", "urn:xmpp:forward:0");
 		Element delay = forwarded.addElement("delay", "urn:xmpp:delay");
 		delay.addAttribute("stamp", sdf.format(this.getArchiveTimestamp()));
-		Element message = delay.addElement("message", "jabber:client");
+		Element message = forwarded.addElement("message", "jabber:client");
 		message.addAttribute("from", this.getFromJID());
 		message.addAttribute("type", Message.Type.groupchat.name());
 		Element body = message.addElement("body");

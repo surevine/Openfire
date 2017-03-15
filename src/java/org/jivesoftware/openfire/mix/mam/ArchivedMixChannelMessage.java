@@ -1,5 +1,6 @@
 package org.jivesoftware.openfire.mix.mam;
 
+import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -15,9 +16,16 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
+import org.dom4j.Document;
+import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.dom4j.QName;
+import org.dom4j.io.SAXReader;
 import org.hibernate.annotations.GenericGenerator;
 import org.jivesoftware.openfire.mix.mam.repository.TimeBasedChannelQuery;
+import org.jivesoftware.openfire.mix.model.LocalMixChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Message.Type;
@@ -26,7 +34,9 @@ import org.xmpp.packet.Packet;
 @Entity
 @Table(name = "ofArchivedMixChannelMessage")
 public class ArchivedMixChannelMessage {
-	
+
+	private static final Logger Log = LoggerFactory.getLogger(ArchivedMixChannelMessage.class);
+
 	@Id @GeneratedValue(generator="system-uuid")
 	@GenericGenerator(name="system-uuid", strategy = "uuid")
 	private String id;
@@ -39,6 +49,9 @@ public class ArchivedMixChannelMessage {
 	@Column(columnDefinition = "text")
 	private String body;
 
+	@Column(columnDefinition = "text")
+	private String stanza;
+
 	private String channel;
 	
 	@Temporal(TemporalType.TIMESTAMP)
@@ -50,13 +63,13 @@ public class ArchivedMixChannelMessage {
 	private SimpleDateFormat sdf = new SimpleDateFormat(TimeBasedChannelQuery.MAM_DATE_FORMAT);
 
 	public ArchivedMixChannelMessage() {
-		
 	}
 
 	public ArchivedMixChannelMessage(Message archive) {
 		this.type = archive.getType();
 		this.subject = archive.getSubject();
 		this.body = archive.getBody();
+		this.stanza = archive.toString();
 		this.setChannel(archive.getTo().getNode());
 		this.setFromJID(archive.getFrom().getNode());
 	}
@@ -98,6 +111,14 @@ public class ArchivedMixChannelMessage {
 		this.body = body;
 	}
 
+	public String getStanza() {
+		return stanza;
+	}
+
+	public void setStanza(String stanza) {
+		this.stanza = stanza;
+	}
+
 	public String getChannel() {
 		return channel;
 	}
@@ -119,6 +140,7 @@ public class ArchivedMixChannelMessage {
 		msg.setType(Message.Type.groupchat);
 		msg.setTo(queryIQ.getFrom());
 
+		Log.info("NAMESPACE: " + MessageArchiveService.MAM_NAMESPACE);
 		Element result = msg.addChildElement("result", MessageArchiveService.MAM_NAMESPACE);
 		result.addAttribute("id", this.id);
 
@@ -127,15 +149,29 @@ public class ArchivedMixChannelMessage {
 		if (queryid != null) {
 			result.addAttribute("queryid", queryid);
 		}
+
 		Element forwarded = result.addElement("forwarded", "urn:xmpp:forward:0");
 		Element delay = forwarded.addElement("delay", "urn:xmpp:delay");
 		delay.addAttribute("stamp", sdf.format(this.getArchiveTimestamp()));
-		Element message = forwarded.addElement("message", "jabber:client");
-		message.addAttribute("from", this.getFromJID());
-		message.addAttribute("type", Message.Type.groupchat.name());
-		Element body = message.addElement("body");
-		body.setText(this.getBody());
-		
+
+		String stanza = this.getStanza();
+		if (stanza != null) {
+		    try {
+				Document stanzaDoc = DocumentHelper.parseText(stanza);
+				Element stanzaEl = stanzaDoc.getRootElement();
+				stanzaEl.setQName(QName.get("message", "jabber:client"));
+				forwarded.add(stanzaEl);
+			} catch (Exception ex) {
+				Log.error("Failed to parse payload XML", ex);
+			}
+		} else {
+			Element message = forwarded.addElement("message", "jabber:client");
+			message.addAttribute("from", this.getFromJID());
+			message.addAttribute("type", Message.Type.groupchat.name());
+			Element body = message.addElement("body");
+			body.setText(this.getBody());
+		}
+
 		return msg;
 	}
 

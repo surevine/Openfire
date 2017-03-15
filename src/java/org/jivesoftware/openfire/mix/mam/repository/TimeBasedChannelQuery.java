@@ -10,7 +10,7 @@ import org.xmpp.packet.IQ;
 
 public class TimeBasedChannelQuery extends AbstractResultSetQuery {
 
-	public static final String MAM_DATE_FORMAT = "YYYY-MM-DD'T'HH:mm:ssZ";
+	public static final String MAM_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssZ";
 
 	private SimpleDateFormat sdf = new SimpleDateFormat(MAM_DATE_FORMAT);
 

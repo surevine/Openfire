@@ -139,6 +139,7 @@ public class ArchivedMixChannelMessage {
 		Message msg = new Message();
 		msg.setType(Message.Type.groupchat);
 		msg.setTo(queryIQ.getFrom());
+		msg.setFrom(queryIQ.getTo());
 
 		Log.info("NAMESPACE: " + MessageArchiveService.MAM_NAMESPACE);
 		Element result = msg.addChildElement("result", MessageArchiveService.MAM_NAMESPACE);

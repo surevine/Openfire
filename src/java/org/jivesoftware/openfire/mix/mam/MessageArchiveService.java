@@ -5,7 +5,7 @@ import org.xmpp.packet.IQ;
 
 public interface MessageArchiveService {
 	
-	String MAM_NAMESPACE = "urn:xmpp:mam:1";
+	String MAM_NAMESPACE = "urn:xmpp:mam:2";
 	
 	String RSM_NAMESPACE = "http://jabber.org/protocol/rsm";
 	

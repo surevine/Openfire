@@ -31,6 +31,8 @@ public class MamQueryFactory implements QueryFactory {
 						return new WithQuery(repository, queryIQ);
 					} else if (fieldNode.attribute("var").getText().equals("start") || fieldNode.attribute("var").getText().equals("end")) {
 						return new TimeBasedChannelQuery(repository, queryIQ);
+					} else {
+						return new BareChannelQuery(repository, queryIQ);
 					}
 				}
 			}			

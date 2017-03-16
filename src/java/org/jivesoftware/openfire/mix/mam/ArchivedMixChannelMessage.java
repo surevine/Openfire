@@ -24,6 +24,8 @@ import org.dom4j.io.SAXReader;
 import org.hibernate.annotations.GenericGenerator;
 import org.jivesoftware.openfire.mix.mam.repository.TimeBasedChannelQuery;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
+import org.jivesoftware.openfire.mix.model.MixChannelMessage;
+import org.jivesoftware.openfire.mix.model.MixChannelParticipant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmpp.packet.IQ;
@@ -65,13 +67,25 @@ public class ArchivedMixChannelMessage {
 	public ArchivedMixChannelMessage() {
 	}
 
-	public ArchivedMixChannelMessage(Message archive) {
-		this.type = archive.getType();
-		this.subject = archive.getSubject();
-		this.body = archive.getBody();
-		this.stanza = archive.toString();
-		this.setChannel(archive.getTo().getNode());
-		this.setFromJID(archive.getFrom().getNode());
+	public ArchivedMixChannelMessage(MixChannelMessage archive) {
+		Message message = archive.getMessage();
+		MixChannelParticipant sender = archive.getSender();
+
+		this.type = message.getType();
+		this.subject = message.getSubject();
+		this.body = message.getBody();
+
+		Message stanza = message.createCopy();
+		stanza.getElement().addAttribute("id", this.getId());
+		stanza.getElement().addAttribute("from", message.getTo().toBareJID());
+		stanza.getElement().addAttribute("to", null);
+		stanza.addChildElement("nick", "urn:xmpp:mix:0").addText(sender.getNick());
+		stanza.addChildElement("jid", "urn:xmpp:mix:0").addText(sender.getJid().toBareJID().toString());
+
+		this.stanza = stanza.toString();
+
+		this.setChannel(message.getTo().getNode());
+		this.setFromJID(sender.getJid().toBareJID().toString());
 	}
 
 	private void setFromJID(String node) {
@@ -136,42 +150,41 @@ public class ArchivedMixChannelMessage {
 	}
 
 	public Message formatMessageResponse(IQ queryIQ) {
+		// create wrapper mam <message>
 		Message msg = new Message();
-		msg.setType(Message.Type.groupchat);
-		msg.setTo(queryIQ.getFrom());
+		//msg.setType(Message.Type.groupchat);
 		msg.setFrom(queryIQ.getTo());
+		msg.setTo(queryIQ.getFrom());
 
-		Log.info("NAMESPACE: " + MessageArchiveService.MAM_NAMESPACE);
+		// add <result> with id set to the message id (from mam)
 		Element result = msg.addChildElement("result", MessageArchiveService.MAM_NAMESPACE);
-		result.addAttribute("id", this.id);
+		result.addAttribute("id", this.getId());
 
+		// add queryid if set in query iq
 		String queryid = queryIQ.getChildElement().attributeValue("queryid");
-
 		if (queryid != null) {
 			result.addAttribute("queryid", queryid);
 		}
 
+		// add <forwarded> and <delay>
 		Element forwarded = result.addElement("forwarded", "urn:xmpp:forward:0");
 		Element delay = forwarded.addElement("delay", "urn:xmpp:delay");
 		delay.addAttribute("stamp", sdf.format(this.getArchiveTimestamp()));
 
+		// parse stanza from db, set id, and to
 		String stanza = this.getStanza();
-		if (stanza != null) {
-		    try {
-				Document stanzaDoc = DocumentHelper.parseText(stanza);
-				Element stanzaEl = stanzaDoc.getRootElement();
-				stanzaEl.setQName(QName.get("message", "jabber:client"));
-				forwarded.add(stanzaEl);
-			} catch (Exception ex) {
-				Log.error("Failed to parse payload XML", ex);
-			}
-		} else {
-			Element message = forwarded.addElement("message", "jabber:client");
-			message.addAttribute("from", this.getFromJID());
-			message.addAttribute("type", Message.Type.groupchat.name());
-			Element body = message.addElement("body");
-			body.setText(this.getBody());
-		}
+        try {
+            Document stanzaDoc = DocumentHelper.parseText(stanza);
+            Element stanzaEl = stanzaDoc.getRootElement();
+			stanzaEl.setQName(QName.get("message", "jabber:client"));
+            // override the message id with the mam archive id
+            stanzaEl.addAttribute("id", this.getId());
+            stanzaEl.addAttribute("to", queryIQ.getFrom().toString());
+
+            forwarded.add(stanzaEl);
+        } catch (Exception ex) {
+            Log.error("Failed to parse payload XML", ex);
+        }
 
 		return msg;
 	}

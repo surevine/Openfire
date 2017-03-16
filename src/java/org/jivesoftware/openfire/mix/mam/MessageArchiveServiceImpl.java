@@ -99,8 +99,7 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
 	}
 
 	public String archive(MixChannelMessage message) {
-		return repository.archive(message.getMessage());
-		// TODO
+		return repository.archive(message);
 	}
 
 }

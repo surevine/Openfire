@@ -4,8 +4,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.jivesoftware.openfire.mix.mam.ArchivedMixChannelMessage;
-import org.xmpp.packet.JID;
-import org.xmpp.packet.Message;
+import org.jivesoftware.openfire.mix.model.MixChannelMessage;
 
 public interface MixChannelArchiveRepository {
 	
@@ -15,7 +14,7 @@ public interface MixChannelArchiveRepository {
 	 * @param archive
 	 * @return MAM ID
 	 */
-	String archive(Message archive);
+	String archive(MixChannelMessage archive);
 	
 	/**
 	 * Retrieve by the primary key.

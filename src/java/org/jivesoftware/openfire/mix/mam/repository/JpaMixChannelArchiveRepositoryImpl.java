@@ -12,6 +12,7 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
 import org.jivesoftware.openfire.mix.mam.ArchivedMixChannelMessage;
+import org.jivesoftware.openfire.mix.model.MixChannelMessage;
 import org.xmpp.packet.Message;
 import org.jivesoftware.database.DbConnectionManager;
 
@@ -66,7 +67,7 @@ public class JpaMixChannelArchiveRepositoryImpl implements MixChannelArchiveRepo
 		return entityManager.find(ArchivedMixChannelMessage.class, id);
 	}
 	
-	public String archive(Message archive) {
+	public String archive(MixChannelMessage archive) {
 		
 		ArchivedMixChannelMessage tmp = new ArchivedMixChannelMessage(archive);
 		

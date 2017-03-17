@@ -315,7 +315,7 @@ public class LocalMixChannel implements MixChannel {
 		MixChannelParticipant sender = mcMessage.getSender();
 		
 		Message templateMessage = mcMessage.getMessage().createCopy();
-		templateMessage.setFrom(getJID()); // Message is from the channel
+		templateMessage.setFrom(this.getJID()); // Message is from the channel
 		templateMessage.setID(mamId);
 		templateMessage.addChildElement("nick", MixManager.MIX_NAMESPACE).addText(sender.getNick());
 		templateMessage.addChildElement("jid", MixManager.MIX_NAMESPACE).addText(sender.getJid().toBareJID());

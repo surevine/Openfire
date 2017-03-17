@@ -26,16 +26,16 @@ public class MixChannelNodeItemsGetPacketHandler implements MixChannelPacketHand
 		if ((el == null) || (!el.getQName().equals(QNAME))) {
 			return null;
 		}
-		
+
 		Element itemsEl = el.element("items");
 		
 		if(itemsEl == null) {
 			return null;
 		}
-		
+
+		Element replyPubSubEl = reply.setChildElement("pubsub", "http://jabber.org/protocol/pubsub");
 		Element replyItemsEl = itemsEl.createCopy();
-		
-		reply.setChildElement(replyItemsEl);
+		replyPubSubEl.add(replyItemsEl);
 		
 		String nodeName = itemsEl.attributeValue("node");
 		

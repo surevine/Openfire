@@ -64,6 +64,7 @@ public class IQMixHandler extends IQHandler {
             return errorResult;
         }
 
+        // TODO this isn't good enough
         Boolean isFromMixService = packet.getFrom().getDomain().startsWith("mix.");
         Boolean isToSelf = packet.getFrom().toBareJID().equals(packet.getTo().toBareJID());
 
@@ -105,6 +106,10 @@ public class IQMixHandler extends IQHandler {
                 Element reply = packet.getElement().createCopy();
                 IQ replyIQ = new IQ(reply);
                 replyIQ.setTo(clientJID);
+                // should come from the "mix agent", i.e. bare jid
+                Log.info("Override from", clientJID.toBareJID());
+                replyIQ.setFrom(clientJID.toBareJID());
+                Log.info("Sending reply" + replyIQ.toString());
                 xmppserver.getPacketDeliverer().deliver(replyIQ);
 
                 if(replyIQ.getType() == IQ.Type.result) {

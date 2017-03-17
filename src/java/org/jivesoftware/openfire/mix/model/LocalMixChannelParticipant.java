@@ -25,8 +25,8 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 	
 	private String nick;
 	
-	// TODO - Defaulting to ENFORCE_HIDDEN in the short-term, this will need to be fixed.
-	private ChannelJidVisibilityPreference jvp = ChannelJidVisibilityPreference.ENFORCE_HIDDEN;
+	// TODO - Defaulting to NO_PREFERENCE in the short-term, this will need to be fixed.
+	private ChannelJidVisibilityPreference jvp = ChannelJidVisibilityPreference.NO_PREFERENCE;
 
 	private MixPersistenceManager subscriptionsRepository;
 	

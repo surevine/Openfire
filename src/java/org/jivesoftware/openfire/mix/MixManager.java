@@ -62,7 +62,8 @@ public class MixManager extends BasicModule {
     		);
     	
     	List<MixChannelPacketHandler> channelHandlers = Arrays.asList(
-    			new MixChannelJoinPacketHandler(),
+				new MixChannelJoinPacketHandler(),
+    			new MixChannelJoinStatusPacketHandler(),
     			new MixChannelMessagePacketHandler(router),
     			new MixChannelLeavePacketHandler(),
     			new MixChannelNodeItemsGetPacketHandler(),

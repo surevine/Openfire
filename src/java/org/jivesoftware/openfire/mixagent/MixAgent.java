@@ -32,7 +32,7 @@ public class MixAgent extends BasicModule {
         Log.info("Adding to roster " + user + " " + channelJID.toString());
         try {
             RosterItem rosteritem = xmppServer.getRosterManager().getRoster(user).createRosterItem(channelJID, false, true);
-            rosteritem.setSubStatus(RosterItem.SubType.BOTH);
+            rosteritem.setSubStatus(RosterItem.SubType.NONE);
         } catch (Exception e) {
             Log.error("Error adding channel to roster: " + e.toString());
         }
@@ -42,8 +42,6 @@ public class MixAgent extends BasicModule {
         Log.info("Removing from roster " + user + " " + channelJID.toString());
         try {
             xmppServer.getRosterManager().getRoster(user).deleteRosterItem(channelJID, false);
-            RosterItem rosteritem = xmppServer.getRosterManager().getRoster(user).createRosterItem(channelJID, false, true);
-            rosteritem.setSubStatus(RosterItem.SubType.BOTH);
         } catch (Exception e) {
             Log.error("Error removing channel from roster: " + e.toString());
         }

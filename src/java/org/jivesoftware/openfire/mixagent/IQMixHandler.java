@@ -86,7 +86,7 @@ public class IQMixHandler extends IQHandler {
 
             leaveIQ.setChildElement(child);
 
-            Log.info("Send leave request to mix service: " + leaveIQ.toString());
+            Log.info("Send request to mix service: " + leaveIQ.toString());
             xmppserver.getIQRouter().route(leaveIQ);
             return null;
         }

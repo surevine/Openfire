@@ -31,6 +31,10 @@ public class MixChannelJoinPacketHandler implements MixChannelPacketHandler {
 		// Unpack packet
 		Element joinNode = iq.getChildElement();
 
+		if (iq.getType() != IQ.Type.set) {
+			return null;
+		}
+
 		if ((joinNode == null) || (!joinNode.getQName().equals(QName.get("join", MixManager.MIX_NAMESPACE)))) {
 			return null;
 		}
@@ -54,23 +58,25 @@ public class MixChannelJoinPacketHandler implements MixChannelPacketHandler {
 		if (configForm != null) {
 			DataForm form = new DataForm(configForm);
 			FormField field = form.getField("JID Visibility");
-			String jidVisibilityPreference = field.getFirstValue();
+			if (field != null) {
+				String jidVisibilityPreference = field.getFirstValue();
 
-			switch (jidVisibilityPreference) {
-				case "no-preference":
-					jvp = ChannelJidVisibilityPreference.NO_PREFERENCE;
-					break;
-				case "prefer-hidden":
-					jvp = ChannelJidVisibilityPreference.PREFER_HIDDEN;
-					break;
-				case "enforce-hidden":
-					jvp = ChannelJidVisibilityPreference.ENFORCE_HIDDEN;
-					break;
-				case "enforce-visible":
-					jvp = ChannelJidVisibilityPreference.ENFORCE_VISIBLE;
-					break;
-				default:
-					jvp = ChannelJidVisibilityPreference.NO_PREFERENCE;
+				switch (jidVisibilityPreference) {
+					case "no-preference":
+						jvp = ChannelJidVisibilityPreference.NO_PREFERENCE;
+						break;
+					case "prefer-hidden":
+						jvp = ChannelJidVisibilityPreference.PREFER_HIDDEN;
+						break;
+					case "enforce-hidden":
+						jvp = ChannelJidVisibilityPreference.ENFORCE_HIDDEN;
+						break;
+					case "enforce-visible":
+						jvp = ChannelJidVisibilityPreference.ENFORCE_VISIBLE;
+						break;
+					default:
+						jvp = ChannelJidVisibilityPreference.NO_PREFERENCE;
+				}
 			}
 		}
 
@@ -84,7 +90,7 @@ public class MixChannelJoinPacketHandler implements MixChannelPacketHandler {
 			mcp = channel.addParticipant(iq.getFrom(), subscriptionRequests, jvp);
 
 			for (String subscription : mcp.getSubscriptions()) {
-				Element current = joinElement.addElement("node");
+				Element current = joinElement.addElement("subscribe");
 				current.addAttribute("node", subscription);
 			}
 

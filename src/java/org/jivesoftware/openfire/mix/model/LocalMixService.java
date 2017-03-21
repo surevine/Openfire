@@ -324,8 +324,10 @@ public class LocalMixService implements Component, MixService, ServerItemsProvid
 		MixChannel newChannel = new LocalMixChannel(this, name, owner, xmppService, persistenceManager, archive);
 		try {
 			newChannel = persistenceManager.save(newChannel);
+			// FIXME?: PR - I don't think owner should automatically be a participant, as should
+			// join via their mixagent, and allow them to configure anonymity prefs
 			// Need to delay adding the owner as a participant until we have a database ID
-			newChannel.addParticipant(owner, Collections.<String> emptySet());
+			//newChannel.addParticipant(owner, Collections.<String> emptySet());
 		} catch (Exception e) {
 			Log.error(e.getMessage());
 			throw new CannotCreateMixChannelException(name);

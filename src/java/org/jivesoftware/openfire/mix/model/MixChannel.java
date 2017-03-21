@@ -9,6 +9,7 @@ import org.jivesoftware.openfire.mix.MixChannelNode;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityMode;
+import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityPreference;
 import org.jivesoftware.openfire.mix.exception.CannotJoinMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotLeaveMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotUpdateMixChannelSubscriptionException;
@@ -48,7 +49,7 @@ public interface MixChannel {
 
 	void addParticipantsListener(MixChannelParticipantsListener listener);
 	
-	MixChannelParticipant addParticipant(JID jid, Set<String> subscribeNodes) throws CannotJoinMixChannelException;
+	MixChannelParticipant addParticipant(JID jid, Set<String> subscribeNodes, ChannelJidVisibilityPreference jidVisibilityPreference) throws CannotJoinMixChannelException;
 	
 	void removeParticipant(JID jid) throws CannotLeaveMixChannelException;
 

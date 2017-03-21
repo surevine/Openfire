@@ -17,6 +17,7 @@ import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityMode;
+import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityPreference;
 import org.jivesoftware.openfire.mix.exception.CannotJoinMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotLeaveMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotUpdateMixChannelSubscriptionException;
@@ -182,7 +183,7 @@ public class LocalMixChannel implements MixChannel {
 	}
 
 	@Override
-	public MixChannelParticipant addParticipant(JID jid, Set<String> subscribeNodes) throws CannotJoinMixChannelException {
+	public MixChannelParticipant addParticipant(JID jid, Set<String> subscribeNodes, ChannelJidVisibilityPreference jidVisibilityPreference) throws CannotJoinMixChannelException {
 
 		JID bareJoinerJID = jid.asBareJID();
 		
@@ -192,9 +193,9 @@ public class LocalMixChannel implements MixChannel {
 			MixChannelParticipant participant;
 			
 			if (subscribeNodes.isEmpty()) {
-				participant = new LocalMixChannelParticipant(proxyJid, bareJoinerJID, this, this.channelRepository);
+				participant = new LocalMixChannelParticipant(proxyJid, bareJoinerJID, this, jidVisibilityPreference, this.channelRepository);
 			} else {
-				participant = new LocalMixChannelParticipant(proxyJid, bareJoinerJID, this, subscribeNodes, this.channelRepository);				
+				participant = new LocalMixChannelParticipant(proxyJid, bareJoinerJID, this, subscribeNodes, jidVisibilityPreference, this.channelRepository);
 			}
 
 

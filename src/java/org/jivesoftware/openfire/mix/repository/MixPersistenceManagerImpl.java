@@ -17,6 +17,7 @@ import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.MixXmppService;
+import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityPreference;
 import org.jivesoftware.openfire.mix.mam.MessageArchiveService;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.model.LocalMixChannelParticipant;
@@ -294,8 +295,9 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 					
 					JID proxyJid = new JID(resultSet.getString(3));
 					JID realJid = new JID(resultSet.getString(2));
-					
-					LocalMixChannelParticipant mcp = new LocalMixChannelParticipant(resultSet.getLong(1), proxyJid, realJid, channel, this);
+					ChannelJidVisibilityPreference jvp = ChannelJidVisibilityPreference.fromId(resultSet.getInt(5));
+
+					LocalMixChannelParticipant mcp = new LocalMixChannelParticipant(resultSet.getLong(1), proxyJid, realJid, channel, jvp,this);
 					
 					participantsByChannel.add(mcp);
 					

@@ -30,8 +30,8 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 
 	private MixPersistenceManager subscriptionsRepository;
 	
-	public LocalMixChannelParticipant(JID proxyJid, JID jid, MixChannel channel, Set<String> requestedSubscriptions, MixPersistenceManager mpm) {
-		this(proxyJid, jid, channel, mpm);
+	public LocalMixChannelParticipant(JID proxyJid, JID jid, MixChannel channel, Set<String> requestedSubscriptions, ChannelJidVisibilityPreference jvp, MixPersistenceManager mpm) {
+		this(proxyJid, jid, channel, jvp, mpm);
 		
 		this.subscriptions = new HashSet<>(requestedSubscriptions);
 
@@ -46,12 +46,13 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 	 * @param jid
 	 * @param channel
 	 */
-	public LocalMixChannelParticipant(JID proxyJid, JID jid, MixChannel channel, MixPersistenceManager mpm) {
+	public LocalMixChannelParticipant(JID proxyJid, JID jid, MixChannel channel, ChannelJidVisibilityPreference jvp, MixPersistenceManager mpm) {
 		this.proxyJid = proxyJid;
 		this.jid = jid;
 		this.channel = channel;
 		this.nick = Md5Crypt.md5Crypt(jid.toBareJID().getBytes()); // Not sure what this should be yet
 		this.subscriptionsRepository = mpm;
+		this.jvp = jvp;
 		
 		this.subscriptions = new HashSet<>(channel.getNodesAsStrings());		
 	}
@@ -66,8 +67,8 @@ public class LocalMixChannelParticipant implements MixChannelParticipant {
 	 * @param channel2
 	 * @param mpm
 	 */
-	public LocalMixChannelParticipant(long id, JID proxyJid, JID realJid, MixChannel channel, MixPersistenceManager mpm) {
-		this(proxyJid, realJid, channel, mpm);
+	public LocalMixChannelParticipant(long id, JID proxyJid, JID realJid, MixChannel channel, ChannelJidVisibilityPreference jvp, MixPersistenceManager mpm) {
+		this(proxyJid, realJid, channel, jvp, mpm);
 		this.id = id;
 	}
 

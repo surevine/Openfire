@@ -106,7 +106,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 			while (resultSet.next()) {
 				try {
 					LocalMixChannel channel = new LocalMixChannel(resultSet.getLong(1), mixService, resultSet.getString(4),
-							new JID(resultSet.getString(6), mixService.getServiceDomain(), null), xmppService, this, mixService.getArchive(), new Date(Long.parseLong(resultSet.getString(2).trim())));
+							new JID(resultSet.getString(6)), xmppService, this, mixService.getArchive(), new Date(Long.parseLong(resultSet.getString(2).trim())));
 
 					channels.add(channel);
 				} catch (SQLException e) {
@@ -144,7 +144,7 @@ public class MixPersistenceManagerImpl implements MixPersistenceManager {
 			pstmt.setString(3, toPersist.getName());
 			pstmt.setInt(4, toPersist.getJidVisibilityMode().getId());
 			pstmt.setString(5, StringUtils.dateToMillis(toPersist.getCreationDate()));
-			pstmt.setString(6, toPersist.getOwner().getNode());
+			pstmt.setString(6, toPersist.getOwner().toBareJID());
 
 			pstmt.executeUpdate();
 

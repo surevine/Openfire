@@ -1,5 +1,7 @@
 package org.jivesoftware.openfire.mix.model;
 
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -26,10 +28,14 @@ import org.jivesoftware.openfire.mix.policy.AlwaysAllowPermissionPolicy;
 import org.jivesoftware.openfire.mix.policy.MixChannelJidMapNodeItemPermissionPolicy;
 import org.jivesoftware.openfire.mix.policy.MixChannelStandardPermissionPolicy;
 import org.jivesoftware.openfire.mix.policy.PermissionPolicy;
+import org.jivesoftware.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 public class LocalMixChannel implements MixChannel {
 	private static final Logger LOG = LoggerFactory.getLogger(LocalMixChannel.class);
@@ -188,7 +194,7 @@ public class LocalMixChannel implements MixChannel {
 		JID bareJoinerJID = jid.asBareJID();
 		
 		if (!this.participantsByRealJID.containsKey(bareJoinerJID)) {
-			JID proxyJid = this.getNewProxyJID();
+			JID proxyJid = this.createProxyJID(bareJoinerJID.toString(), jidVisibilityPreference.getId());
 			
 			MixChannelParticipant participant;
 			
@@ -261,10 +267,27 @@ public class LocalMixChannel implements MixChannel {
 		
 		return;
 	}
-	
 
-	private JID getNewProxyJID() {
-		return new JID(this.name + "+" + this.getNextProxyNodePart(), this.getJID().getDomain(), "", false);
+	private SecretKeySpec key = new SecretKeySpec("some secret".getBytes(), "HmacMD5");
+
+	private JID createProxyJID(String userJID, Integer jidVisibilityPreference) {
+	    try {
+            Mac mac = Mac.getInstance("HmacMD5");
+            mac.init(key);
+			mac.update(this.getJID().toString().getBytes());
+            mac.update(userJID.getBytes());
+            mac.update(jidVisibilityPreference.toString().getBytes());
+
+            String hash = StringUtils.encodeHex(mac.doFinal()).substring(0, 10);
+
+		    return new JID(hash + "#" + this.getJID().getNode(), this.getJID().getDomain(), "", false);
+	    } catch (NoSuchAlgorithmException e) {
+	        LOG.info("Failed to create proxy jid", e);
+		} catch (InvalidKeyException e) {
+			LOG.info("Failed to create proxy jid", e);
+		}
+
+		throw new RuntimeException("Failed to create proxy jid");
 	}
 
 	public void setID(long newID) {
@@ -283,13 +306,6 @@ public class LocalMixChannel implements MixChannel {
 	@Override
 	public Set<String> getNodesAsStrings() {
 		return nodes.keySet();
-	}
-
-	private int proxyNodeNamePart = 0;
-
-	private String getNextProxyNodePart() {
-		// TODO - temporary implementation
-		return Integer.toString(proxyNodeNamePart++);
 	}
 
 	@Override

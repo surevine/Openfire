@@ -82,7 +82,7 @@ public class ArchivedMixChannelMessage {
 		stanza.addChildElement("nick", "urn:xmpp:mix:0").addText(sender.getNick());
 		stanza.addChildElement("jid", "urn:xmpp:mix:0").addText(sender.getJid().toBareJID().toString());
 
-		this.stanza = stanza.toString();
+		this.stanza = stanza.toXML();
 
 		this.setChannel(message.getTo().getNode());
 		this.setFromJID(sender.getJid().toBareJID().toString());

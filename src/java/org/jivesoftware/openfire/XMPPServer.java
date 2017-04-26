@@ -43,6 +43,8 @@ import org.jivesoftware.openfire.labelling.AccessControlDecisionFunction;
 import org.jivesoftware.openfire.labelling.MessageInterceptor;
 import org.jivesoftware.openfire.lockout.LockOutManager;
 import org.jivesoftware.openfire.mediaproxy.MediaProxyService;
+import org.jivesoftware.openfire.mix.MixManager;
+import org.jivesoftware.openfire.mixagent.MixAgent;
 import org.jivesoftware.openfire.muc.MultiUserChatManager;
 import org.jivesoftware.openfire.net.MulticastDNSService;
 import org.jivesoftware.openfire.net.ServerTrafficCounter;
@@ -547,6 +549,10 @@ public class XMPPServer {
         loadModule(MultiUserChatManager.class.getName());
         loadModule(IQMessageCarbonsHandler.class.getName());
         loadModule(CertificateStoreManager.class.getName());
+
+        // mix
+        loadModule(MixManager.class.getName());
+        loadModule(MixAgent.class.getName());
 
         // Load this module always last since we don't want to start listening for clients
         // before the rest of the modules have been started
@@ -1077,6 +1083,8 @@ public class XMPPServer {
     public IQPEPHandler getIQPEPHandler() {
         return (IQPEPHandler) modules.get(IQPEPHandler.class);
     }
+
+    public MixManager getMixManager() { return (MixManager)modules.get(MixManager.class); }
 
     /**
      * Returns the <code>PluginManager</code> instance registered with this server.

@@ -21,3 +21,6 @@ out/
 nbproject/
 nbbuild/
 /bin/
+
+scrapbook.sql
+

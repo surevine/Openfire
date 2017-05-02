@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2005-2008 Jive Software. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,6 @@
 
 package org.jivesoftware.openfire.net;
 
-import com.sun.mail.smtp.DigestMD5;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
@@ -192,6 +191,22 @@ public class SASLAuthentication {
     {
         final Element result = DocumentHelper.createElement( new QName( "mechanisms", new Namespace( "", SASL_NAMESPACE ) ) );
         for (String mech : getSupportedMechanisms()) {
+            if (mech.equals("EXTERNAL")) {
+                boolean trustedCert = false;
+                if (session.isSecure()) {
+                    final LocalClientSession localClientSession = (LocalClientSession)session;
+                    final Connection connection = localClientSession.getConnection();
+                    final KeyStore keyStore = connection.getConfiguration().getIdentityStore().getStore();
+                    final KeyStore trustStore = connection.getConfiguration().getTrustStore().getStore();
+                    final X509Certificate trusted = CertificateManager.getEndEntityCertificate(connection.getPeerCertificates(), keyStore, trustStore);
+                    if (trusted != null) {
+                        trustedCert = true;
+                    }
+                }
+                if (trustedCert == false) {
+                    continue; // Do not offer EXTERNAL.
+                }
+            }
             final Element mechanism = result.addElement("mechanism");
             mechanism.setText(mech);
         }

@@ -1622,7 +1622,7 @@ public class PubSubPersistenceManager {
                 	item.setPayloadXML(rs.getString(4));
                 }
                 if (rs.getString(5) != null) {
-                    item.setSecurityLabelXML(rs.getString(4));
+                    item.setSecurityLabelXML(rs.getString(5));
                 }
                 // Add the published item to the node
 				if (descending)

@@ -82,7 +82,7 @@ public class IQMixHandler extends IQHandler {
             leaveIQ.setTo(channel.getValue());
             leaveIQ.setFrom(packet.getFrom().toBareJID());
             // should have same id
-            leaveIQ.setID(packet.getID());
+            leaveIQ.setID(packet.getID() + "-XXX");
 
             leaveIQ.setChildElement(child);
 
@@ -94,7 +94,8 @@ public class IQMixHandler extends IQHandler {
         if (isFromMixService) {
             Log.info("Got response from mix service, forwarding to client: " + packet.toString());
             try {
-                String key = packet.getTo() + "!" + packet.getID();
+                String originalID = packet.getID().substring(0, packet.getID().length() - 4);
+                String key = packet.getTo() + "!" + originalID;
                 if (!requests.containsKey(key)) {
                     Log.info("No outbound request, so ignoring");
                     return null;
@@ -106,11 +107,14 @@ public class IQMixHandler extends IQHandler {
                 Element reply = packet.getElement().createCopy();
                 IQ replyIQ = new IQ(reply);
                 replyIQ.setTo(clientJID);
+                replyIQ.setID(originalID);
+
                 // should come from the "mix agent", i.e. bare jid
                 Log.info("Override from", clientJID.toBareJID());
                 replyIQ.setFrom(clientJID.toBareJID());
+
                 Log.info("Sending reply" + replyIQ.toString());
-                xmppserver.getPacketDeliverer().deliver(replyIQ);
+                xmppserver.getPacketRouter().route(replyIQ);
 
                 if(replyIQ.getType() == IQ.Type.result) {
                     if (isJoin) {

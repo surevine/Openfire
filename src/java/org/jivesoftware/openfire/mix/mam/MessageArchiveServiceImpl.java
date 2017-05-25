@@ -84,7 +84,7 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
 					if (outboundLabel != null) {
 						msg.addExtension(outboundLabel);
 					}
-					router.route(result.formatMessageResponse(queryIQ));
+					router.route(msg);
 				}
 
 			} else if (query instanceof CountQuery) {

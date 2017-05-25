@@ -5,6 +5,10 @@ import java.util.List;
 
 import org.dom4j.Element;
 import org.jivesoftware.openfire.PacketRouter;
+import org.jivesoftware.openfire.XMPPServer;
+import org.jivesoftware.openfire.labelling.AccessControlDecisionFunction;
+import org.jivesoftware.openfire.labelling.SecurityLabel;
+import org.jivesoftware.openfire.labelling.SecurityLabelException;
 import org.jivesoftware.openfire.mix.mam.repository.CountQuery;
 import org.jivesoftware.openfire.mix.mam.repository.MamQueryFactory;
 import org.jivesoftware.openfire.mix.mam.repository.MixChannelArchiveRepository;
@@ -12,10 +16,14 @@ import org.jivesoftware.openfire.mix.mam.repository.Query;
 import org.jivesoftware.openfire.mix.mam.repository.QueryFactory;
 import org.jivesoftware.openfire.mix.mam.repository.ResultSetQuery;
 import org.jivesoftware.openfire.mix.model.MixChannelMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
+import org.xmpp.packet.Message;
 
 public class MessageArchiveServiceImpl implements MessageArchiveService {
+	private static final Logger Log = LoggerFactory.getLogger(ArchivedMixChannelMessage.class);
 
 	private MixChannelArchiveRepository repository;
 
@@ -51,6 +59,19 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
 
 					ArchivedMixChannelMessage result = iter.next();
 
+					AccessControlDecisionFunction acdf = XMPPServer.getInstance().getAccessControlDecisionFunction();
+					SecurityLabel outboundLabel = null;
+					if (acdf != null) {
+						SecurityLabel archiveLabel = result.getSecurityLabel();
+						String clearances = acdf.getClearance(queryIQ.getFrom().asBareJID());
+						try {
+							outboundLabel = acdf.check(clearances, archiveLabel, queryIQ.getFrom().asBareJID());
+						} catch (SecurityLabelException e) {
+							Log.warn("Discarding MAM result due to label violation", e);
+							continue;
+						}
+					}
+
 					// Capture ID of first
 					if (first == null) {
 						first = result.getId();
@@ -58,6 +79,10 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
 
 					if (!iter.hasNext()) {
 						last = result.getId();
+					}
+					Message msg = result.formatMessageResponse(queryIQ);
+					if (outboundLabel != null) {
+						msg.addExtension(outboundLabel);
 					}
 					router.route(result.formatMessageResponse(queryIQ));
 				}

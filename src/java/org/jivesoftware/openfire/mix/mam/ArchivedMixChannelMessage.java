@@ -22,6 +22,7 @@ import org.dom4j.Element;
 import org.dom4j.QName;
 import org.dom4j.io.SAXReader;
 import org.hibernate.annotations.GenericGenerator;
+import org.jivesoftware.openfire.labelling.SecurityLabel;
 import org.jivesoftware.openfire.mix.mam.repository.TimeBasedChannelQuery;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannelMessage;
@@ -131,6 +132,18 @@ public class ArchivedMixChannelMessage {
 
 	public void setStanza(String stanza) {
 		this.stanza = stanza;
+	}
+
+	public SecurityLabel getSecurityLabel() {
+		try {
+			Document stanzaDoc = DocumentHelper.parseText(stanza);
+			Element stanzaElement = stanzaDoc.getRootElement();
+			Element securityLabelElement = stanzaElement.element(SecurityLabel.QNAME);
+			return new SecurityLabel(securityLabelElement);
+		} catch (Exception e) {
+			Log.error("Failed to parse Stanza XML", e);
+		}
+		return null;
 	}
 
 	public String getChannel() {

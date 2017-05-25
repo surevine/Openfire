@@ -12,6 +12,7 @@ import org.xmpp.packet.PacketExtension;
 public class SecurityLabel extends PacketExtension {
     public static final String NAMESPACE = "urn:xmpp:sec-label:0";
     public static final String NAME = "securitylabel";
+    public static final QName QNAME = QName.get(NAME, NAMESPACE);
     public SecurityLabel(Element el) {
         super(el);
         if (!el.getNamespaceURI().equals(NAMESPACE)) {
@@ -48,7 +49,7 @@ public class SecurityLabel extends PacketExtension {
     }
 
     static {
-        registeredExtensions.put(QName.get(NAME, NAMESPACE), SecurityLabel.class);
+        registeredExtensions.put(QNAME, SecurityLabel.class);
     }
 
 }

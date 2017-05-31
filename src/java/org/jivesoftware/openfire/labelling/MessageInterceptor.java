@@ -98,7 +98,9 @@ public class MessageInterceptor implements PacketInterceptor {
                             Element newItem = newItems.addElement("item");
                             newItem.addAttribute("id", id);
                             newItem.add(payload.createCopy());
-                            newItem.add(newLabel.getElement());
+                            if (newLabel != null) {
+                                newItem.add(newLabel.getElement());
+                            }
                         } catch (SecurityLabelException e) {
                             Log.warn("Pubsub item failed ACDF check: ", e);
                         }

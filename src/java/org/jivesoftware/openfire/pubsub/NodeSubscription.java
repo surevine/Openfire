@@ -815,6 +815,16 @@ public class NodeSubscription {
         if (!canSendPublicationEvent(publishedItem.getNode(), publishedItem)) {
             return;
         }
+        SecurityLabel securityLabel = publishedItem.getSecurityLabel();
+        // Just drop this if it doesn't pass ACDF:
+        AccessControlDecisionFunction acdf = XMPPServer.getInstance().getAccessControlDecisionFunction();
+        if (acdf != null) {
+            try {
+                securityLabel = acdf.check(acdf.getClearance(owner), securityLabel, owner);
+            } catch (SecurityLabelException e) {
+                return;
+            }
+        }
         // Send event notification to the subscriber
         Message notification = new Message();
         Element event = notification.getElement()
@@ -835,6 +845,10 @@ public class NodeSubscription {
         // Include date when published item was created
         notification.getElement().addElement("delay", "urn:xmpp:delay")
                 .addAttribute("stamp", XMPPDateTimeFormat.format(publishedItem.getCreationDate()));
+        // Add security label if present
+        if (securityLabel != null) {
+            notification.addExtension(securityLabel);
+        }
         // Send the event notification to the subscriber
 		node.getService().sendNotification(node, notification, jid);
     }

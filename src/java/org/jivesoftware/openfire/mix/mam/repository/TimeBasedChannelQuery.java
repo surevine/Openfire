@@ -27,7 +27,7 @@ public class TimeBasedChannelQuery extends AbstractResultSetQuery {
 			}
 			
 			if (params.containsKey("end")) {
-				start = sdf.parse(params.get("end"));				
+				end = sdf.parse(params.get("end"));
 			}
 			
 		} catch (ParseException e) {
@@ -42,7 +42,7 @@ public class TimeBasedChannelQuery extends AbstractResultSetQuery {
 
 	@Override
 	public List<ArchivedMixChannelMessage> execute() {
-		if (end == null) {
+		if (end != null) {
 			if  (limit == 0) {
 				return repository.findTimeBoundMessagesByChannel(channelName, start, end);	
 			} else {

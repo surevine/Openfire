@@ -7,11 +7,6 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 
 public class WithQuery extends AbstractResultSetQuery {
-
-	private MixChannelArchiveRepository repository;
-
-	private JID channel;
-
 	private String term;
 
 	public WithQuery(MixChannelArchiveRepository repository, IQ query) {
@@ -27,9 +22,9 @@ public class WithQuery extends AbstractResultSetQuery {
 	@Override
 	public List<ArchivedMixChannelMessage> execute() {
 		if (limit == 0) {
-			return repository.findMessagesByChannelWith(this.channel.getNode(), this.term);	
+			return repository.findMessagesByChannelWith(channelName, this.term);
 		} else {
-			return repository.findLimitedMessagesByChannelWith(this.channel.getNode(), this.term, limit);	
+			return repository.findLimitedMessagesByChannelWith(channelName, this.term, limit);
 
 		}
 		

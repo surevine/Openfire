@@ -1,21 +1,20 @@
 package org.jivesoftware.openfire.mix.mam.repository;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
 import org.jivesoftware.openfire.mix.mam.ArchivedMixChannelMessage;
+import org.jivesoftware.util.XMPPDateTimeFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xmpp.packet.IQ;
 
 public class TimeBasedChannelQuery extends AbstractResultSetQuery {
 
-	public static final String MAM_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssZ";
-
-	private SimpleDateFormat sdf = new SimpleDateFormat(MAM_DATE_FORMAT);
+	private final XMPPDateTimeFormat xmppDateTimeFormat = new XMPPDateTimeFormat();
 
 	private Date start;
-
 	private Date end;
 
 	public TimeBasedChannelQuery(MixChannelArchiveRepository mar, IQ query) {
@@ -23,11 +22,11 @@ public class TimeBasedChannelQuery extends AbstractResultSetQuery {
 
 		try {
 			if (params.containsKey("start")) {
-				start = sdf.parse(params.get("start"));				
+				start = xmppDateTimeFormat.parseString(params.get("start"));
 			}
 			
 			if (params.containsKey("end")) {
-				end = sdf.parse(params.get("end"));
+				end = xmppDateTimeFormat.parseString(params.get("end"));
 			}
 			
 		} catch (ParseException e) {

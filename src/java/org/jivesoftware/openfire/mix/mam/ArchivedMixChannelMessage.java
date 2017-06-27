@@ -1,7 +1,6 @@
 package org.jivesoftware.openfire.mix.mam;
 
 import java.io.StringReader;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -33,6 +32,7 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Message.Type;
 import org.xmpp.packet.Packet;
+import org.jivesoftware.util.XMPPDateTimeFormat;
 
 @Entity
 @Table(name = "ofArchivedMixChannelMessage")
@@ -61,9 +61,6 @@ public class ArchivedMixChannelMessage {
 	private Date archiveTimestamp;
 
 	private String fromJID;
-	
-	@Transient
-	private SimpleDateFormat sdf = new SimpleDateFormat(TimeBasedChannelQuery.MAM_DATE_FORMAT);
 
 	public ArchivedMixChannelMessage() {
 	}
@@ -182,7 +179,7 @@ public class ArchivedMixChannelMessage {
 		// add <forwarded> and <delay>
 		Element forwarded = result.addElement("forwarded", "urn:xmpp:forward:0");
 		Element delay = forwarded.addElement("delay", "urn:xmpp:delay");
-		delay.addAttribute("stamp", sdf.format(this.getArchiveTimestamp()));
+		delay.addAttribute("stamp", XMPPDateTimeFormat.format(this.getArchiveTimestamp()));
 
 		// parse stanza from db, set id, and to
 		String stanza = this.getStanza();

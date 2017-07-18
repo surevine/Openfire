@@ -16,6 +16,7 @@ import org.jivesoftware.openfire.mix.model.MixChannelMessageImpl;
 import org.jivesoftware.openfire.mix.model.MixChannelParticipant;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
@@ -107,6 +108,7 @@ public class JpaMixChannelArchiveRepositoryImplTest {
 	}
 	
 	@Test
+    @Ignore
 	public void thatRetractionRemovesMessage() {
 
 		String id = fixture.archive(mcm);

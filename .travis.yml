@@ -1,8 +1,8 @@
 sudo: false
 
-before_script:
- - export ANT_OPTS="-Xms1024M"
- - echo $ANT_OPTS
+env:
+  global:
+  - ANT_OPTS=-Xmx1024m
 
 language: java
 jdk:

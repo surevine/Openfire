@@ -29,7 +29,9 @@ import org.jivesoftware.database.EmbeddedConnectionProvider;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixService;
 import org.jivesoftware.openfire.mix.MixXmppServiceImpl;
+import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityPreference;
 import org.jivesoftware.openfire.mix.exception.CannotUpdateMixChannelSubscriptionException;
+import org.jivesoftware.openfire.mix.mam.MessageArchiveService;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.model.LocalMixChannelParticipant;
 import org.jivesoftware.openfire.mix.model.MixChannel;
@@ -62,11 +64,12 @@ public class MixPersistenceManagerImplTest {
 	final MixXmppServiceImpl mockXmppService = mockery.mock(MixXmppServiceImpl.class);
 	final MixService mockMixService = mockery.mock(MixService.class);
 	final IdentityManager testIdentityManager = new PKGenerator();
+	final MessageArchiveService mockMAS = mockery.mock(MessageArchiveService.class);
 
 	public MixPersistenceManagerImplTest() {
 
 		mixPersistenceManager = new MixPersistenceManagerImpl(jiveProperties, mockXmppService, testIdentityManager,
-				testIdentityManager, testIdentityManager);
+				testIdentityManager, testIdentityManager, mockMAS);
 		
 		mockery.checking(new Expectations() {
 			{
@@ -84,7 +87,7 @@ public class MixPersistenceManagerImplTest {
 
 		System.out.println("Database script dir is " + System.getProperty(DATABASE_UPGRADE_DIR));
 		
-		String scriptDir = System.getProperty(DATABASE_UPGRADE_DIR) + File.separator + "24" + File.separator;
+		String scriptDir = System.getProperty(DATABASE_UPGRADE_DIR) + File.separator + "27" + File.separator;
 		Path hsqldbDirPath = Paths.get(scriptDir + File.separator + "hsqldb");
 		Files.createDirectory(hsqldbDirPath);
 		JiveGlobals.setHomeDirectory(scriptDir + File.separator + "hsqldb");
@@ -106,7 +109,7 @@ public class MixPersistenceManagerImplTest {
 
 	@AfterClass
 	public static void tidyUp() {
-		Path hsqldbDirPath = Paths.get(System.getProperty(DATABASE_UPGRADE_DIR) + File.separator + "24" + File.separator + "hsqldb");
+		Path hsqldbDirPath = Paths.get(System.getProperty(DATABASE_UPGRADE_DIR) + File.separator + "27" + File.separator + "hsqldb");
 		deleteFilesInFolder(hsqldbDirPath.toFile());
 	}
 
@@ -146,7 +149,7 @@ public class MixPersistenceManagerImplTest {
 		stmt.setString(3, dateStr);
 		stmt.setString(4, "CHANNEL_NAME");
 		stmt.setInt(5, 0);
-		stmt.setString(6, "test_node");
+		stmt.setString(6, "testnode");
 
 		stmt.execute();
 
@@ -159,6 +162,7 @@ public class MixPersistenceManagerImplTest {
 				will(returnValue("shakespeare.example.com"));
 				allowing(mockMixService).getId();
 				will(returnValue(1L));
+				allowing(mockMixService).getArchive();
 			}
 		});
 
@@ -170,7 +174,7 @@ public class MixPersistenceManagerImplTest {
 	public void testSavingAndDeletingMixChannel() throws MixPersistenceException, SQLException {
 
 		MixChannel mc = new LocalMixChannel(mockMixService, TEST_MIX_CHANNEL_NAME,
-				TEST_USERS_JID, mockXmppService, mixPersistenceManager);
+				TEST_USERS_JID, mockXmppService, mixPersistenceManager, mockMAS);
 		mc = mixPersistenceManager.save(mc);
 		assertNotNull(mc);
 		assertNotNull(mc.getID());
@@ -202,14 +206,14 @@ public class MixPersistenceManagerImplTest {
 
 		// Create a channel
 		MixChannel mc = mixPersistenceManager.save(new LocalMixChannel(mockMixService, TEST_MIX_CHANNEL_NAME,
-				new JID(TEST_USER, TEST_SERVICE_DOMAIN, null), mockXmppService, mixPersistenceManager));
+				new JID(TEST_USER, TEST_SERVICE_DOMAIN, null), mockXmppService, mixPersistenceManager, mockMAS));
 
 		Set<String> subscriptions = new HashSet<String>(
 				Arrays.asList("urn:xmpp:mix:nodes:messages", "urn:xmpp:mix:nodes:presence"));
 
 		// Save a participant
 		MixChannelParticipant toPersist = new LocalMixChannelParticipant(TEST_USER_PROXY_JID, TEST_USERS_JID, mc,
-				subscriptions, null);
+				subscriptions, ChannelJidVisibilityPreference.NO_PREFERENCE, null);
 		toPersist = mixPersistenceManager.save(toPersist);
 
 		Connection conn = DbConnectionManager.getConnection();
@@ -234,14 +238,14 @@ public class MixPersistenceManagerImplTest {
 	public void thatParticipantsSubscriptionsAreUpdated() throws MixPersistenceException, CannotUpdateMixChannelSubscriptionException {
 		// Create a channel
 		MixChannel mc = mixPersistenceManager.save(new LocalMixChannel(mockMixService, TEST_MIX_CHANNEL_NAME,
-				new JID(TEST_USER, TEST_SERVICE_DOMAIN, null), mockXmppService, mixPersistenceManager));
+				new JID(TEST_USER, TEST_SERVICE_DOMAIN, null), mockXmppService, mixPersistenceManager, mockMAS));
 		
 		Set<String> subscriptions = new HashSet<String>(
 				Arrays.asList("urn:xmpp:mix:nodes:messages", "urn:xmpp:mix:nodes:participants"));
 
 		// Save a participant
 		MixChannelParticipant toPersist = new LocalMixChannelParticipant(TEST_USER_PROXY_JID, TEST_USERS_JID, mc,
-				subscriptions, null);
+				subscriptions, ChannelJidVisibilityPreference.NO_PREFERENCE, null);
 		toPersist = mixPersistenceManager.save(toPersist);
 		
 		assertEquals(2, toPersist.getSubscriptions().size());

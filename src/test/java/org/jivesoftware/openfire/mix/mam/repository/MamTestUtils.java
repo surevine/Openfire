@@ -1,19 +1,13 @@
 package org.jivesoftware.openfire.mix.mam.repository;
 
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.UUID;
 
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
-import org.jivesoftware.openfire.mix.mam.ArchivedMixChannelMessage;
 import org.jivesoftware.openfire.mix.mam.MessageArchiveService;
-import org.jivesoftware.openfire.mix.mam.MessageArchiveServiceImplTest;
+import org.jivesoftware.util.XMPPDateTimeFormat;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
-import org.xmpp.packet.Message;
-import org.xmpp.packet.Message.Type;
 
 public class MamTestUtils {
 	
@@ -31,21 +25,22 @@ public class MamTestUtils {
 
 	public static final JID MIX_CHANNEL_JID = new JID(TEST_MIX_CHANNEL_NAME, TEST_MIX_DOMAIN, null);
 
+	private static final XMPPDateTimeFormat XMPP_DATE_TIME_FORMAT = new XMPPDateTimeFormat();
+
 	public static IQ getTimeBoundQuery() {
 
 		Calendar today = Calendar.getInstance();
 		Calendar yesterday = Calendar.getInstance();
 		yesterday.add(Calendar.DAY_OF_MONTH, -1);
-		
-		SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-DD'T'HH:mm:ssZ");
+
 		
 		IQ iq = MamTestUtils.getBaseQuery();
 		Element x = iq.getChildElement().addElement("x", "jabber:x:data");
 		x.addAttribute("type", "submit");
 		Element field = x.addElement("field").addAttribute("var", "FORM_TYPE").addAttribute("type", "hidden");
 		field.addElement("value").addText(MessageArchiveService.MAM_NAMESPACE);
-		x.addElement("field").addAttribute("var", "start").addElement("value").addText(sdf.format(yesterday.getTime()));
-		x.addElement("field").addAttribute("var", "end").addElement("value").addText(sdf.format(today.getTime()));
+		x.addElement("field").addAttribute("var", "start").addElement("value").addText(MamTestUtils.XMPP_DATE_TIME_FORMAT.format(yesterday.getTime()));
+		x.addElement("field").addAttribute("var", "end").addElement("value").addText(MamTestUtils.XMPP_DATE_TIME_FORMAT.format(today.getTime()));
 		
 		return iq;
 	}
@@ -82,38 +77,13 @@ public class MamTestUtils {
 		Calendar yesterday = Calendar.getInstance();
 		yesterday.add(Calendar.DAY_OF_MONTH, -1);
 		
-		SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-DD'T'HH:mm:ssZ");
-		
 		IQ iq = MamTestUtils.getBaseQuery();
 		Element x = iq.getChildElement().addElement("x", "jabber:x:data");
 		x.addAttribute("type", "submit");
 		Element field = x.addElement("field").addAttribute("var", "FORM_TYPE").addAttribute("type", "hidden");
 		field.addElement("value").addText(MessageArchiveService.MAM_NAMESPACE);
-		x.addElement("field").addAttribute("var", "start").addElement("value").addText(sdf.format(yesterday.getTime()));
+		x.addElement("field").addAttribute("var", "start").addElement("value").addText(MamTestUtils.XMPP_DATE_TIME_FORMAT.format(yesterday.getTime()));
 		
 		return iq;
-	}
-	
-
-	public static ArchivedMixChannelMessage getTestMessage() {
-		return getTestMessage(TEST_USERS_JID);
-	}
-	
-	public static ArchivedMixChannelMessage getTestMessage(JID from) {
-		Message msg = new Message();
-		msg.setBody(
-				"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi ligula erat, ullamcorper at ullamcorper e");
-		msg.setType(Type.groupchat);
-		msg.setSubject("Lorem ipsum");
-		msg.setTo(MIX_CHANNEL_JID);
-		msg.setFrom(from);
-
-		ArchivedMixChannelMessage amcm = new ArchivedMixChannelMessage(msg);
-		
-		// Both of these below are performed by the database, but need to be done here.
-		amcm.setId(UUID.randomUUID().toString());
-		amcm.setArchiveTimestamp(new Date());
-
-		return amcm;	
 	}
 }

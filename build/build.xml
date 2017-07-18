@@ -239,6 +239,12 @@
 
     <patternset id="test.sources">
         <include name="**/*Test.java"/>
+        <include name="**/*Utils.java"/>
+        <exclude name="**/CheckChainTrustedTest.java" if="skipResourceIntensiveTests"/>
+    </patternset>
+
+    <patternset id="tests">
+        <include name="**/*Test.java"/>
         <exclude name="**/CheckChainTrustedTest.java" if="skipResourceIntensiveTests"/>
     </patternset>
 
@@ -740,7 +746,7 @@
 	
 	            <batchtest todir="${test.results.dest.dir}">
 	                <fileset dir="${src.test.java.dir}">
-	                    <patternset refid="test.sources"/>
+	                    <patternset refid="tests"/>
 	                </fileset>
 	            </batchtest>
 	        </junit>

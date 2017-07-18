@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 
+import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityPreference;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.junit.Test;
@@ -48,7 +49,7 @@ public class LocalMixChannelParticipantTest {
 	    	will(returnValue(new HashSet<String>(Arrays.asList(SUPPORTED_SUBSCRIPTIONS))));
 	    }});
 		
-		LocalMixChannelParticipant fixture = new LocalMixChannelParticipant(PROXY_CHANNEL_JID, TEST_USERS_JID, mockMixChannel, null);
+		LocalMixChannelParticipant fixture = new LocalMixChannelParticipant(PROXY_CHANNEL_JID, TEST_USERS_JID, mockMixChannel, ChannelJidVisibilityPreference.NO_PREFERENCE, null);
 		
 		assertEquals(PROXY_CHANNEL_JID, fixture.getJid());
 	}
@@ -61,7 +62,7 @@ public class LocalMixChannelParticipantTest {
 	    	will(returnValue(new HashSet<String>(Arrays.asList(SUPPORTED_SUBSCRIPTIONS))));
 	    }});
 		
-		LocalMixChannelParticipant fixture = new LocalMixChannelParticipant(PROXY_CHANNEL_JID, TEST_USERS_JID, mockMixChannel, new HashSet<String>(Arrays.asList(EXTENDED_SUBSCRIPTIONS)), null);
+		LocalMixChannelParticipant fixture = new LocalMixChannelParticipant(PROXY_CHANNEL_JID, TEST_USERS_JID, mockMixChannel, new HashSet<String>(Arrays.asList(EXTENDED_SUBSCRIPTIONS)), ChannelJidVisibilityPreference.NO_PREFERENCE,null);
 		
 		assertEquals(1, fixture.getSubscriptions().size());
 	}

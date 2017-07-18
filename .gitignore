@@ -5,6 +5,7 @@ build/projects/test
 
 # Ignore Intellij Idea project files
 *.iml
+*.iws
 *.ipr
 .idea
 atlassian-ide-plugin.xml

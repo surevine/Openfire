@@ -1,4 +1,9 @@
 sudo: false
+
+before_script:
+ - export ANT_OPTS="-Xms1024M"
+ - echo $ANT_OPTS
+
 language: java
 jdk:
   - oraclejdk8
@@ -7,6 +12,5 @@ env:
   - SCRIPT="ant -Dhalt.on.plugin.error=true -f build/build.xml clean test"
   - SCRIPT="ant -Dhalt.on.plugin.error=true -f build/build.xml clean openfire"
   - SCRIPT="ant -Dhalt.on.plugin.error=true -f build/build.xml clean plugins"
-  - SCRIPT="mvn clean verify"
 script: $SCRIPT
 install: true

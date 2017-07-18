@@ -728,7 +728,7 @@
         <!-- Run jUnit -->
         <mkdir dir="${test.results.dest.dir}"/>
     	<jacoco:coverage destfile="${test.results.dest.dir}/jacoco.exec">
-	        <junit printsummary="yes" haltonfailure="yes" fork="yes" forkmode="once" dir="${test.dest.dir}" includeantruntime="false">
+	        <junit printsummary="yes" haltonfailure="yes" fork="yes" forkmode="once" dir="${test.dest.dir}" includeantruntime="false" showoutput="true">
 	        	
 		    	<sysproperty key="openfireHome" value="${target.openfireHome}"/>
 	        	<sysproperty key="databaseUpgradeDir" value="${database.upgrade.dir}"/>

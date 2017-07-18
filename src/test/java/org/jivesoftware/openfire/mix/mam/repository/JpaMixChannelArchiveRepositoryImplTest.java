@@ -108,7 +108,6 @@ public class JpaMixChannelArchiveRepositoryImplTest {
 	}
 	
 	@Test
-    @Ignore
 	public void thatRetractionRemovesMessage() {
 
 		String id = fixture.archive(mcm);

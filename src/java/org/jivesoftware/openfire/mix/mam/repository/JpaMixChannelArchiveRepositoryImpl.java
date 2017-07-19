@@ -11,12 +11,18 @@ import javax.persistence.Persistence;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
+import org.jivesoftware.openfire.XMPPServer;
+import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.mam.ArchivedMixChannelMessage;
 import org.jivesoftware.openfire.mix.model.MixChannelMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xmpp.packet.Message;
 import org.jivesoftware.database.DbConnectionManager;
 
 public class JpaMixChannelArchiveRepositoryImpl implements MixChannelArchiveRepository {
+
+	private static final Logger logger = LoggerFactory.getLogger(JpaMixChannelArchiveRepositoryImpl.class);
 	
 	private static final String END_PARAM = "end";
 	private static final String START_PARAM = "start";
@@ -31,7 +37,6 @@ public class JpaMixChannelArchiveRepositoryImpl implements MixChannelArchiveRepo
 	private static final String SELECT_BY_CHANNEL = "selectByChannel";
 	
 	private EntityManager entityManager;
-	private EntityTransaction tx;
 	
 	public JpaMixChannelArchiveRepositoryImpl(Map<String,String> config) {
 		this("mam", config);
@@ -40,7 +45,6 @@ public class JpaMixChannelArchiveRepositoryImpl implements MixChannelArchiveRepo
 	public JpaMixChannelArchiveRepositoryImpl(String pu, Map<String,String> config) {
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory(pu, config);
 		entityManager = emf.createEntityManager();
-		tx = entityManager.getTransaction();
 		
 		Query selectByChannel = this.entityManager.createQuery("SELECT a FROM ArchivedMixChannelMessage a WHERE a.channel LIKE :channel");
 		this.entityManager.getEntityManagerFactory().addNamedQuery(SELECT_BY_CHANNEL, selectByChannel);
@@ -67,14 +71,28 @@ public class JpaMixChannelArchiveRepositoryImpl implements MixChannelArchiveRepo
 		return entityManager.find(ArchivedMixChannelMessage.class, id);
 	}
 	
-	public String archive(MixChannelMessage archive) {
-		
+	public String archive(MixChannelMessage archive) throws MixPersistenceException {
+
 		ArchivedMixChannelMessage tmp = new ArchivedMixChannelMessage(archive);
-		
-		tx.begin();
-		entityManager.persist(tmp);
-		tx.commit();
-		
+
+		EntityTransaction transaction = entityManager.getTransaction();
+		try {
+
+			transaction.begin();
+			entityManager.persist(tmp);
+			transaction.commit();
+
+		} catch (Exception e) {
+
+		    logger.error("Unable to persist message", e);
+
+			if (transaction.isActive()) {
+				transaction.rollback();
+			}
+
+			throw new MixPersistenceException("Unable to persist", e);
+		}
+
 		return tmp.getId();
 	}
 
@@ -103,10 +121,26 @@ public class JpaMixChannelArchiveRepositoryImpl implements MixChannelArchiveRepo
 		return nq.getResultList();
 	}
 
-	public void retract(String id) {
-		tx.begin();
-		entityManager.remove(this.findById(id));
-		tx.commit();
+	public void retract(String id) throws MixPersistenceException {
+
+		EntityTransaction transaction = entityManager.getTransaction();
+		try {
+
+			transaction.begin();
+			entityManager.remove(this.findById(id));
+			transaction.commit();
+
+		} catch (Exception e) {
+
+		    logger.error("Unable to retract message with ID " + id, e);
+			if (transaction.isActive()) {
+				transaction.rollback();
+			}
+
+            throw new MixPersistenceException("Unable to retract message with id " + id, e);
+
+		}
+
 	}
 
 	public List<ArchivedMixChannelMessage> findMessagesByChannelAfter(String channel, String after) {

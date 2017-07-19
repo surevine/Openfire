@@ -3,6 +3,7 @@ package org.jivesoftware.openfire.mix.mam.repository;
 import java.util.Date;
 import java.util.List;
 
+import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.mam.ArchivedMixChannelMessage;
 import org.jivesoftware.openfire.mix.model.MixChannelMessage;
 
@@ -14,7 +15,7 @@ public interface MixChannelArchiveRepository {
 	 * @param archive
 	 * @return MAM ID
 	 */
-	String archive(MixChannelMessage archive);
+	String archive(MixChannelMessage archive) throws MixPersistenceException;
 	
 	/**
 	 * Retrieve by the primary key.
@@ -52,7 +53,7 @@ public interface MixChannelArchiveRepository {
 	 * 
 	 * @param id MAM ID of message to be retracted.
 	 */
-	void retract(String id);
+	void retract(String id) throws MixPersistenceException;
 
 	List<ArchivedMixChannelMessage>  findMessagesByChannelWith(String mixChannelJid, String term);
 

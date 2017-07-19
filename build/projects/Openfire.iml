@@ -1,36 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module relativePaths="true" type="JAVA_MODULE" version="4">
-  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_5" inherit-compiler-output="false">
-    <output url="file://$MODULE_DIR$/../../make/work/classes" />
-    <exclude-output />
+  <component name="FacetManager">
+    <facet type="jpa" name="JPA">
+      <configuration>
+        <setting name="validation-enabled" value="true" />
+        <setting name="provider-name" value="Hibernate" />
+        <datasource-mapping>
+          <factory-entry name="Entities" />
+        </datasource-mapping>
+      </configuration>
+    </facet>
+  </component>
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_7">
     <exclude-exploded />
+    <output url="file://$MODULE_DIR$/../../make/work/classes" />
     <output-test url="file://$MODULE_DIR$/test/classes" />
+    <exclude-output />
     <content url="file://$MODULE_DIR$/../..">
-      <sourceFolder url="file://$MODULE_DIR$/../../src/i18n" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../src/java" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/../../src/test/java" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/../../src/test/resources" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/../../src/test/throttletest/src" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/../../test/unit" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../../src/i18n" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../../src/test/java" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/../../make" />
       <excludeFolder url="file://$MODULE_DIR$/../../target" />
       <excludeFolder url="file://$MODULE_DIR$/../../work" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/ant-contrib.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/merge/jstl.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/ant/ant-contrib.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -48,42 +49,6 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/commons-el.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/jasper-compiler.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/ant-subdirtask.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/merge/commons-logging.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
           <root url="jar://$MODULE_DIR$/../lib/dist/hsqldb.jar!/" />
         </CLASSES>
         <JAVADOC />
@@ -93,7 +58,7 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/xmltask.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/ant/xmltask.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -103,15 +68,6 @@
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/../lib/merge/xpp3.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/dist/servlet.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -147,24 +103,6 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/jasper-runtime.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/ant.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
           <root url="jar://$MODULE_DIR$/../lib/dist/mysql.jar!/" />
         </CLASSES>
         <JAVADOC />
@@ -175,15 +113,6 @@
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/../lib/merge/standard.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/merge/jetty.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -228,15 +157,6 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/dist/jdic.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
           <root url="jar://$MODULE_DIR$/../lib/merge/jzlib.jar!/" />
         </CLASSES>
         <JAVADOC />
@@ -247,15 +167,6 @@
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/../lib/i4jruntime.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/dist/bouncycastle.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -291,15 +202,6 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/merge/jsp-api.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
           <root url="jar://$MODULE_DIR$/../lib/merge/stringprep.jar!/" />
         </CLASSES>
         <JAVADOC />
@@ -315,51 +217,6 @@
         <SOURCES>
           <root url="jar://$MODULE_DIR$/../lib/merge/dbutil.jar!/" />
         </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/merge/jstun-0.6.1.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/merge/slf4j-api-1.1.0.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/merge/slf4j-simple-1.1.0.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/ant-jive-edition.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/dist/activation.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
@@ -392,24 +249,6 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/hamcrest-library.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/hamcrest-api.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
           <root url="jar://$MODULE_DIR$/../lib/objenesis.jar!/" />
         </CLASSES>
         <JAVADOC />
@@ -425,15 +264,6 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/merge/jetty-sslengine.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
@@ -443,15 +273,6 @@
         <SOURCES>
           <root url="jar://$MODULE_DIR$/../lib/src/commons-lang-sources.jar!/" />
         </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/merge/mina-filter-ssl.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library" exported="">
@@ -511,17 +332,281 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$APPLICATION_HOME_DIR$/lib/javaee.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/dist/hibernate-commons-annotations-5.0.1.Final.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntryProperties />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/dist/hibernate-core-5.0.5.Final.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/dist/hibernate-entitymanager-5.0.5.Final.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/dist/hibernate-jpa-2.1-api-1.0.0.Final.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/merge/tinder.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/merge/slf4j-api.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/merge/libidn.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/merge/servlet-api.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/dist/bcprov-jdk15on.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/merge/org.mortbay.jasper.apache-jsp.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/merge/commons-pool2.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/javax-websocket-client-impl.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/javax-websocket-server-impl.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/javax.websocket-api.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/jcl-over-slf4j.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/jetty-annotations.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/jetty-continuation.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/jetty-http.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/jetty-io.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/jetty-jmx.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/jetty-plus.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/jetty-security.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/jetty-server.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/jetty-servlet.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/jetty-servlets.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/jetty-webapp.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/jetty-xml.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/jsmpp.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/log4j.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/mina-integration-beans.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/mina-integration-jmx.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/mina-integration-ognl.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/ognl.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/org.apache.taglibs.taglibs-standard-impl.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/org.apache.taglibs.taglibs-standard-spec.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/org.eclipse.jetty.apache-jsp.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/org.eclipse.jetty.orbit.org.eclipse.jdt.core.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/org.mortbay.jasper.apache-el.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/spdy-client.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/spdy-core.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/spdy-http-common.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/spdy-http-server.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/spdy-server.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/websocket-api.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/websocket-client.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/websocket-common.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/websocket-server.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/websocket-servlet.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/concurrentlinkedhashmap-lru-1.0_jdk5.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/merge/javassist.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/../lib/merge/stringprep.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/dist/bcpkix-jdk15on.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/ant/ant-junit.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/ant/ant-junit4.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/ant/jacocoant.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/ant/jugbbant-1.7.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/ant/slf4j-simple.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/ant/xalan.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/tools/apache-ant-1.9.4/lib/ant.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../src/test/throttletest/build/lib/smack.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../src/test/throttletest/build/lib/smackx.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/hamcrest-all-1.3.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/dist/jboss-logging-3.3.0.Final.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/dist/jta-1.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/dist/h2-1.4.193.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/dist/antlr-2.7.7.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ACTIVE_VCS_NAME" value="svn" />
     <option name="USE_PROJECT_VCS" value="false" />
   </component>
 </module>
-

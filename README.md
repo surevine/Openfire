@@ -1,6 +1,6 @@
 Openfire ![alt tag](https://raw.githubusercontent.com/igniterealtime/IgniteRealtime-Website/master/src/web/images/logo_openfire.gif)
 ========
-[![Build Status](https://travis-ci.org/igniterealtime/Openfire.svg?branch=master)](https://travis-ci.org/igniterealtime/Openfire)  [![Project Stats](https://www.openhub.net/p/Openfire/widgets/project_thin_badge.gif)](https://www.openhub.net/p/Openfire)
+[![Build Status](https://travis-ci.org/surevine/Openfire.svg?branch=sv-fork-2)](https://travis-ci.org/surevine/Openfire)  [![Project Stats](https://www.openhub.net/p/Openfire/widgets/project_thin_badge.gif)](https://www.openhub.net/p/Openfire)
 
 About
 -----

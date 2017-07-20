@@ -390,7 +390,8 @@ public class LocalMixChannel implements MixChannel {
 
 	@Override
 	public boolean isDestructable(JID requestor) {
-		return this.getOwner().toBareJID().equals(requestor.toBareJID()) && this.getParticipants().size() == 1 ? true : false;
+		// Size of participants used to be 1, as the owner was automatically joined, not now.
+		return this.getOwner().toBareJID().equals(requestor.toBareJID()) && this.getParticipants().size() == 0 ? true : false;
 
 	}
 

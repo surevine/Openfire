@@ -10,6 +10,7 @@ import java.util.Set;
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
+import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityPreference;
 import org.jivesoftware.openfire.mix.exception.CannotJoinMixChannelException;
 import org.jivesoftware.openfire.mix.handler.MixRequestContextImpl;
 import org.jivesoftware.openfire.mix.model.LocalMixChannelParticipant;
@@ -61,13 +62,13 @@ public class MixChannelJoinPacketHandlerTest {
 		
 		final Set<String> requestedSubscriptions = new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET));
 		IQ join = createJoinRequest(EXTENDED_NODE_SET);
-		final MixChannelParticipant mcp = new LocalMixChannelParticipant(null, TEST_USERS_JID, mockMixChannel,
-				requestedSubscriptions, null);
+		final MixChannelParticipant mcp = new LocalMixChannelParticipant(TEST_USERS_JID, TEST_USERS_JID, mockMixChannel,
+				requestedSubscriptions, ChannelJidVisibilityPreference.NO_PREFERENCE,null);
 		
 		context.checking(new Expectations() {{
 				allowing(mockMixChannel).getJID();
 
-				one(mockMixChannel).addParticipant(with(equal(TEST_USERS_JID)), with(equal(requestedSubscriptions)));
+				one(mockMixChannel).addParticipant(with(equal(TEST_USERS_JID)), with(equal(requestedSubscriptions)), with(equal(ChannelJidVisibilityPreference.NO_PREFERENCE)));
 				will(returnValue(mcp));
 		}});
 

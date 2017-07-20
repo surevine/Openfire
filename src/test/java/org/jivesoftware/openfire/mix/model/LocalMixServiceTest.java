@@ -28,9 +28,11 @@ import org.jivesoftware.openfire.disco.ServerItemsProvider;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixXmppServiceImpl;
+import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityPreference;
 import org.jivesoftware.openfire.mix.exception.CannotCreateMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotDestroyMixChannelException;
 import org.jivesoftware.openfire.mix.exception.MixChannelAlreadyExistsException;
+import org.jivesoftware.openfire.mix.mam.MessageArchiveService;
 import org.jivesoftware.openfire.mix.model.LocalMixChannel;
 import org.jivesoftware.openfire.mix.model.LocalMixService;
 import org.jivesoftware.openfire.mix.model.MixChannel;
@@ -84,7 +86,9 @@ public class LocalMixServiceTest {
 	private MixXmppServiceImpl mockXmppService;
 	
 	private PacketRouter mockRouter;
-	
+
+	private MessageArchiveService mockMAS;
+
 	@Before
 	public void setUp() throws Exception {
 		xmppServer = mockery.mock(XMPPServer.class);
@@ -101,6 +105,8 @@ public class LocalMixServiceTest {
 		iqDiscoInfoHandler = mockery.mock(IQDiscoInfoHandler.class);
 		
 		mockRouter = mockery.mock(PacketRouter.class);
+
+		mockMAS = mockery.mock(MessageArchiveService.class);
 		
 		mockery.checking(new Expectations() {{
 			allowing(xmppServerInfo).getXMPPDomain(); will(returnValue(TEST_DOMAIN));
@@ -114,10 +120,10 @@ public class LocalMixServiceTest {
 			allowing(mockRouter).route(with(any(Message.class)));
 		}});
 
-		mixServiceImpl = new LocalMixService(xmppServer, jiveProperties, TEST_SUBDOMAIN, TEST_DESCRIPTION, mockXmppService, mixPersistenceManager);
+		mixServiceImpl = new LocalMixService(xmppServer, jiveProperties, TEST_SUBDOMAIN, TEST_DESCRIPTION, mockXmppService, mixPersistenceManager, mockMAS);
 		
-		testChannelOne = new LocalMixChannel(mixServiceImpl, "channel1", TEST_SENDER_JID, mockRouter, mixPersistenceManager); 
-		testChannelTwo = new LocalMixChannel(mixServiceImpl, "channel2", TEST_SENDER_JID, mockRouter, mixPersistenceManager);
+		testChannelOne = new LocalMixChannel(mixServiceImpl, "channel1", TEST_SENDER_JID, mockRouter, mixPersistenceManager,mockMAS);
+		testChannelTwo = new LocalMixChannel(mixServiceImpl, "channel2", TEST_SENDER_JID, mockRouter, mixPersistenceManager, mockMAS);
 	}
 
 	@Test
@@ -358,7 +364,7 @@ public class LocalMixServiceTest {
 			allowing(newMixChannel).getParticipantByRealJID(TEST_SENDER_JID);
 			one(mixPersistenceManager).save(with(Matchers.<MixChannel>hasProperty("name", equal("coven"))));
 			will(returnValue(newMixChannel));
-			allowing(newMixChannel).addParticipant(TEST_SENDER_JID, Collections.<String> emptySet());
+			allowing(newMixChannel).addParticipant(TEST_SENDER_JID, Collections.<String> emptySet(), ChannelJidVisibilityPreference.NO_PREFERENCE);
 			one(mixPersistenceManager).save(with(any(MixChannelParticipant.class)));
 		}});
 		
@@ -407,9 +413,7 @@ public class LocalMixServiceTest {
 		mockery.checking(new Expectations() {{
 			one(mixPersistenceManager).save(with(any(MixChannel.class)));
 			will(returnValue(testChannelOne));
-			one(mixPersistenceManager).save(with(any(MixChannelParticipant.class)));
-			
-			one(mixPersistenceManager).delete(with(any(MixChannelParticipant.class)));
+
 			one(mixPersistenceManager).delete(with(any(MixChannel.class)));
 		}});
 		

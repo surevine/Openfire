@@ -12,8 +12,10 @@ import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.MixPersistenceManager;
 import org.jivesoftware.openfire.mix.MixService;
+import org.jivesoftware.openfire.mix.constants.ChannelJidVisibilityPreference;
 import org.jivesoftware.openfire.mix.exception.CannotJoinMixChannelException;
 import org.jivesoftware.openfire.mix.exception.CannotLeaveMixChannelException;
+import org.jivesoftware.openfire.mix.mam.MessageArchiveService;
 import org.jivesoftware.openfire.testutil.ElementMatchers;
 import org.jivesoftware.openfire.testutil.PacketMatchers;
 import org.jmock.Expectations;
@@ -58,6 +60,8 @@ public class LocalMixChannelTest {
 	final PacketRouter mockRouter = context.mock(PacketRouter.class);
 	
 	final MixPersistenceManager mockPersistenceManager = context.mock(MixPersistenceManager.class);
+
+	final MessageArchiveService mockArchiveService = context.mock(MessageArchiveService.class);
 	
 	private LocalMixChannel fixture;
 	
@@ -83,7 +87,7 @@ public class LocalMixChannelTest {
             when(test.isNot("set up"));
         }});
         
-		fixture = new LocalMixChannel(mockMixService, TEST_MIX_CHANNEL_NAME, TEST_USER1_JID, mockRouter, mockPersistenceManager);
+		fixture = new LocalMixChannel(mockMixService, TEST_MIX_CHANNEL_NAME, TEST_USER1_JID, mockRouter, mockPersistenceManager, mockArchiveService);
 	}
 	
 	@Test
@@ -94,7 +98,7 @@ public class LocalMixChannelTest {
 	    	one(mockRouter);
 	    }});
 		
-		MixChannelParticipant mcp = fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)));
+		MixChannelParticipant mcp = fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)), ChannelJidVisibilityPreference.NO_PREFERENCE);
 		
 		assertEquals(mcp.getRealJid(), TEST_USER1_JID);
 
@@ -108,8 +112,8 @@ public class LocalMixChannelTest {
 	    	exactly(3).of(mockRouter).route(with(any(Message.class)));
 	    }});
 		
-		fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)));
-		fixture.addParticipant(TEST_USER2_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)));
+		fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)), ChannelJidVisibilityPreference.NO_PREFERENCE);
+		fixture.addParticipant(TEST_USER2_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)), ChannelJidVisibilityPreference.NO_PREFERENCE);
 		
 	}
 	
@@ -118,9 +122,9 @@ public class LocalMixChannelTest {
 		settingUp.activate();
 		
 		// We have three participants
-		final MixChannelParticipant sender = fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)));
-		fixture.addParticipant(TEST_USER2_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)));
-		fixture.addParticipant(TEST_USER3_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)));
+		final MixChannelParticipant sender = fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)), ChannelJidVisibilityPreference.NO_PREFERENCE);
+		fixture.addParticipant(TEST_USER2_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)), ChannelJidVisibilityPreference.NO_PREFERENCE);
+		fixture.addParticipant(TEST_USER3_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)), ChannelJidVisibilityPreference.NO_PREFERENCE);
 		
 		// Particiant 1 sends a message to the channel
 		final String testMessageID = "1234ABCD";
@@ -161,6 +165,7 @@ public class LocalMixChannelTest {
 	    			PacketMatchers.element(ElementMatchers.hasTextChild("jid", equal(sender.getJid().toBareJID()))),
 	    			PacketMatchers.element(ElementMatchers.hasNoChild("submission-id"))
 	    		)));
+	    	one(mockArchiveService).archive(with(any(MixChannelMessage.class)));
 	    }});
 		
 		fixture.receiveMessage(mcMessage);
@@ -175,7 +180,7 @@ public class LocalMixChannelTest {
 			one(mockPersistenceManager).delete(with(any(MixChannelParticipant.class)));
 	    }});
 		
-		fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)));
+		fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)), ChannelJidVisibilityPreference.NO_PREFERENCE);
 		
 		assertNotNull(fixture.getParticipantByRealJID(TEST_USER1_JID));
 		
@@ -199,7 +204,7 @@ public class LocalMixChannelTest {
 			one(mockRouter).route(with(any(IQ.class)));
 	    }});
 		
-		fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)));
-		fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)));
+		fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)), ChannelJidVisibilityPreference.NO_PREFERENCE);
+		fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)), ChannelJidVisibilityPreference.NO_PREFERENCE);
 	}
 }

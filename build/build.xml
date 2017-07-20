@@ -1860,13 +1860,13 @@
             <arg line="-uc"/>
         </exec>
 
-	<!-- Copy the resulting files into target -->
-	<copy todir="${debian.release.dir}">
+        <!-- Copy the resulting files into target -->
+        <copy todir="${debian.release.dir}">
             <fileset dir="${debian.work.dir}/.." followsymlinks="false">
-		<include name="**/*.deb" />
-		<include name="**/*.changes" />
-		<include name="**/*.dsc" />
-		<include name="**/*.gz" />
+                <include name="**/*.deb" />
+                <include name="**/*.changes" />
+                <include name="**/*.dsc" />
+                <include name="**/*.gz" />
             </fileset>
         </copy>
     </target>

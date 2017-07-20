@@ -73,4 +73,14 @@ public interface MixChannelArchiveRepository {
 			int limit);
 
 	List<ArchivedMixChannelMessage> findLimitedMessagesByChannelSince(String channelName, Date start, int limit);
+
+
+	/**
+	 * Allows a client to free text search across a whole service
+	 *
+	 * @param term to search for
+	 */
+
+	List<ArchivedMixChannelMessage> searchAllMessages(String term);
+	List<ArchivedMixChannelMessage> searchAllMessagesLimit(String term, int limit);
 }

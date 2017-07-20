@@ -103,8 +103,6 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
 				set.addElement("last").addText(last);
 			}
 
-			router.route(response);
-
 		} else {
 			response = queryIQ.createCopy();
 			response.setType(Type.error);

@@ -36,8 +36,14 @@ public class MessageBuilder {
         return this;
     }
 
+    public MessageBuilder subject(String s) {
+        message.setSubject(s);
+        return this;
+    }
+
     public Message build() {
         return message;
     }
+
 
 }

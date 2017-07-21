@@ -1,9 +1,5 @@
 package org.jivesoftware.openfire.mix.mam.repository;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,6 +21,8 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Message.Type;
 import org.hibernate.jpa.HibernatePersistenceProvider;
+
+import static org.junit.Assert.*;
 
 public class JpaMixChannelArchiveRepositoryImplTest {
 
@@ -121,19 +119,27 @@ public class JpaMixChannelArchiveRepositoryImplTest {
 	}
 
 	@Test
-	public void recreatingNullBodyMessageIssue() throws MixPersistenceException {
+	public void thatNullCharacterIsStrippedFromMessage() throws MixPersistenceException {
+	    String nullCharStr = "\u0000";
+
 		MessageBuilder builder = new MessageBuilder();
 		Message nullMessage = builder.from(fromJID)
 				.to(targetChannelJID)
 				.type(Type.chat)
-				.body(Character.toString('\0'))
+				.body(nullCharStr)
+                .subject(nullCharStr)
 				.build();
 
 		MixChannelMessage nullBodyMessage = new MixChannelMessageImpl(nullMessage, TEST_CHANNEL_NAME, mockMCP);
 
 		String id = fixture.archive(nullBodyMessage);
 
-		assertNotNull(fixture.findById(id));
+        ArchivedMixChannelMessage archived = fixture.findById(id);
+
+        assertFalse(archived.getSubject().contains(nullCharStr));
+        assertFalse(archived.getBody().contains(nullCharStr));
+        assertFalse(archived.getStanza().contains(nullCharStr));
+
 	}
 
 }

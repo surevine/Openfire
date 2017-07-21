@@ -325,22 +325,10 @@ public class LocalMixChannel implements MixChannel {
 	}
 
 	@Override
-	public void receiveMessage(MixChannelMessage mcMessage) {
+	public void receiveMessage(MixChannelMessage mcMessage) throws MixPersistenceException {
 		Set<MixChannelParticipant> subscribers = getNodeSubscribers(NODE_MESSAGES);
 
-		String mamId = null;
-		try {
-			mamId = archive.archive(mcMessage);
-		} catch (MixPersistenceException e) {
-			LOG.error("Error persisting message, reflecting to sender");
-
-			// TODO Get from Dave what the actual message and type should be
-			IQ error = new IQ(IQ.Type.error, mcMessage.getId());
-			error.setTo(mcMessage.getSender().getJid());
-			packetRouter.route(error);
-
-			return;
-		}
+		String	mamId = archive.archive(mcMessage);
 
 		MixChannelParticipant sender = mcMessage.getSender();
 		

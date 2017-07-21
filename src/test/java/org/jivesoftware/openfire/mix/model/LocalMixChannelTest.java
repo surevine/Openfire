@@ -173,7 +173,7 @@ public class LocalMixChannelTest {
 		fixture.receiveMessage(mcMessage);
 	}
 
-    @Test
+    @Test(expected = MixPersistenceException.class)
 	public void testUnableToArchiveMessageSendsError() throws MixPersistenceException, CannotJoinMixChannelException {
 
         final MixChannelParticipant sender = fixture.addParticipant(TEST_USER1_JID, new HashSet<String>(Arrays.asList(EXTENDED_NODE_SET)), ChannelJidVisibilityPreference.NO_PREFERENCE);

@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.hamcrest.Matchers;
 import org.jivesoftware.openfire.PacketRouter;
+import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.handler.MixRequestContextImpl;
 import org.jivesoftware.openfire.mix.handler.channel.MixChannelMessagePacketHandler;
 import org.jivesoftware.openfire.mix.model.MixChannel;
@@ -75,7 +76,7 @@ public class MixChannelMessagePacketHandlerTest {
 	}
 
 	@Test
-	public void testProcessMessageReturnsFalseIfNotGroupchat() {
+	public void testProcessMessageReturnsFalseIfNotGroupchat() throws MixPersistenceException {
 		Message message = getTestMessage();
 		message.setType(Type.chat);
 		
@@ -85,7 +86,7 @@ public class MixChannelMessagePacketHandlerTest {
 	}
 
 	@Test
-	public void testProcessMessageSendsNotAcceptableIfNotParticipant() {
+	public void testProcessMessageSendsNotAcceptableIfNotParticipant() throws MixPersistenceException {
 		final Message message = getTestMessage();
 
 		context.checking(new Expectations() {{
@@ -103,7 +104,7 @@ public class MixChannelMessagePacketHandlerTest {
 	}
 	
 	@Test
-	public void testProcessMessage() {
+	public void testProcessMessage() throws MixPersistenceException {
 		final Message message = getTestMessage();
 		final MixChannelParticipant sender = context.mock(MixChannelParticipant.class);
 		

@@ -51,7 +51,7 @@ public class MessageArchiveServiceImplTest {
 
 	@Test
 	public void testCorrectNumberOfMessagesSent() {
-		ArchivedMixChannelMessage archivedMessage = new ArchivedMixChannelMessage();
+		final ArchivedMixChannelMessage archivedMessage = new ArchivedMixChannelMessage();
 		archivedMessage.setId("some-message-id");
 		archivedMessage.setStanza("<message />");
 		archivedMessage.setArchiveTimestamp(new Date());

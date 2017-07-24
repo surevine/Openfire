@@ -1,6 +1,7 @@
 package org.jivesoftware.openfire.mix.handler.channel;
 
 import org.jivesoftware.openfire.PacketRouter;
+import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.handler.MixRequestContext;
 import org.jivesoftware.openfire.mix.model.MixChannel;
 import org.jivesoftware.openfire.mix.model.MixChannelMessage;
@@ -30,7 +31,7 @@ public class MixChannelMessagePacketHandler implements MixChannelPacketHandler {
 	}
 
 	@Override
-	public boolean processMessage(MixRequestContext context, MixChannel channel, Message message) {
+	public boolean processMessage(MixRequestContext context, MixChannel channel, Message message) throws MixPersistenceException {
 		if(message.getType() != Message.Type.groupchat) {
 			// We only deal with groupchat messages
 			return false;

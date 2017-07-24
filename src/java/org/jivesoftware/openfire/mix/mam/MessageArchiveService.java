@@ -1,5 +1,6 @@
 package org.jivesoftware.openfire.mix.mam;
 
+import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.model.MixChannelMessage;
 import org.xmpp.packet.IQ;
 
@@ -11,6 +12,6 @@ public interface MessageArchiveService {
 	
 	IQ query(IQ query);
 	
-	String archive(MixChannelMessage archive);
+	String archive(MixChannelMessage archive) throws MixPersistenceException;
 
 }

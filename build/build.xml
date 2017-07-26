@@ -44,6 +44,7 @@
     <property name="spank.dir" value="${src.dir}/spank"/>
     <property name="lib.ant.dir" value="${basedir}/build/lib/ant"/>
     <property name="lib.build.dir" value="${basedir}/build/lib"/>
+    <property name="test.lib.build.dir" value="${basedir}/build/lib/test"/>
     <property name="lib.build.installer.dir" value="${basedir}/build/installer"/>
     <property name="lib.merge.dir" value="${lib.build.dir}/merge"/>
     <property name="lib.dist.dir" value="${lib.build.dir}/dist"/>
@@ -217,13 +218,14 @@
     </path>
 
     <path id="test.dependencies">
+        <fileset dir="${test.lib.build.dir}" includes="*.jar"/>
         <path refid="compile.dependencies"/>
+        <fileset dir="${lib.dist.dir}/solrj-lib" includes="*.jar"/>
         <fileset dir="${jar.dest.dir}" includes="${jar.name}"/>
-        <fileset dir="${lib.build.dir}" includes="junit.jar"/>
         <fileset dir="${lib.build.dir}" includes="hamcrest-core.jar"/>
         <fileset dir="${lib.dist.dir}" includes="slf4j-log4j12.jar"/>
-    	<fileset dir="${lib.dist.dir}" includes="hsqldb.jar"/>
-    	<fileset dir="${lib.dist.dir}" includes="*.jar"/>
+
+
 
         <!-- <fileset dir="${ant.home}/lib" includes="clover.jar" /> -->
     </path>

@@ -22,24 +22,10 @@ import java.util.UUID;
 
 public class SolrMixChannelArchiveRepositoryImpl implements MixChannelArchiveRepository {
 
-    private String solrUrl = "http://localhost:32783/solr/tvx";
+    private final SolrClient solr;
 
-    public int query() throws IOException, SolrServerException {
-
-        SolrQuery query = new SolrQuery();
-        query.setQuery("ipod");
-        query.setRequestHandler("/select");
-        query.setFields("name, price");
-
-        SolrClient client = getSolrClient();
-
-        QueryResponse response = client.query(query);
-
-        return response.getResults().size();
-    }
-
-    private SolrClient getSolrClient() {
-         return new HttpSolrClient.Builder(solrUrl).build();
+    public SolrMixChannelArchiveRepositoryImpl(SolrClient client) {
+        this.solr = client;
     }
 
     @Override
@@ -51,7 +37,7 @@ public class SolrMixChannelArchiveRepositoryImpl implements MixChannelArchiveRep
 
         SolrInputDocument doc = new SolrInputDocument();
         doc.addField("id", archive.getId());
-        doc.addField("type", msg.getMessage().getType());
+//        doc.addField("type", msg.getMessage().getType());
         doc.addField("subject", msg.getMessage().getSubject());
         doc.addField("body", msg.getMessage().getBody());
         doc.addField("stanza", archive.getStanza());
@@ -59,10 +45,9 @@ public class SolrMixChannelArchiveRepositoryImpl implements MixChannelArchiveRep
         doc.addField("channel", archive.getChannel());
 //        doc.addField("archiveTimestamp", archive.getArchiveTimestamp());
 
-        SolrClient client = getSolrClient();
         try {
-            UpdateResponse response = client.add(doc);
-            client.commit();
+            UpdateResponse response = solr.add(doc);
+            solr.commit();
         } catch (SolrServerException e) {
             throw new MixPersistenceException(e);
         } catch (IOException e) {
@@ -80,9 +65,9 @@ public class SolrMixChannelArchiveRepositoryImpl implements MixChannelArchiveRep
         q.setRequestHandler("/get");
         q.set("id", id);
         q.set("fl", "*");
-        SolrClient client = getSolrClient();
+
         try {
-            QueryResponse response = client.query(q);
+            QueryResponse response = solr.query(q);
 
             // This is a bit of a hack to allow us to get the near real time get request handler, which returns a single result.
             SolrDocumentList sdl = new SolrDocumentList();

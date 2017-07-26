@@ -3,10 +3,14 @@ package org.jivesoftware.openfire.mix.mam.repository;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.beans.DocumentObjectBinder;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.common.util.NamedList;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.mam.ArchivedMixChannelMessage;
 import org.jivesoftware.openfire.mix.model.MixChannelMessage;
@@ -18,7 +22,7 @@ import java.util.UUID;
 
 public class SolrMixChannelArchiveRepositoryImpl implements MixChannelArchiveRepository {
 
-    private String solrUrl = "http://localhost:32782/solr/tvx";
+    private String solrUrl = "http://localhost:32783/solr/tvx";
 
     public int query() throws IOException, SolrServerException {
 
@@ -71,6 +75,41 @@ public class SolrMixChannelArchiveRepositoryImpl implements MixChannelArchiveRep
 
     @Override
     public ArchivedMixChannelMessage findById(String id) {
+
+        SolrQuery q = new SolrQuery();
+        q.setRequestHandler("/get");
+        q.set("id", id);
+        q.set("fl", "*");
+        SolrClient client = getSolrClient();
+        try {
+            QueryResponse response = client.query(q);
+
+            // This is a bit of a hack to allow us to get the near real time get request handler, which returns a single result.
+            SolrDocumentList sdl = new SolrDocumentList();
+            NamedList responseList = response.getResponse();
+            SolrDocument doc = (SolrDocument) responseList.get("doc");
+            if (doc != null){
+                sdl.add(doc);
+            }
+
+            if (!sdl.isEmpty()){
+                DocumentObjectBinder dob = new DocumentObjectBinder();
+                List<ArchivedMixChannelMessage> results = dob.getBeans(ArchivedMixChannelMessage.class, sdl);
+
+                if (results.size() == 1) {
+                    return results.get(0);
+                }
+            }
+            else {
+                return null;
+            }
+
+
+        } catch (SolrServerException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 

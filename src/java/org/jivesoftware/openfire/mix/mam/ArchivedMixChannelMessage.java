@@ -15,6 +15,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
+import org.apache.solr.client.solrj.beans.Field;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
@@ -42,24 +43,31 @@ public class ArchivedMixChannelMessage {
 
 	@Id @GeneratedValue(generator="system-uuid")
 	@GenericGenerator(name="system-uuid", strategy = "uuid")
+	@Field
 	private String id;
 	
 	@Enumerated(EnumType.STRING)
 	private Type type;
-	
+
+	@Field
 	private String subject;
 	
 	@Column(columnDefinition = "text")
+	@Field
 	private String body;
 
 	@Column(columnDefinition = "text")
+	@Field
 	private String stanza;
 
+	@Field
 	private String channel;
-	
+
+	@Field
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date archiveTimestamp;
 
+	@Field
 	private String fromJID;
 
 	public ArchivedMixChannelMessage() {

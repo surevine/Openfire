@@ -18,7 +18,7 @@ import static org.jivesoftware.openfire.mix.mam.repository.MamTestUtils.TEST_MIX
 import static org.jivesoftware.openfire.mix.mam.repository.MamTestUtils.TEST_USERS_JID;
 import static org.junit.Assert.*;
 
-public class SolrMixChannelArchiveRepositoryImplTest {
+public class SolrMixChannelArchiveRepositoryImplTest extends AbstractSolrTestCase {
 
     private Mockery context = new Mockery();
     private MixChannelParticipant mockMCP = context.mock(MixChannelParticipant.class);
@@ -50,6 +50,15 @@ public class SolrMixChannelArchiveRepositoryImplTest {
         SolrMixChannelArchiveRepositoryImpl fixture = new SolrMixChannelArchiveRepositoryImpl();
 
         assertNotNull(fixture.archive(mcm));
+    }
+
+    @Test
+    public void testFindByIdentity() throws MixPersistenceException {
+        SolrMixChannelArchiveRepositoryImpl fixture = new SolrMixChannelArchiveRepositoryImpl();
+
+        String id = fixture.archive(mcm);
+
+        assertNotNull(fixture.findById(id));
     }
 
 }

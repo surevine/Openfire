@@ -230,6 +230,7 @@ public class AdHocCommandHandler extends IQHandler
         addCommand(new VCardDeleting());
         addCommand(new VCardModified());
         addCommand(new GetAdminConsoleInfo());
+        addCommand(new GetSystemProperty());
     }
 
     private void startCommand(AdHocCommand command) {

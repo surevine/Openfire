@@ -734,6 +734,8 @@
 	        	
 		    	<sysproperty key="openfireHome" value="${target.openfireHome}"/>
 	        	<sysproperty key="databaseUpgradeDir" value="${database.upgrade.dir}"/>
+                <sysproperty key="solr.solr.home" value="${test.resources.dest.dir}/solr"/>
+                <sysproperty key="solrDataDir" value="${test.resources.dest.dir}/solr"/>
 	
 	            <!-- We must add our own classes to the classpath for testing -->
 	            <classpath>

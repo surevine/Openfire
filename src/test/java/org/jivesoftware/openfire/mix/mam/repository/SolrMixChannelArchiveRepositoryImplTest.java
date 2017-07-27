@@ -31,13 +31,17 @@ public class SolrMixChannelArchiveRepositoryImplTest {
     private MixChannelMessage mcm;
     private SolrMixChannelArchiveRepositoryImpl fixture;
 
+    private static CoreContainer container;
     private static SolrClient server;
 
     @BeforeClass
     public static void setup() {
-        CoreContainer container = new CoreContainer("src/test/resources/solr");
+        container = new CoreContainer(System.getProperty("solrDataDir"));
         container.load();
-        server = new EmbeddedSolrServer( container, "tvx" );
+        if (container.isLoaded("tvx")) {
+            server = new EmbeddedSolrServer( container, "tvx" );
+        }
+
     }
 
 
@@ -45,6 +49,7 @@ public class SolrMixChannelArchiveRepositoryImplTest {
     public static void teardownClass() {
         try {
             server.close();
+            container.unload("tvx", true, true, false);
         } catch (Exception e) {
         }
     }

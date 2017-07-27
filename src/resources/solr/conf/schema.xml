@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
-<schema name="example" version="1.6">
+<schema name="tvx" version="1.6">
 
     <field name="_version_" type="long" indexed="true" stored="true" />
 

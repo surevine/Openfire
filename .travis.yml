@@ -11,6 +11,5 @@ env:
   - SCRIPT="ant -Dhalt.on.plugin.error=true -f build/build.xml clean compile"
   - SCRIPT="ant -Dhalt.on.plugin.error=true -f build/build.xml clean test"
   - SCRIPT="ant -Dhalt.on.plugin.error=true -f build/build.xml clean openfire"
-  - SCRIPT="ant -Dhalt.on.plugin.error=true -f build/build.xml clean plugins"
 script: $SCRIPT
 install: true

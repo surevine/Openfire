@@ -28,3 +28,6 @@ scrapbook.sql
 
 src/plugins/spiffing/
 src/plugins/threatvineExchange/
+
+src/test/resources/solr/tvx/conf/managed-schema
+src/test/resources/solr/tvx/conf/schema.xml.bak

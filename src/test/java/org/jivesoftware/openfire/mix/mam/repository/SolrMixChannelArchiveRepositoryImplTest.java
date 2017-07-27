@@ -36,7 +36,8 @@ public class SolrMixChannelArchiveRepositoryImplTest {
 
     @BeforeClass
     public static void setup() {
-        container = new CoreContainer(System.getProperty("solrDataDir"));
+
+        container = new CoreContainer(System.getProperty("solr.solr.home"));
         container.load();
         if (container.isLoaded("tvx")) {
             server = new EmbeddedSolrServer( container, "tvx" );

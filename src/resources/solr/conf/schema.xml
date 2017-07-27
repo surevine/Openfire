@@ -7,9 +7,7 @@
     <field name="_root_" type="string" indexed="true" stored="false" docValues="false" />
 
     <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" />
-    <!--
-    <field name="type" type="string" indexed="true" stored="true" required="true" multiValued="false"/>
-    -->
+
     <field name="subject" type="string" indexed="true" stored="true" required="false" multiValued="false"/>
     <field name="body" type="text_general" indexed="true" stored="true" required="false" multiValued="false"/>
     <field name="stanza" type="text_general" indexed="true" stored="true" required="false" multiValued="false"/>

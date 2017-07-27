@@ -10,17 +10,24 @@ import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.util.NamedList;
 import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.mam.ArchivedMixChannelMessage;
 import org.jivesoftware.openfire.mix.model.MixChannelMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 public class SolrMixChannelArchiveRepositoryImpl implements MixChannelArchiveRepository {
+
+    private static final Logger logger = LoggerFactory.getLogger(SolrMixChannelArchiveRepositoryImpl.class);
+
 
     private final SolrClient solr;
 
@@ -37,23 +44,21 @@ public class SolrMixChannelArchiveRepositoryImpl implements MixChannelArchiveRep
 
         SolrInputDocument doc = new SolrInputDocument();
         doc.addField("id", archive.getId());
-//        doc.addField("type", msg.getMessage().getType());
         doc.addField("subject", msg.getMessage().getSubject());
         doc.addField("body", msg.getMessage().getBody());
         doc.addField("stanza", archive.getStanza());
         doc.addField("fromJID", archive.getFromJID());
         doc.addField("channel", archive.getChannel());
-//        doc.addField("archiveTimestamp", archive.getArchiveTimestamp());
+
+        archive.setArchiveTimestamp(new Date());
+        doc.addField("archiveTimestamp", archive.getArchiveTimestamp());
 
         try {
             UpdateResponse response = solr.add(doc);
             solr.commit();
-        } catch (SolrServerException e) {
-            throw new MixPersistenceException(e);
-        } catch (IOException e) {
+        } catch (SolrServerException | IOException e) {
             throw new MixPersistenceException(e);
         }
-
 
         return archive.getId();
     }
@@ -90,17 +95,30 @@ public class SolrMixChannelArchiveRepositoryImpl implements MixChannelArchiveRep
             }
 
 
-        } catch (SolrServerException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (SolrServerException | IOException e) {
+            logger.error("Exception caught " + e);
         }
         return null;
     }
 
     @Override
     public List<ArchivedMixChannelMessage> findMessagesByChannel(String channel) {
-        return null;
+        SolrQuery q = new SolrQuery();
+        q.setRequestHandler("/select");
+        q.set("q", "*:*");
+        q.set("fl", "*");
+        q.setFilterQueries("channel:" + channel);
+
+        List<ArchivedMixChannelMessage> channelMessages = Collections.emptyList();
+
+        try {
+            QueryResponse response = solr.query(q);
+             channelMessages = response.getBeans(ArchivedMixChannelMessage.class);
+        } catch (SolrServerException | IOException e) {
+            logger.error("Exception caught " + e);
+        }
+
+        return channelMessages;
     }
 
     @Override
@@ -115,17 +133,60 @@ public class SolrMixChannelArchiveRepositoryImpl implements MixChannelArchiveRep
 
     @Override
     public long getMessageCountByChannel(String channel) {
-        return 0;
+        SolrQuery q = new SolrQuery();
+        q.setRequestHandler("/select");
+        q.set("q", "*:*");
+        q.set("fl", "*");
+
+        // This is important, don't bring back any results
+        q.setRows(0);
+        q.setFilterQueries("channel:" + channel);
+
+        List<ArchivedMixChannelMessage> channelMessages = Collections.emptyList();
+
+        Long numResults = new Long(0);
+        try {
+            QueryResponse response = solr.query(q);
+            numResults =  response.getResults().getNumFound();
+
+        } catch (SolrServerException | IOException e) {
+            logger.error("Exception caught " + e);
+        }
+
+        return numResults;
     }
 
     @Override
     public void retract(String id) throws MixPersistenceException {
+        try {
+            solr.deleteById(id);
+            solr.commit();
+        } catch (SolrServerException | IOException e) {
+            logger.error("Exception caught " + e);
+        }
 
+        return;
     }
 
     @Override
     public List<ArchivedMixChannelMessage> findMessagesByChannelWith(String mixChannelJid, String term) {
-        return null;
+        SolrQuery q = new SolrQuery();
+        q.setRequestHandler("/select");
+        q.set("df", "stanza");
+        q.set("q", term);
+        q.set("fl", "*");
+        q.setFilterQueries("channel:" + mixChannelJid);
+
+        List<ArchivedMixChannelMessage> channelMessages = Collections.emptyList();
+
+        try {
+            QueryResponse response = solr.query(q);
+            channelMessages = response.getBeans(ArchivedMixChannelMessage.class);
+        } catch (SolrServerException | IOException e) {
+            logger.error("Exception caught " + e);
+        }
+
+        return channelMessages;
     }
 
     @Override

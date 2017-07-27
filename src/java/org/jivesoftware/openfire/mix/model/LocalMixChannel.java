@@ -31,6 +31,7 @@ import org.jivesoftware.openfire.mix.policy.PermissionPolicy;
 import org.jivesoftware.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 
@@ -41,11 +42,11 @@ public class LocalMixChannel implements MixChannel {
 	private static final Logger LOG = LoggerFactory.getLogger(LocalMixChannel.class);
 
 	public static final String NODE_PARTICIPANTS = "urn:xmpp:mix:nodes:participants";
-	public static final String NODE_MESSAGES = "urn:xmpp:mix:nodes:messages";	
+	public static final String NODE_MESSAGES = "urn:xmpp:mix:nodes:messages";
 	public static final String NODE_JIDMAP = "urn:xmpp:mix:nodes:jidmap";
 
 	private PacketRouter packetRouter;
-	
+
 	private Map<JID, MixChannelParticipant> participantsByRealJID;
 
 	private Map<JID, MixChannelParticipant> participantsByProxyJid;
@@ -55,7 +56,7 @@ public class LocalMixChannel implements MixChannel {
 	private List<MixChannelParticipantsListener> participantsListeners;
 
 	private Long id;
-	
+
 	/**
 	 * The {@link PermissionPolicy} to apply to this channel
 	 */
@@ -65,7 +66,7 @@ public class LocalMixChannel implements MixChannel {
 	 * This {@link MixService} to which this channel is attached.
 	 */
 	private MixService mixService;
-	
+
 	private MixPersistenceManager channelRepository;
 
 	private MessageArchiveService archive;
@@ -84,7 +85,7 @@ public class LocalMixChannel implements MixChannel {
 	private ChannelJidVisibilityMode jidVisibilityMode = ChannelJidVisibilityMode.VISIBLE;
 
 	private JID owner;
-	
+
 	/**
 	 * Constructor to be used when serialising from the database.  The id on the constructor is key as it will be known when constructing as part of a query.
 	 * @param id
@@ -94,22 +95,22 @@ public class LocalMixChannel implements MixChannel {
 	 * @param packetRouter
 	 * @param mpm
 	 * @param creationDate
-	 * @throws MixPersistenceException 
+	 * @throws MixPersistenceException
 	 */
 	public LocalMixChannel(long id, MixService service, String name, JID owner, PacketRouter packetRouter, MixPersistenceManager mpm, MessageArchiveService archive, Date creationDate) throws MixPersistenceException {
 		initialise(service, name, owner, packetRouter, mpm, archive);
-		
+
 		this.id = id;
 		this.creationDate = new Date(creationDate.getTime());
-		
+
 		Collection<MixChannelParticipant> fromDB = mpm.findByChannel(this);
-		
+
 		for (MixChannelParticipant mcp : fromDB) {
 			mcp.setSubscriptions(mpm.findByParticipant(mcp));
 			participantsByRealJID.put(mcp.getRealJid(), mcp);
 			participantsByProxyJid.put(mcp.getJid(), mcp);
 		}
-		
+
 	}
 
 	public LocalMixChannel(MixService service, String name, JID owner, PacketRouter packetRouter, MixPersistenceManager mpm, MessageArchiveService archive) {
@@ -126,14 +127,14 @@ public class LocalMixChannel implements MixChannel {
 		this.owner = owner;
 		this.name = name;
 		this.archive = archive;
-		
+
 		this.participantsListeners = new ArrayList<>();
 		this.participantsByRealJID = new HashMap<>();
 		this.participantsByProxyJid = new HashMap<>();
 		this.nodes = new HashMap<>();
-		
+
 		this.setCreationDate(new Date());
-		
+
 		setupNodes();
 		setupPermissionPolicy();
 	}
@@ -148,11 +149,11 @@ public class LocalMixChannel implements MixChannel {
 		nodes.put(NODE_JIDMAP, new MixChannelNodeImpl<>(packetRouter, this, NODE_JIDMAP,
 				new MixChannelJidMapNodeItemsProvider(this), new MixChannelJidMapNodeItemPermissionPolicy(), new AlwaysAllowPermissionPolicy<MixChannelNode<MixChannelJidMapNodeItem>>()));
 	}
-	
+
 	private void setupPermissionPolicy() {
 		permissionPolicy = new MixChannelStandardPermissionPolicy();
 	}
-	
+
 	@Override
 	public JID getJID() {
 		return new JID(getName(), mixService.getServiceDomain(), null);
@@ -167,7 +168,7 @@ public class LocalMixChannel implements MixChannel {
 	public String getName() {
 		return name;
 	}
-	
+
 	@Override
 	public JID getOwner() {
 		return this.owner;
@@ -192,12 +193,12 @@ public class LocalMixChannel implements MixChannel {
 	public MixChannelParticipant addParticipant(JID jid, Set<String> subscribeNodes, ChannelJidVisibilityPreference jidVisibilityPreference) throws CannotJoinMixChannelException {
 
 		JID bareJoinerJID = jid.asBareJID();
-		
+
 		if (!this.participantsByRealJID.containsKey(bareJoinerJID)) {
 			JID proxyJid = this.createProxyJID(bareJoinerJID.toString(), jidVisibilityPreference.getId());
-			
+
 			MixChannelParticipant participant;
-			
+
 			if (subscribeNodes.isEmpty()) {
 				participant = new LocalMixChannelParticipant(proxyJid, bareJoinerJID, this, jidVisibilityPreference, this.channelRepository);
 			} else {
@@ -206,49 +207,49 @@ public class LocalMixChannel implements MixChannel {
 
 
 			this.participantsByRealJID.put(bareJoinerJID, participant);
-			
+
 			// Trigger the participant added event.
 			for (MixChannelParticipantsListener listener : participantsListeners) {
 				listener.onParticipantAdded(participant);
 			}
-			
+
 			try {
 				channelRepository.save(participant);
 			} catch (MixPersistenceException e) {
 				LOG.error("Persistence exception adding participant " + jid + " to " + this.getName(), e);
 				throw new CannotJoinMixChannelException(this.getName(), e.getMessage());
 			}
-			
+
 			return participant;
 		} else {
 			throw new CannotJoinMixChannelException(this.getName(), "Already a member");
 		}
 	}
-	
+
 
 	@Override
 	public void updateSubscriptions(JID from, Set<String> subscriptionRequests)
 			throws CannotUpdateMixChannelSubscriptionException {
 		JID requestorBareJid = from.asBareJID();
-		
+
 		if (participantsByRealJID.containsKey(requestorBareJid)) {
 			MixChannelParticipant participant = participantsByRealJID.get(requestorBareJid);
 			participant.updateSubscriptions(subscriptionRequests);
 		} else {
 			throw new CannotUpdateMixChannelSubscriptionException(this.getName(), "Not a participant");
 		}
-		
+
 	}
-	
+
 	@Override
 	public void removeParticipant(JID jid) throws CannotLeaveMixChannelException {
 
 		JID bareJid = jid.asBareJID();
-		
+
 		if (participantsByRealJID.containsKey(bareJid)) {
 			MixChannelParticipant mcp = participantsByRealJID.remove(bareJid);
 			participantsByProxyJid.remove(mcp.getJid());
-			
+
 			// Let all listeners know that the participant has left
 			for (MixChannelParticipantsListener listener : participantsListeners) {
 				listener.onParticipantRemoved(mcp);
@@ -263,8 +264,8 @@ public class LocalMixChannel implements MixChannel {
 		} else {
 			throw new CannotLeaveMixChannelException(this.getName(), "Not a participant");
 		}
-		
-		
+
+
 		return;
 	}
 
@@ -297,7 +298,7 @@ public class LocalMixChannel implements MixChannel {
 	public void setCreationDate(Date date) {
 		this.creationDate = new Date(date.getTime());
 	}
-	
+
 	@Override
 	public Collection<MixChannelNode<? extends MixChannelNodeItem>> getNodes() {
 		return Collections.unmodifiableCollection(nodes.values());
@@ -316,7 +317,7 @@ public class LocalMixChannel implements MixChannel {
 	@Override
 	public MixChannelParticipant getParticipantByProxyJID(JID jid) {
 		return participantsByProxyJid.get(jid.asBareJID());
-	}	
+	}
 
 	@Override
 	public Collection<MixChannelParticipant> getParticipants() {
@@ -324,11 +325,11 @@ public class LocalMixChannel implements MixChannel {
 	}
 
 	@Override
-	public void receiveMessage(MixChannelMessage mcMessage) {
+	public void receiveMessage(MixChannelMessage mcMessage) throws MixPersistenceException {
 		Set<MixChannelParticipant> subscribers = getNodeSubscribers(NODE_MESSAGES);
 
-		String mamId = archive.archive(mcMessage);
-		
+		String	mamId = archive.archive(mcMessage);
+
 		MixChannelParticipant sender = mcMessage.getSender();
 		
 		Message templateMessage = mcMessage.getMessage().createCopy();

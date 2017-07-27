@@ -9,6 +9,7 @@ import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.labelling.AccessControlDecisionFunction;
 import org.jivesoftware.openfire.labelling.SecurityLabel;
 import org.jivesoftware.openfire.labelling.SecurityLabelException;
+import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.mam.repository.CountQuery;
 import org.jivesoftware.openfire.mix.mam.repository.MamQueryFactory;
 import org.jivesoftware.openfire.mix.mam.repository.MixChannelArchiveRepository;
@@ -121,8 +122,9 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
 		}
 	}
 
-	public String archive(MixChannelMessage message) {
-		return repository.archive(message);
+	public String archive(MixChannelMessage message) throws MixPersistenceException {
+			return repository.archive(message);
+
 	}
 
 }

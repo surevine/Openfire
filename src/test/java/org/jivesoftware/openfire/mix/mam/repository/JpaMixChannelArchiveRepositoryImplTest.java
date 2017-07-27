@@ -1,16 +1,15 @@
 package org.jivesoftware.openfire.mix.mam.repository;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import org.bouncycastle.openssl.MiscPEMGenerator;
+import org.jivesoftware.openfire.mix.MixPersistenceException;
 import org.jivesoftware.openfire.mix.mam.ArchivedMixChannelMessage;
 import org.jivesoftware.openfire.mix.mam.repository.JpaMixChannelArchiveRepositoryImpl;
+import org.jivesoftware.openfire.mix.model.MessageBuilder;
 import org.jivesoftware.openfire.mix.model.MixChannelMessage;
 import org.jivesoftware.openfire.mix.model.MixChannelMessageImpl;
 import org.jivesoftware.openfire.mix.model.MixChannelParticipant;
@@ -22,6 +21,8 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Message.Type;
 import org.hibernate.jpa.HibernatePersistenceProvider;
+
+import static org.junit.Assert.*;
 
 public class JpaMixChannelArchiveRepositoryImplTest {
 
@@ -57,7 +58,7 @@ public class JpaMixChannelArchiveRepositoryImplTest {
 	}
 
 	@Test
-	public void testPersisting() {
+	public void testPersisting() throws MixPersistenceException {
 
 		fixture.archive(mcm);
 
@@ -74,7 +75,7 @@ public class JpaMixChannelArchiveRepositoryImplTest {
 	 * firsts ID.
 	 */
 	@Test
-	public void thatAfterUUIDQueryWorks() {
+	public void thatAfterUUIDQueryWorks() throws MixPersistenceException {
 
 		String id = fixture.archive(mcm);
 
@@ -85,7 +86,7 @@ public class JpaMixChannelArchiveRepositoryImplTest {
 	}
 
 	@Test
-	public void thatLimitingResultsWorks() {
+	public void thatLimitingResultsWorks() throws MixPersistenceException {
 
 		int limit = 50;
 
@@ -97,7 +98,7 @@ public class JpaMixChannelArchiveRepositoryImplTest {
 	}
 
 	@Test
-	public void thatMessageCountWorks() {
+	public void thatMessageCountWorks() throws MixPersistenceException {
 		int count = 50;
 
 		for (int i = 0; i < count; i++) {
@@ -108,13 +109,37 @@ public class JpaMixChannelArchiveRepositoryImplTest {
 	}
 	
 	@Test
-	public void thatRetractionRemovesMessage() {
+	public void thatRetractionRemovesMessage() throws MixPersistenceException {
 
 		String id = fixture.archive(mcm);
 		
 		fixture.retract(id);
 		
 		assertNull(fixture.findById(id));
+	}
+
+	@Test
+	public void thatNullCharacterIsStrippedFromMessage() throws MixPersistenceException {
+	    String nullCharStr = "\u0000";
+
+		MessageBuilder builder = new MessageBuilder();
+		Message nullMessage = builder.from(fromJID)
+				.to(targetChannelJID)
+				.type(Type.chat)
+				.body(nullCharStr)
+                .subject(nullCharStr)
+				.build();
+
+		MixChannelMessage nullBodyMessage = new MixChannelMessageImpl(nullMessage, TEST_CHANNEL_NAME, mockMCP);
+
+		String id = fixture.archive(nullBodyMessage);
+
+        ArchivedMixChannelMessage archived = fixture.findById(id);
+
+        assertFalse(archived.getSubject().contains(nullCharStr));
+        assertFalse(archived.getBody().contains(nullCharStr));
+        assertFalse(archived.getStanza().contains(nullCharStr));
+
 	}
 
 }

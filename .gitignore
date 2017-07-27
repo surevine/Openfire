@@ -26,3 +26,5 @@ nbbuild/
 
 scrapbook.sql
 
+src/plugins/spiffing/
+src/plugins/threatvineExchange/

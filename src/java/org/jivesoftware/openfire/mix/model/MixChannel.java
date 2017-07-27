@@ -61,7 +61,7 @@ public interface MixChannel {
 
 	MixChannelParticipant getParticipantByRealJID(JID from);
 	
-	void receiveMessage(MixChannelMessage mcMessage);
+	void receiveMessage(MixChannelMessage mcMessage) throws MixPersistenceException;
 	
 	Set<MixChannelParticipant> getNodeSubscribers(String node);
 

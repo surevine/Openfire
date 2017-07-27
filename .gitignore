@@ -28,3 +28,4 @@ scrapbook.sql
 
 src/plugins/spiffing/
 src/plugins/threatvineExchange/
+plugins.built

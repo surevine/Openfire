@@ -6,7 +6,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
- * Mockable wrapper for JiveGlobals
+ * Mockable wrapper for {@link JiveGlobals}
  */
 public class JiveGlobalsWrapper {
 

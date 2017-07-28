@@ -78,6 +78,12 @@ public class GetSystemProperty extends AdHocCommand {
         command.add(form.getElement());
     }
 
+    /**
+     * Flags certain properties as being sensitive, if encrypted or based on property naming conventions.
+     *
+     * @param key The name of the property
+     * @return True if the property is encrypted or considered sensitive
+     */
     private boolean isPropertySensitive(String key) {
         return this.getPropertyStore().isPropertySensitive(key) || this.getPropertyStore().isPropertyEncrypted(key);
     }
@@ -158,7 +164,7 @@ public class GetSystemProperty extends AdHocCommand {
     /**
      * Strips the wildcard characters to return just the parent key
      *
-     * @param key
+     * @param key to strip down
      * @return the parent of the wildcard
      */
     private String stripWildcardPart(String key) {
@@ -168,7 +174,7 @@ public class GetSystemProperty extends AdHocCommand {
     /**
      * Is the key a wildcard specifier
      *
-     * @param key
+     * @param key to check
      * @return true if key specifies a wildcard match
      */
     private boolean isWildcard(String key) {

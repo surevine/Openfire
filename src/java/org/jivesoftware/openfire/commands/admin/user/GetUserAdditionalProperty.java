@@ -33,7 +33,7 @@ public class GetUserAdditionalProperty extends AdHocCommand {
 
     @Override
 	public String getDefaultLabel() {
-        return "Get additional user properties";
+        return "Get additional user property";
     }
 
     @Override
@@ -125,8 +125,8 @@ public class GetUserAdditionalProperty extends AdHocCommand {
     @Override
 	protected void addStageInformation(SessionData data, Element command) {
         DataForm form = new DataForm(DataForm.Type.form);
-        form.setTitle("Get a user's additional properties");
-        form.addInstruction("Fill out this form to get a user's additional properties.");
+        form.setTitle("Get an additional property for a user");
+        form.addInstruction("Fill out this form to get an additional property for a user.");
 
         FormField field = form.addField();
         field.setType(FormField.Type.hidden);
@@ -135,7 +135,7 @@ public class GetUserAdditionalProperty extends AdHocCommand {
 
         field = form.addField();
         field.setType(FormField.Type.jid_single);
-        field.setLabel("The Jabber ID for which to lookup additional properties");
+        field.setLabel("The Jabber ID for which to lookup an additional property");
         field.setVariable(ACCOUNT_JID_VAR);
         field.setRequired(true);
 

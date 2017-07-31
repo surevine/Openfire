@@ -120,7 +120,6 @@ public class GetUserAdditionalPropertyTest {
 
             allowing(mockXMPPServer).isLocal(with(a(JID.class)));
             will(returnValue(true));
-
         }});
 
         // Result stanza to populate
@@ -133,10 +132,11 @@ public class GetUserAdditionalPropertyTest {
 
         final Element x = childElement.element("x");
         assertEquals("result", x.attributeValue("type"));
-        assertNotNull("Response should contain reported element", x.element("reported"));
-        assertEquals("Reported element should contain 2 fields", 2,  x.element("reported").elements().size());
-        assertEquals("Reported element should key field", "key",  x.element("reported").elements().get(0).attribute("var").getValue());
-        assertEquals("Reported element should value field", "value",  x.element("reported").elements().get(1).attribute("var").getValue());
+        final Element reported = x.element("reported");
+        assertNotNull("Response should contain reported element", reported);
+        assertEquals("Reported element should contain 2 fields", 2,  reported.elements().size());
+        assertEquals("Reported element should contain key field", "key",  reported.elements().get(0).attribute("var").getValue());
+        assertEquals("Reported element should contain value field", "value",  reported.elements().get(1).attribute("var").getValue());
     }
 
     @Test

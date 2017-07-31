@@ -17,4 +17,17 @@ public class UserWrapper {
     public String getPropertyValue(String username, String propertyName) {
         return User.getPropertyValue(username, propertyName);
     }
+
+    /**
+     * Sets an additional property on a user. If property doesn't already exist, a new one will be created.
+     *
+     * @param username for which to set the property
+     * @param key the key of the property being set.
+     * @param value the value of the property being set.
+     * @throws UserNotFoundException when user is not found
+     */
+    public void setProperty(String username, String key, String value) throws UserNotFoundException {
+        User user = UserManager.getInstance().getUser(username);
+        user.getProperties().put(key, value);
+    }
 }

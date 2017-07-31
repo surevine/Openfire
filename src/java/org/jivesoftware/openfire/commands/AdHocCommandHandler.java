@@ -229,6 +229,7 @@ public class AdHocCommandHandler extends IQHandler
         addCommand(new GetSystemProperty());
         addCommand(new SetSystemProperty());
         addCommand(new GetUserAdditionalProperty());
+        addCommand(new SetUserAdditionalProperty());
     }
 
     private void startCommand(AdHocCommand command) {

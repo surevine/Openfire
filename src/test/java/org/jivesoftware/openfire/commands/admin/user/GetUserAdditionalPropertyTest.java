@@ -392,9 +392,9 @@ public class GetUserAdditionalPropertyTest {
 
         assertEquals("Stage information should indicate form", "form", x.attribute("type").getValue());
         assertThat("Title should mention user", title, containsString("user"));
-        assertThat("Title should mention additional properties", title, containsString("additional properties"));
+        assertThat("Title should mention additional property", title, containsString("additional property"));
         assertThat("Title should mention get", title, containsString("get"));
-        assertThat("Instructions should mention additional properties", instructions, containsString("additional properties"));
+        assertThat("Instructions should mention additional property", instructions, containsString("additional property"));
         assertThat("Instructions should mention get", instructions, containsString("get"));
     }
 

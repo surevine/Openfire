@@ -20,6 +20,7 @@ import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 public class GetUserAdditionalPropertyTest {
@@ -90,6 +91,52 @@ public class GetUserAdditionalPropertyTest {
 
         assertEquals("result", childElement.element("x").attributeValue("type"));
         assertEquals(expectedPropertyValue, childElement.selectSingleNode("//*[name()='field'][@var='value']/*[name()='value']").getText());
+    }
+
+    @Test
+    public void testResponseContainsReportedTableHeader() {
+
+        final String username = "user";
+        final String accountJid = username + "@localhost";
+        final String propertyToLookup = "property.to.lookup";
+        final String expectedPropertyValue = "expected-property-value";
+
+        // Test data
+        requestData.put("accountjid", new ArrayList<String>() {{
+            add(accountJid);
+        }});
+        requestData.put("key", new ArrayList<String>() {{
+            add(propertyToLookup);
+        }});
+
+        context.checking(new Expectations() {{
+            // Our mock test data
+            one(mockSessionData).getData();
+            will(returnValue(requestData));
+
+            // Our mock property store
+            one(mockUserWrapper).getPropertyValue(username, propertyToLookup);
+            will(returnValue(expectedPropertyValue));
+
+            allowing(mockXMPPServer).isLocal(with(a(JID.class)));
+            will(returnValue(true));
+
+        }});
+
+        // Result stanza to populate
+        IQ result = new IQ(IQ.Type.result);
+        Element childElement = result.setChildElement("command", COMMANDS_NAMESPACE);
+
+        getUserAdditionalPropertyCommand.execute(mockSessionData, childElement);
+
+        context.assertIsSatisfied();
+
+        final Element x = childElement.element("x");
+        assertEquals("result", x.attributeValue("type"));
+        assertNotNull("Response should contain reported element", x.element("reported"));
+        assertEquals("Reported element should contain 2 fields", 2,  x.element("reported").elements().size());
+        assertEquals("Reported element should key field", "key",  x.element("reported").elements().get(0).attribute("var").getValue());
+        assertEquals("Reported element should value field", "value",  x.element("reported").elements().get(1).attribute("var").getValue());
     }
 
     @Test

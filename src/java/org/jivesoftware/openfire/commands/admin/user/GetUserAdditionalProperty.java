@@ -86,10 +86,8 @@ public class GetUserAdditionalProperty extends AdHocCommand {
 
         DataForm form = new DataForm(DataForm.Type.result);
 
-        FormField field = form.addField();
-        field.setType(FormField.Type.hidden);
-        field.setVariable("FORM_TYPE");
-        field.addValue("http://jabber.org/protocol/admin");
+        form.addReportedField("key", "Additional user property key", FormField.Type.text_single);
+        form.addReportedField("value", "Additional user property value", FormField.Type.text_single);
 
         String propertyValue = lookupProperty(account.getNode(), propertyKey);
 

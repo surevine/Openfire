@@ -19,6 +19,10 @@ import java.util.Map;
  */
 public class GetUserAdditionalProperty extends AdHocCommand {
 
+    private static final String ACCOUNT_JID_VAR = "accountjid";
+    private static final String PROPERTY_KEY_VAR = "key";
+    private static final String PROPERTY_VALUE_VAR = "value";
+
     private XMPPServer xmppServer;
     private UserWrapper propertyStore;
 
@@ -42,17 +46,23 @@ public class GetUserAdditionalProperty extends AdHocCommand {
 
         Map<String, List<String>> data = sessionData.getData();
 
-        String accountJid;
-        String propertyKey;
+        final boolean requestIsMissingAccountJID = !data.containsKey(ACCOUNT_JID_VAR);
+        final boolean requestIsMissingKey = !data.containsKey(PROPERTY_KEY_VAR);
 
-        try {
-            accountJid = data.get("accountjid").get(0);
-            propertyKey = data.get("key").get(0);
-        }
-        catch (NullPointerException ne) {
+        if (requestIsMissingAccountJID || requestIsMissingKey) {
             Element note = command.addElement("note");
             note.addAttribute("type", "error");
             note.setText("accountjid and key are required parameters.");
+            return;
+        }
+
+        String accountJid = data.get(ACCOUNT_JID_VAR).get(0);
+        String propertyKey = data.get(PROPERTY_KEY_VAR).get(0);
+
+        if (accountJid.isEmpty() || propertyKey.isEmpty()) {
+            Element note = command.addElement("note");
+            note.addAttribute("type", "error");
+            note.setText("accountjid and key must not be empty.");
             return;
         }
 
@@ -84,8 +94,8 @@ public class GetUserAdditionalProperty extends AdHocCommand {
         String propertyValue = lookupProperty(account.getNode(), propertyKey);
 
         Map<String,Object> fields = new HashMap<>();
-        fields.put("key", propertyKey);
-        fields.put("value", propertyValue);
+        fields.put(PROPERTY_KEY_VAR, propertyKey);
+        fields.put(PROPERTY_VALUE_VAR, propertyValue);
         form.addItemFields(fields);
 
         command.add(form.getElement());
@@ -128,13 +138,13 @@ public class GetUserAdditionalProperty extends AdHocCommand {
         field = form.addField();
         field.setType(FormField.Type.jid_single);
         field.setLabel("The Jabber ID for which to lookup additional properties");
-        field.setVariable("accountjid");
+        field.setVariable(ACCOUNT_JID_VAR);
         field.setRequired(true);
 
         field = form.addField();
         field.setType(FormField.Type.text_single);
         field.setLabel("The system property key to fetch the value of");
-        field.setVariable("key");
+        field.setVariable(PROPERTY_KEY_VAR);
         field.setRequired(true);
 
         // Add the form to the command

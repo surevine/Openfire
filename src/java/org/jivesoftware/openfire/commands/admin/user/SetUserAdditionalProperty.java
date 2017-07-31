@@ -19,6 +19,10 @@ import java.util.Map;
  */
 public class SetUserAdditionalProperty extends AdHocCommand {
 
+    private static final String ACCOUNT_JID_VAR = "accountjid";
+    private static final String PROPERTY_KEY_VAR = "key";
+    private static final String PROPERTY_VALUE_VAR = "value";
+
     private XMPPServer xmppServer;
     private UserWrapper propertyStore;
 
@@ -44,18 +48,23 @@ public class SetUserAdditionalProperty extends AdHocCommand {
 
         Element note = command.addElement("note");
 
-        String accountJid;
-        String propertyKey;
-        String propertyValue;
+        final boolean requestIsMissingAccountJID = !data.containsKey(ACCOUNT_JID_VAR);
+        final boolean requestIsMissingKey = !data.containsKey(PROPERTY_KEY_VAR);
+        final boolean requestIsMissingValue = !data.containsKey(PROPERTY_VALUE_VAR);
 
-        try {
-            accountJid = data.get("accountjid").get(0);
-            propertyKey = data.get("key").get(0);
-            propertyValue = data.get("value").get(0);
-        }
-        catch (NullPointerException ne) {
+        if (requestIsMissingAccountJID || requestIsMissingKey || requestIsMissingValue) {
             note.addAttribute("type", "error");
             note.setText("accountjid, key, and value are required parameters.");
+            return;
+        }
+
+        String accountJid = data.get(ACCOUNT_JID_VAR).get(0);
+        String propertyKey = data.get(PROPERTY_KEY_VAR).get(0);
+        String propertyValue = data.get(PROPERTY_VALUE_VAR).get(0);
+
+        if (accountJid.isEmpty() || propertyKey.isEmpty()) {
+            note.addAttribute("type", "error");
+            note.setText("accountjid and key must not be empty.");
             return;
         }
 
@@ -126,7 +135,7 @@ public class SetUserAdditionalProperty extends AdHocCommand {
         field = form.addField();
         field.setType(FormField.Type.text_single);
         field.setLabel("The value of the property to set");
-        field.setVariable("value");
+        field.setVariable(PROPERTY_VALUE_VAR);
         field.setRequired(true);
 
         command.add(form.getElement());

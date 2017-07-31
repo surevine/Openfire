@@ -231,9 +231,82 @@ public class SetUserAdditionalPropertyTest {
     }
 
     @Test
+    public void testShouldErrorIfEmptyKeySupplied() {
+
+        final String username = "user";
+        final String accountJid = username + "@localhost";
+        final String propertyToSet = "";
+        final String propertyValue = "property-value";
+
+        // Test data
+        requestData.put("accountjid", new ArrayList<String>() {{
+            add(accountJid);
+        }});
+        requestData.put("key", new ArrayList<String>() {{
+            add(propertyToSet);
+        }});
+        requestData.put("value", new ArrayList<String>() {{
+            add(propertyValue);
+        }});
+
+        context.checking(new Expectations() {{
+            one(mockSessionData).getData();
+            will(returnValue(requestData));
+        }});
+
+        IQ result = new IQ(IQ.Type.result);
+        Element childElement = result.setChildElement("command", COMMANDS_NAMESPACE);
+
+        setUserAdditionalPropertyCommand.execute(mockSessionData, childElement);
+
+        context.assertIsSatisfied();
+
+        final Element note = childElement.element("note");
+        assertEquals("Should return an error note", "error", note.attributeValue("type"));
+        assertThat("Error should mention empty", note.getText().toLowerCase(), containsString("empty"));
+        assertThat("Error should mention key", note.getText().toLowerCase(), containsString("key"));
+    }
+
+    @Test
     public void testShouldErrorIfEmptyJIDSupplied() {
 
         final String accountJid = "";
+        final String propertyToSet = "property.to.set";
+        final String propertyValue = "property-value";
+
+        // Test data
+        requestData.put("accountjid", new ArrayList<String>() {{
+            add(accountJid);
+        }});
+        requestData.put("key", new ArrayList<String>() {{
+            add(propertyToSet);
+        }});
+        requestData.put("value", new ArrayList<String>() {{
+            add(propertyValue);
+        }});
+
+        context.checking(new Expectations() {{
+            one(mockSessionData).getData();
+            will(returnValue(requestData));
+        }});
+
+        IQ result = new IQ(IQ.Type.result);
+        Element childElement = result.setChildElement("command", COMMANDS_NAMESPACE);
+
+        setUserAdditionalPropertyCommand.execute(mockSessionData, childElement);
+
+        context.assertIsSatisfied();
+
+        final Element note = childElement.element("note");
+        assertEquals("Should return an error note", "error", note.attributeValue("type"));
+        assertThat("Error should mention empty", note.getText().toLowerCase(), containsString("empty"));
+        assertThat("Error should mention accountjid", note.getText().toLowerCase(), containsString("accountjid"));
+    }
+
+    @Test
+    public void testShouldErrorIfInvalidJIDSupplied() {
+
+        final String accountJid = "!!!!!!";
         final String propertyToSet = "property.to.set";
         final String propertyValue = "property-value";
 

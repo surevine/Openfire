@@ -124,6 +124,41 @@ public class GetUserAdditionalPropertyTest {
     }
 
     @Test
+    public void testShouldErrorIfEmptyKeySupplied() {
+
+        final String username = "user";
+        final String accountJid = username + "@localhost";
+        final String propertyToLookup = "";
+
+        // Test data
+        requestData.put("accountjid", new ArrayList<String>() {{
+            add(accountJid);
+        }});
+        requestData.put("key", new ArrayList<String>() {{
+            add(propertyToLookup);
+        }});
+
+        context.checking(new Expectations() {{
+            // Our mock test data
+            one(mockSessionData).getData();
+            will(returnValue(requestData));
+        }});
+
+        // Result stanza to populate
+        IQ result = new IQ(IQ.Type.result);
+        Element childElement = result.setChildElement("command", COMMANDS_NAMESPACE);
+
+        getUserAdditionalPropertyCommand.execute(mockSessionData, childElement);
+
+        context.assertIsSatisfied();
+
+        final Element note = childElement.element("note");
+        assertEquals("Should return an error note", "error", note.attributeValue("type"));
+        assertThat("Error should mention empty", note.getText().toLowerCase(), containsString("empty"));
+        assertThat("Error should mention key", note.getText().toLowerCase(), containsString("key"));
+    }
+
+    @Test
     public void testShouldErrorIfNoJIDSupplied() {
 
         final String propertyToLookup = "property.to.lookup";
@@ -156,6 +191,40 @@ public class GetUserAdditionalPropertyTest {
     public void testShouldErrorIfEmptyJIDSupplied() {
 
         final String accountJid = "";
+        final String propertyToLookup = "property.to.lookup";
+
+        // Test data
+        requestData.put("accountjid", new ArrayList<String>() {{
+            add(accountJid);
+        }});
+        requestData.put("key", new ArrayList<String>() {{
+            add(propertyToLookup);
+        }});
+
+        context.checking(new Expectations() {{
+            // Our mock test data
+            one(mockSessionData).getData();
+            will(returnValue(requestData));
+        }});
+
+        // Result stanza to populate
+        IQ result = new IQ(IQ.Type.result);
+        Element childElement = result.setChildElement("command", COMMANDS_NAMESPACE);
+
+        getUserAdditionalPropertyCommand.execute(mockSessionData, childElement);
+
+        context.assertIsSatisfied();
+
+        final Element note = childElement.element("note");
+        assertEquals("Should return an error note", "error", note.attributeValue("type"));
+        assertThat("Error should mention empty", note.getText().toLowerCase(), containsString("empty"));
+        assertThat("Error should mention accountjid", note.getText().toLowerCase(), containsString("accountjid"));
+    }
+
+    @Test
+    public void testShouldErrorIfInvalidJIDSupplied() {
+
+        final String accountJid = "!!!!!!!!";
         final String propertyToLookup = "property.to.lookup";
 
         // Test data

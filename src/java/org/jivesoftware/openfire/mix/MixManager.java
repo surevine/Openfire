@@ -75,7 +75,7 @@ public class MixManager extends BasicModule {
 
 		MixChannelArchiveRepository mar = new JpaMixChannelArchiveRepositoryImpl("mam", this.getDbConfig());
 		QueryFactory queryFactory = new MamQueryFactory();
-		MessageArchiveService archive = new MessageArchiveServiceImpl(mar, router, queryFactory);
+		MessageArchiveService archive = new MessageArchiveServiceImpl(xmppServer, mar, router, queryFactory);
     	
     	this.persistenceManager = new MixPersistenceManagerImpl(JiveProperties.getInstance(), xmppService, 
     			new MixIdentityManager(CHANNEL_SEQ_TYPE, 5), new MixIdentityManager(MCP_SEQ_TYPE, 5), new MixIdentityManager(MCP_SUBS_SEQ_TYPE, 5), archive);

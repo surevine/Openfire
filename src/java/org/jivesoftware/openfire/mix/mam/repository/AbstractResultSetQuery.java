@@ -17,8 +17,8 @@ public abstract class AbstractResultSetQuery implements ResultSetQuery {
 	protected String channelName;
 	
 	protected int limit = 0;
-	
-	private String[] paramKeys = {"FORM_TYPE", "start", "end", "with"};
+
+	private String[] paramKeys = {"FORM_TYPE", "start", "end", "with", "search"};
 	
 	protected Map<String, String> params = new HashMap<>();
 

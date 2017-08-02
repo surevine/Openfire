@@ -99,7 +99,7 @@ public class JpaMixChannelArchiveRepositoryImplTest {
 
 	@Test
 	public void thatMessageCountWorks() throws MixPersistenceException {
-		int count = 50;
+		int count = 5;
 
 		for (int i = 0; i < count; i++) {
 			fixture.archive(mcm);
@@ -116,6 +116,26 @@ public class JpaMixChannelArchiveRepositoryImplTest {
 		fixture.retract(id);
 		
 		assertNull(fixture.findById(id));
+	}
+
+	@Test
+	public void thatSearchingContentWorks() throws MixPersistenceException {
+		fixture.archive(mcm);
+
+		assertEquals(1, fixture.searchAllMessages("ipsum").size());
+		assertEquals(0, fixture.searchAllMessages("not-a-term").size());
+	}
+
+	@Test
+	public void thatSearchingLimitedContentWorks() throws MixPersistenceException {
+		int limit = 5;
+
+		for (int i = 0; i < limit * 2; i++) {
+			fixture.archive(mcm);
+		}
+
+		assertEquals(limit, fixture.searchAllMessagesLimit("ipsum", limit).size());
+		assertEquals(0, fixture.searchAllMessagesLimit("not-a-term", limit).size());
 	}
 
 	@Test

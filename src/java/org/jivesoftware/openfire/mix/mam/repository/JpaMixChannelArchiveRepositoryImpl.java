@@ -29,12 +29,14 @@ public class JpaMixChannelArchiveRepositoryImpl implements MixChannelArchiveRepo
 	private static final String FROM_PARAM = "from";
 	private static final String TIMESTAMP_PARAM = "ts";
 	private static final String CHANNEL_PARAM = "channel";
+	private static final String SEARCH_TERM_PARAM = "term";
 	private static final String SELECT_TIME_BOUND_BY_CHANNEL = "selectTimeBoundByChannel";
 	private static final String SELECT_BY_CHANNEL_WITH = "selectByChannelWith";
 	private static final String MESSAGE_COUNT_BY_CHANNEL = "messageCountByChannel";
 	private static final String SELECT_MESSAGES_BY_CHANNEL_AFTER = "selectMessagesByChannelAfter";
 	private static final String SELECT_MESSAGES_BY_CHANNEL_SINCE = "selectMessagesByChannelSince";
 	private static final String SELECT_BY_CHANNEL = "selectByChannel";
+	private static final String SELECT_MESSAGES_BY_SEARCH = "selectMessagesBySearch";
 
 	private EntityManagerFactory emf;
 
@@ -60,10 +62,12 @@ public class JpaMixChannelArchiveRepositoryImpl implements MixChannelArchiveRepo
 		
 		Query selectByChannelWith = em.createQuery("SELECT a FROM ArchivedMixChannelMessage a WHERE a.channel LIKE :channel AND a.fromJID LIKE :from");
 		emf.addNamedQuery(SELECT_BY_CHANNEL_WITH, selectByChannelWith);
-		
+
 		Query selectTimeBoundByChannel = em.createQuery("SELECT a FROM ArchivedMixChannelMessage a WHERE a.channel LIKE :channel AND a.archiveTimestamp > :start AND a.archiveTimestamp < :end");
 		emf.addNamedQuery(SELECT_TIME_BOUND_BY_CHANNEL, selectTimeBoundByChannel);
-		
+
+		Query selectMessagesBySearch = em.createQuery("SELECT a FROM ArchivedMixChannelMessage a WHERE a.stanza LIKE :term");
+		emf.addNamedQuery(SELECT_MESSAGES_BY_SEARCH, selectMessagesBySearch);
 	}
 
 
@@ -221,6 +225,24 @@ public class JpaMixChannelArchiveRepositoryImpl implements MixChannelArchiveRepo
 		return nq.getResultList();
 	}
 
+	@Override
+	public List<ArchivedMixChannelMessage> searchAllMessages(String term) {
+		TypedQuery<ArchivedMixChannelMessage> nq = emf.createEntityManager().createNamedQuery(SELECT_MESSAGES_BY_SEARCH, ArchivedMixChannelMessage.class);
+		nq.setParameter(SEARCH_TERM_PARAM, '%' + term + '%');
+
+		return nq.getResultList();
+	}
+
+	@Override
+	public List<ArchivedMixChannelMessage> searchAllMessagesLimit(String term, int limit) {
+		TypedQuery<ArchivedMixChannelMessage> nq = emf.createEntityManager().createNamedQuery(SELECT_MESSAGES_BY_SEARCH, ArchivedMixChannelMessage.class);
+		nq.setParameter(SEARCH_TERM_PARAM, '%' + term + '%');
+		nq.setMaxResults(limit);
+
+		return nq.getResultList();
+
+	}
+
     /**
      * Postgres doesn't allow text content with the null character '\0' so just strip it from any user generated content.
      *
@@ -243,5 +265,4 @@ public class JpaMixChannelArchiveRepositoryImpl implements MixChannelArchiveRepo
             toArchive.setStanza(toArchive.getStanza().replace("&#0;", ""));
 		}
     }
-
 }

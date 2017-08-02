@@ -26,13 +26,16 @@ import org.xmpp.packet.Message;
 public class MessageArchiveServiceImpl implements MessageArchiveService {
 	private static final Logger Log = LoggerFactory.getLogger(ArchivedMixChannelMessage.class);
 
+	private XMPPServer xmppServer;
+
 	private MixChannelArchiveRepository repository;
 
 	private PacketRouter router;
 
 	private QueryFactory queryFactory;
 
-	public MessageArchiveServiceImpl(MixChannelArchiveRepository mar, PacketRouter router, QueryFactory queryFactory) {
+	public MessageArchiveServiceImpl(XMPPServer xmppServer, MixChannelArchiveRepository mar, PacketRouter router, QueryFactory queryFactory) {
+		this.xmppServer = xmppServer;
 		this.repository = mar;
 		this.router = router;
 		this.queryFactory = queryFactory;
@@ -60,7 +63,7 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
 
 					ArchivedMixChannelMessage result = iter.next();
 
-					AccessControlDecisionFunction acdf = XMPPServer.getInstance().getAccessControlDecisionFunction();
+					AccessControlDecisionFunction acdf = xmppServer.getAccessControlDecisionFunction();
 					SecurityLabel outboundLabel = null;
 					if (acdf != null) {
 						SecurityLabel archiveLabel = result.getSecurityLabel();

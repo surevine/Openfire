@@ -23,11 +23,7 @@ import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.auth.UnauthorizedException;
 import org.jivesoftware.openfire.commands.admin.*;
 import org.jivesoftware.openfire.commands.admin.group.*;
-import org.jivesoftware.openfire.commands.admin.user.AddUser;
-import org.jivesoftware.openfire.commands.admin.user.DeleteUser;
-import org.jivesoftware.openfire.commands.admin.user.AuthenticateUser;
-import org.jivesoftware.openfire.commands.admin.user.ChangeUserPassword;
-import org.jivesoftware.openfire.commands.admin.user.UserProperties;
+import org.jivesoftware.openfire.commands.admin.user.*;
 import org.jivesoftware.openfire.commands.event.*;
 import org.jivesoftware.openfire.disco.*;
 import org.jivesoftware.openfire.handler.IQHandler;
@@ -231,6 +227,9 @@ public class AdHocCommandHandler extends IQHandler
         addCommand(new VCardModified());
         addCommand(new GetAdminConsoleInfo());
         addCommand(new GetSystemProperty());
+        addCommand(new SetSystemProperty());
+        addCommand(new GetUserAdditionalProperty());
+        addCommand(new SetUserAdditionalProperty());
     }
 
     private void startCommand(AdHocCommand command) {

@@ -6,7 +6,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
- * Mockable wrapper for JiveGlobals
+ * Mockable wrapper for {@link JiveGlobals}
  */
 public class JiveGlobalsWrapper {
 
@@ -59,10 +59,24 @@ public class JiveGlobalsWrapper {
     /**
      * Determines whether a property is configured for encryption.
      *
+     * Wraps {@link JiveGlobals#isPropertyEncrypted(String)}
+     *
      * @param key The name of the property
      * @return True if the property is stored using encryption, otherwise false
      */
     public boolean isPropertyEncrypted(String key) {
         return JiveGlobals.isPropertyEncrypted(key);
+    }
+
+    /**
+     * Sets a system property. If property doesn't already exist, a new one will be created.
+     *
+     * Wraps {@link JiveGlobals#setProperty(String, String)}
+     *
+     * @param key the key of the property being set.
+     * @param value the value of the property being set.
+     */
+    public void setProperty(String key, String value) {
+        JiveGlobals.setProperty(key, value);
     }
 }

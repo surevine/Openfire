@@ -119,6 +119,28 @@ public class JpaMixChannelArchiveRepositoryImplTest {
 	}
 
 	@Test
+	public void thatSearchingContentWorks() throws MixPersistenceException {
+		fixture.archive(mcm);
+
+		assertEquals(1, fixture.searchAllMessages("ipsum").size());
+		assertEquals(0, fixture.searchAllMessages("not-a-term").size());
+	}
+
+	@Test
+	public void thatSearchingLimitedContentWorks() throws MixPersistenceException {
+		fixture.archive(mcm);
+
+		int limit = 50;
+
+		for (int i = 0; i < limit * 2; i++) {
+			fixture.archive(mcm);
+		}
+
+		assertEquals(limit, fixture.searchAllMessagesLimit("ipsum", limit).size());
+		assertEquals(0, fixture.searchAllMessagesLimit("not-a-term", limit).size());
+	}
+
+	@Test
 	public void thatNullCharacterIsStrippedFromMessage() throws MixPersistenceException {
 	    String nullCharStr = "\u0000";
 

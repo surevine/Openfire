@@ -99,7 +99,7 @@ public class JpaMixChannelArchiveRepositoryImplTest {
 
 	@Test
 	public void thatMessageCountWorks() throws MixPersistenceException {
-		int count = 50;
+		int count = 5;
 
 		for (int i = 0; i < count; i++) {
 			fixture.archive(mcm);
@@ -128,9 +128,7 @@ public class JpaMixChannelArchiveRepositoryImplTest {
 
 	@Test
 	public void thatSearchingLimitedContentWorks() throws MixPersistenceException {
-		fixture.archive(mcm);
-
-		int limit = 50;
+		int limit = 5;
 
 		for (int i = 0; i < limit * 2; i++) {
 			fixture.archive(mcm);

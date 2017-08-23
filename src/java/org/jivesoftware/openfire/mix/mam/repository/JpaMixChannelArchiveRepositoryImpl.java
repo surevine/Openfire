@@ -66,7 +66,7 @@ public class JpaMixChannelArchiveRepositoryImpl implements MixChannelArchiveRepo
 		Query selectTimeBoundByChannel = em.createQuery("SELECT a FROM ArchivedMixChannelMessage a WHERE a.channel LIKE :channel AND a.archiveTimestamp > :start AND a.archiveTimestamp < :end");
 		emf.addNamedQuery(SELECT_TIME_BOUND_BY_CHANNEL, selectTimeBoundByChannel);
 
-		Query selectMessagesBySearch = em.createQuery("SELECT a FROM ArchivedMixChannelMessage a WHERE a.stanza LIKE :term");
+		Query selectMessagesBySearch = em.createQuery("SELECT a FROM ArchivedMixChannelMessage a WHERE a.stanza ILIKE :term");
 		emf.addNamedQuery(SELECT_MESSAGES_BY_SEARCH, selectMessagesBySearch);
 	}
 

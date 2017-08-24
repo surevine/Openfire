@@ -56,11 +56,11 @@ public class TotpSetupTask implements PostAuthenticationTask {
                 googleAuthenticator = new GoogleAuthenticator();
             }
             boolean OK = googleAuthenticator.authorize(key.getKey(), totpCode);
-            user.getProperties().put("openfire.totp.secret", AuthFactory.encryptPassword(key.getKey()));
             completed = true;
             if (!OK) {
                 throw new SaslFailureException(Failure.NOT_AUTHORIZED, "TOTP code error");
             }
+            user.getProperties().put("openfire.totp.secret", AuthFactory.encryptPassword(key.getKey()));
             return null;
         }
         GoogleAuthenticatorKey key = googleAuthenticator.createCredentials();

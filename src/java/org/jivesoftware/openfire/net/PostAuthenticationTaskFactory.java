@@ -39,6 +39,12 @@ public class PostAuthenticationTaskFactory {
         if (name.equalsIgnoreCase("PASSWORD-RESET")) {
             return new PasswordResetTask(user);
         }
+        if (name.equalsIgnoreCase("TOTP")) {
+            return new TotpVerifyTask(user);
+        }
+        if (name.equalsIgnoreCase("TOTP-INIT")) {
+            return new TotpSetupTask(user);
+        }
         throw new SaslFailureException(Failure.NOT_AUTHORIZED, "Requested task not understood");
     }
 }

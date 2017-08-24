@@ -376,10 +376,10 @@ public class SASLAuthentication {
 
                         final String taskName = doc.attributeValue( "task" ).toUpperCase();
 
-                        if (taskName == "PASSWORD-RESET") {
+                        if (taskName != null) {
                             final String authzid = session.getAddress().getNode();
                             User user = UserManager.getInstance().getUser(authzid);
-                            PostAuthenticationTask task = new PasswordResetTask(user);
+                            PostAuthenticationTask task = PostAuthenticationTaskFactory.getInstance().getTask(user, taskName);
                             session.setSessionData("PostAuthTask", task);
                         } else {
                             throw new SaslFailureException( Failure.INVALID_MECHANISM, "No such task known." );

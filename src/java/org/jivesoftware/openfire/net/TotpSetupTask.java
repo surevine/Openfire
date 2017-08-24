@@ -55,7 +55,7 @@ public class TotpSetupTask implements PostAuthenticationTask {
             if (googleAuthenticator == null) {
                 googleAuthenticator = new GoogleAuthenticator();
             }
-            boolean OK = googleAuthenticator.authorize(key, totpCode);
+            boolean OK = googleAuthenticator.authorize(key.getKey(), totpCode);
             user.getProperties().put("openfire.totp.secret", AuthFactory.encryptPassword(key.getKey()));
             completed = true;
             if (!OK) {

@@ -32,6 +32,9 @@ import org.jivesoftware.openfire.sasl.JiveSharedSecretSaslServer;
 import org.jivesoftware.openfire.sasl.SaslFailureException;
 import org.jivesoftware.openfire.session.*;
 import org.jivesoftware.openfire.spi.ConnectionType;
+import org.jivesoftware.openfire.user.User;
+import org.jivesoftware.openfire.user.UserManager;
+import org.jivesoftware.openfire.user.UserNotFoundException;
 import org.jivesoftware.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +49,8 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.regex.Pattern;
+
+import static org.jivesoftware.openfire.net.SASLAuthentication.ElementType.NEXT;
 
 /**
  * SASLAuthentication is responsible for returning the available SASL mechanisms to use and for
@@ -65,7 +70,7 @@ import java.util.regex.Pattern;
  */
 public class SASLAuthentication {
 
-	private static final Logger Log = LoggerFactory.getLogger(SASLAuthentication.class);
+    private static final Logger Log = LoggerFactory.getLogger(SASLAuthentication.class);
 
     // http://stackoverflow.com/questions/8571501/how-to-check-whether-the-string-is-base64-encoded-or-not
     // plus an extra regex alternative to catch a single equals sign ('=', see RFC 6120 6.4.2)
@@ -124,6 +129,7 @@ public class SASLAuthentication {
         ABORT,
         AUTH,
         AUTHENTICATE,
+        NEXT,
         RESPONSE,
         CHALLENGE,
         FAILURE,
@@ -239,17 +245,18 @@ public class SASLAuthentication {
         return result;
     }
 
-    private static byte[] decodeData(Element doc) throws SaslFailureException {
+    private static byte[] decodeData(Element doc, boolean usingSASL2) throws SaslFailureException {
         // Decode any data that is provided in the client response.
         if (doc == null) return null;
         final String encoded = doc.getTextTrim();
         final byte[] decoded;
         if ( encoded == null || encoded.isEmpty()) // java SaslServer cannot handle a null.
         {
-            decoded = null;
+            decoded = usingSASL2 ? new byte[0] : null;
         }
         else if ( encoded.equals("=") )
         {
+            if (usingSASL2) throw new SaslFailureException( Failure.INCORRECT_ENCODING);
             decoded = new byte[0];
         }
         else
@@ -278,6 +285,7 @@ public class SASLAuthentication {
      */
     public static Status handle(LocalSession session, Element doc, boolean usingSASL2)
     {
+        Log.debug("Handling SASL element {} in namespace {}", doc.getName(), doc.getNamespaceURI());
         try
         {
             if ( usingSASL2 && !doc.getNamespaceURI().equals( SASL2_NAMESPACE ) )
@@ -341,7 +349,7 @@ public class SASLAuthentication {
                     session.setSessionData( "SaslServer", saslServer );
 
                     if (elementType == ElementType.AUTHENTICATE) {
-                        data = doc.element("additional-data");
+                        data = doc.element("initial-response");
                     }
 
                     if ( mechanismName.equals( "DIGEST-MD5" ) )
@@ -352,50 +360,92 @@ public class SASLAuthentication {
                         if (data != null) data.setText( "" );
                     }
 
+
+                case NEXT:
+                    // Client wishes to (or, more probably, has been forced to) perform a subsequent action,
+                    // like changing their password or something 2FA related.
+                    // Wrapped in a conditional to allow fall-through.
+                    if (elementType == NEXT) {
+                        if (!(session instanceof LocalClientSession)) {
+                            throw new SaslFailureException(Failure.INVALID_MECHANISM, "No PostAuthTasks for servers.");
+                        }
+                        if ( doc.attributeValue( "task" ) == null )
+                        {
+                            throw new SaslFailureException( Failure.INVALID_MECHANISM, "Peer did not specify a task." );
+                        }
+
+                        final String taskName = doc.attributeValue( "task" ).toUpperCase();
+
+                        if (taskName == "PASSWORD-RESET") {
+                            final String authzid = session.getAddress().getNode();
+                            User user = UserManager.getInstance().getUser(authzid);
+                            PostAuthenticationTask task = new PasswordResetTask(user);
+                            session.setSessionData("PostAuthTask", task);
+                        } else {
+                            throw new SaslFailureException( Failure.INVALID_MECHANISM, "No such task known." );
+                        }
+                        data = doc.element("initial-response");
+                    }
+
                     // intended fall-through
                 case RESPONSE:
 
                     saslServer = (SaslServer) session.getSessionData( "SaslServer" );
+                    PostAuthenticationTask task = (PostAuthenticationTask) session.getSessionData("PostAuthTask");
 
-                    if ( saslServer == null )
+                    if ( task != null )
+                    {
+                        // CAVEAT - This is all a bit cut'n'pastey.
+                        // Decode any data that is provided in the client response.
+                        final byte[] decoded = decodeData(data, usingSASL2);
+
+                        // Process client response.
+                        final byte[] challenge = task.evaluateResponse(decoded == null ? new byte[0] : decoded); // Either a challenge or success data. Note that Java SASL cannot handle a null here.
+
+                        if (!task.isCompleted()) {
+                            // Not complete: client is challenged for additional steps.
+                            sendChallenge(session, challenge, usingSASL2);
+                            return Status.needResponse;
+                        }
+
+                        // Success!
+                        authenticationSuccessful(session, session.getAddress().toFullJID(), challenge, usingSASL2);
+                        session.removeSessionData("PostAuthTask");
+                        return Status.authenticated;
+                    }
+                    else if ( saslServer == null )
                     {
                         // Client sends response without a preceding auth?
                         throw new IllegalStateException( "A SaslServer instance was not initialized and/or stored on the session." );
                     }
-
+                    Log.debug("Processing [initial] response");
                     // Decode any data that is provided in the client response.
-                    final byte[] decoded = decodeData(data);
+                    final byte[] decoded = decodeData(data, usingSASL2);
 
                     // Process client response.
-                    final byte[] challenge = saslServer.evaluateResponse( decoded == null ? new byte[0] : decoded ); // Either a challenge or success data. Note that Java SASL cannot handle a null here.
+                    final byte[] challenge = saslServer.evaluateResponse(decoded == null ? new byte[0] : decoded); // Either a challenge or success data. Note that Java SASL cannot handle a null here.
 
-                    if ( !saslServer.isComplete() )
-                    {
+                    if (!saslServer.isComplete()) {
                         // Not complete: client is challenged for additional steps.
-                        sendChallenge( session, challenge, usingSASL2 );
+                        sendChallenge(session, challenge, usingSASL2);
                         return Status.needResponse;
                     }
 
                     // Success!
-                    if ( session instanceof IncomingServerSession )
-                    {
+                    if (session instanceof IncomingServerSession) {
                         // Flag that indicates if certificates of the remote server should be validated.
-                        final boolean verify = JiveGlobals.getBooleanProperty( ConnectionSettings.Server.TLS_CERTIFICATE_VERIFY, true );
-                        if ( verify )
-                        {
-                            if ( verifyCertificates( session.getConnection().getPeerCertificates(), saslServer.getAuthorizationID(), true ) )
-                            {
-                                ( (LocalIncomingServerSession) session ).tlsAuth();
-                            }
-                            else
-                            {
-                                throw new SaslFailureException( Failure.NOT_AUTHORIZED, "Server-to-Server certificate verification failed." );
+                        final boolean verify = JiveGlobals.getBooleanProperty(ConnectionSettings.Server.TLS_CERTIFICATE_VERIFY, true);
+                        if (verify) {
+                            if (verifyCertificates(session.getConnection().getPeerCertificates(), saslServer.getAuthorizationID(), true)) {
+                                ((LocalIncomingServerSession) session).tlsAuth();
+                            } else {
+                                throw new SaslFailureException(Failure.NOT_AUTHORIZED, "Server-to-Server certificate verification failed.");
                             }
                         }
                     }
 
-                    authenticationSuccessful( session, saslServer.getAuthorizationID(), challenge, usingSASL2 );
-                    session.removeSessionData( "SaslServer" );
+                    authenticationSuccessful(session, saslServer.getAuthorizationID(), challenge, usingSASL2);
+                    session.removeSessionData("SaslServer");
                     return Status.authenticated;
 
                 default:
@@ -480,16 +530,29 @@ public class SASLAuthentication {
         sendElement(session, "challenge", challenge, usingSASL2);
     }
 
-    private static void authenticationSuccessful(LocalSession session, String username,
+    // Returns true if we're done, or false for continue.
+    private static boolean authenticationSuccessful(LocalSession session, String username,
             byte[] successData, boolean usingSASL2) {
         if (username != null && LockOutManager.getInstance().isAccountDisabled(username)) {
             // Interception!  This person is locked out, fail instead!
             LockOutManager.getInstance().recordFailedLogin(username);
             authenticationFailed(session, Failure.ACCOUNT_DISABLED, usingSASL2);
-            return;
+            return true;
         }
+        Set<String> tasks = null;
+        if (session instanceof ClientSession) {
+            try {
+                User user = UserManager.getInstance().getUser(username);
+                tasks = PostAuthenticationTaskFactory.getInstance().availableTasks(user);
+                if (tasks.isEmpty()) tasks = null;
+            } catch (UserNotFoundException e) {
+                authenticationFailed(session, Failure.TEMPORARY_AUTH_FAILURE, usingSASL2);
+                return true;
+            }
+        }
+        boolean finished = (tasks == null);
         if (usingSASL2) {
-            final Element success = DocumentHelper.createElement( new QName( "success", new Namespace( "", SASL2_NAMESPACE ) ) );
+            final Element success = DocumentHelper.createElement(new QName((finished? "success" : "continue"), new Namespace("", SASL2_NAMESPACE)));
             if (successData != null) {
                 String data_b64 = StringUtils.encodeBase64(successData).trim();
                 Element additionalData = success.addElement("additional-data");
@@ -501,12 +564,30 @@ public class SASLAuthentication {
             } else {
                 authId.setText(username);
             }
+            if (tasks != null) {
+                Element nextmechs = success.addElement("tasks");
+                for (String taskname : tasks) {
+                    nextmechs.addElement("task").setText(taskname);
+                }
+            }
+            session.deliverRawText(success.asXML());
+        } else if (!finished) {
+            // More to do but session is SASL 1
+            authenticationFailed(session, Failure.CREDENTIALS_EXPIRED, usingSASL2);
+            return true;
         } else {
             sendElement(session, "success", successData, usingSASL2);
         }
         // We only support SASL for c2s
         if (session instanceof ClientSession) {
             ((LocalClientSession) session).setAuthToken(new AuthToken(username));
+            if (finished) {
+                ((LocalClientSession)session).authCompleted();
+                if (usingSASL2) {
+                    // Send stream features again.
+                    session.deliverRawText("<stream:features xmlns:stream='http://etherx.jabber.org/streams'>" + session.getAvailableStreamFeatures() + "</stream:features>");
+                }
+            }
         }
         else if (session instanceof IncomingServerSession) {
             String hostname = username;
@@ -515,6 +596,7 @@ public class SASLAuthentication {
             ((LocalIncomingServerSession) session).addValidatedDomain(hostname);
             Log.info("Inbound Server {} authenticated (via TLS)", username);
         }
+        return finished;
     }
 
     private static void authenticationFailed(LocalSession session, Failure failure, boolean usingSASL2) {

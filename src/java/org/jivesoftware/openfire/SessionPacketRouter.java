@@ -56,7 +56,11 @@ public class SessionPacketRouter implements PacketRouter {
     public void route(Element wrappedElement)
             throws UnknownStanzaException {
         String tag = wrappedElement.getName();
-        if ("auth".equals(tag) || "response".equals(tag)) {
+        String namespace = wrappedElement.getNamespaceURI();
+        if ("urn:xmpp:sasl:1".equals(namespace)) {
+            SASLAuthentication.handle(session, wrappedElement, true);
+        }
+        else if ("auth".equals(tag) || "response".equals(tag)) {
             SASLAuthentication.handle(session, wrappedElement, false);
         }
         else if ("iq".equals(tag)) {

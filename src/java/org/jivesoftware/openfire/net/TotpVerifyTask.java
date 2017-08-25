@@ -26,6 +26,11 @@ public class TotpVerifyTask implements PostAuthenticationTask {
 
     @Override
     public byte[] evaluateResponse(byte[] response) throws SaslFailureException {
+        // if code not provided along with <next>, respond with empty challenge
+        if (response == null || response.length == 0) {
+            return null;
+        }
+
         // Expecting 6 ASCII digits.
         if (response.length != 6) {
             throw new SaslFailureException(Failure.MALFORMED_REQUEST, "TOTP code too short");

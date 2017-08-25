@@ -9,6 +9,8 @@ import org.jivesoftware.openfire.sasl.Failure;
 import org.jivesoftware.openfire.sasl.SaslFailureException;
 import org.jivesoftware.openfire.user.User;
 import org.jivesoftware.util.JiveGlobals;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Not client sends first (ie, no initial response)
@@ -18,6 +20,8 @@ import org.jivesoftware.util.JiveGlobals;
  */
 
 public class TotpSetupTask implements PostAuthenticationTask {
+    private static final Logger Log = LoggerFactory.getLogger(TotpSetupTask.class);
+
     private boolean completed = false;
     private User user;
     private static GoogleAuthenticator googleAuthenticator = null;
@@ -55,6 +59,8 @@ public class TotpSetupTask implements PostAuthenticationTask {
             if (googleAuthenticator == null) {
                 googleAuthenticator = new GoogleAuthenticator();
             }
+
+            Log.debug("Authorizing secret on setup: {}, code: {}", key.getKey(), totpCode);
             boolean OK = googleAuthenticator.authorize(key.getKey(), totpCode);
             completed = true;
             if (!OK) {

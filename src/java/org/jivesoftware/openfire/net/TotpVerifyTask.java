@@ -7,8 +7,12 @@ import org.jivesoftware.openfire.user.User;
 import org.jivesoftware.util.JiveGlobals;
 
 import com.warrenstrange.googleauth.GoogleAuthenticator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TotpVerifyTask implements PostAuthenticationTask {
+    private static final Logger Log = LoggerFactory.getLogger(TotpVerifyTask.class);
+
     private User user;
     private boolean completed = false;
     private static GoogleAuthenticator googleAuthenticator = null;
@@ -47,6 +51,7 @@ public class TotpVerifyTask implements PostAuthenticationTask {
         if (googleAuthenticator == null) {
             googleAuthenticator = new GoogleAuthenticator();
         }
+        Log.debug("Authorizing secret: {}, code: {}", totpSecret, totpCode);
         boolean OK = googleAuthenticator.authorize(totpSecret, totpCode);
         this.completed = true;
         if (!OK) {

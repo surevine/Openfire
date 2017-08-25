@@ -79,6 +79,6 @@ public class TotpSetupTask implements PostAuthenticationTask {
 
     @Override
     public boolean isCompleted() {
-        return false;
+        return completed;
     }
 }

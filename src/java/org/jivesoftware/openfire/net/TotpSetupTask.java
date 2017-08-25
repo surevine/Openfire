@@ -64,7 +64,10 @@ public class TotpSetupTask implements PostAuthenticationTask {
             return null;
         }
         GoogleAuthenticatorKey key = googleAuthenticator.createCredentials();
-        String uri = GoogleAuthenticatorQRGenerator.getOtpAuthTotpURL("Openfire", user.getUsername() + "@" + XMPPServer.getInstance().getServerInfo().getXMPPDomain(), key);
+
+        String userId = user.getUsername() + "@" + XMPPServer.getInstance().getServerInfo().getXMPPDomain();
+        String uri = "otpauth://totp/" + "Openfire:" + userId + "?secret=" + key.getKey() + "&issuer=Openfire";
+        // String uri = GoogleAuthenticatorQRGenerator.getOtpAuthTotpURL("Openfire", user.getUsername() + "@" + XMPPServer.getInstance().getServerInfo().getXMPPDomain(), key);
         return uri.getBytes();
     }
 

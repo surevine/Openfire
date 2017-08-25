@@ -718,6 +718,15 @@ public class LocalClientSession extends LocalSession implements ClientSession {
     }
 
     /**
+     * Returns an autoToken even if the authentication is not complete.
+     *
+     * @return the authentication token (can be null)
+     */
+    public AuthToken getTemporaryAuthToken() {
+        return authToken;
+    }
+
+    /**
      * Returns the authentication token even if this is not yet completed.
      * @return
      */

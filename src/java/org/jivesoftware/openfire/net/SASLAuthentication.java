@@ -377,7 +377,7 @@ public class SASLAuthentication {
                         final String taskName = doc.attributeValue( "task" ).toUpperCase();
 
                         if (taskName != null) {
-                            final String authzid = session.getAddress().getNode();
+                            final String authzid = ((LocalClientSession) session).getTemporaryAuthToken().getUsername();
                             User user = UserManager.getInstance().getUser(authzid);
                             PostAuthenticationTask task = PostAuthenticationTaskFactory.getInstance().getTask(user, taskName);
                             session.setSessionData("PostAuthTask", task);

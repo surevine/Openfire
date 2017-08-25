@@ -377,12 +377,17 @@ public class SASLAuthentication {
                         final String taskName = doc.attributeValue( "task" ).toUpperCase();
 
                         if (taskName != null) {
+                            Set<String> tasks = (Set<String>)session.getSessionData("tasks");
+                            if (!tasks.contains(taskName)) {
+                                throw new SaslFailureException( Failure.INVALID_MECHANISM, "No such task." );
+                            }
+                            tasks.remove(taskName);
                             final String authzid = ((LocalClientSession) session).getTemporaryAuthToken().getUsername();
                             User user = UserManager.getInstance().getUser(authzid);
                             PostAuthenticationTask task = PostAuthenticationTaskFactory.getInstance().getTask(user, taskName);
                             session.setSessionData("PostAuthTask", task);
                         } else {
-                            throw new SaslFailureException( Failure.INVALID_MECHANISM, "No such task known." );
+                            throw new SaslFailureException( Failure.INVALID_MECHANISM, "No task requested." );
                         }
                         data = doc.element("initial-response");
                     }
@@ -539,16 +544,21 @@ public class SASLAuthentication {
             authenticationFailed(session, Failure.ACCOUNT_DISABLED, usingSASL2);
             return true;
         }
-        Set<String> tasks = null;
-        if (session instanceof ClientSession) {
+        Set<String> tasks = (Set<String>)session.getSessionData("tasks");
+        if (tasks == null && session instanceof ClientSession) {
             try {
                 User user = UserManager.getInstance().getUser(username);
                 tasks = PostAuthenticationTaskFactory.getInstance().availableTasks(user);
                 if (tasks.isEmpty()) tasks = null;
+                session.setSessionData("tasks", tasks);
             } catch (UserNotFoundException e) {
                 authenticationFailed(session, Failure.TEMPORARY_AUTH_FAILURE, usingSASL2);
                 return true;
             }
+        }
+        if (tasks != null && tasks.isEmpty()) {
+            tasks = null;
+            session.removeSessionData("tasks");
         }
         boolean finished = (tasks == null);
         if (usingSASL2) {

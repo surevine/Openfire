@@ -29,6 +29,7 @@ import org.jivesoftware.openfire.keystore.CertificateStoreManager;
 import org.jivesoftware.openfire.lockout.LockOutManager;
 import org.jivesoftware.openfire.sasl.Failure;
 import org.jivesoftware.openfire.sasl.JiveSharedSecretSaslServer;
+import org.jivesoftware.openfire.sasl.PasswordResetToken;
 import org.jivesoftware.openfire.sasl.SaslFailureException;
 import org.jivesoftware.openfire.session.*;
 import org.jivesoftware.openfire.spi.ConnectionType;
@@ -784,7 +785,7 @@ public class SASLAuthentication {
      */
     public static List<String> getEnabledMechanisms()
     {
-        return JiveGlobals.getListProperty("sasl.mechs", Arrays.asList( "ANONYMOUS","PLAIN","DIGEST-MD5","CRAM-MD5","SCRAM-SHA-1","JIVE-SHAREDSECRET","GSSAPI","EXTERNAL" ) );
+        return JiveGlobals.getListProperty("sasl.mechs", Arrays.asList( "ANONYMOUS","PLAIN","DIGEST-MD5","CRAM-MD5","SCRAM-SHA-1","JIVE-SHAREDSECRET","GSSAPI","EXTERNAL", PasswordResetToken.MECH_NAME ) );
     }
 
     /**

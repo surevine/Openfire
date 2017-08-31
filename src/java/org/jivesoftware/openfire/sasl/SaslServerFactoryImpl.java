@@ -57,6 +57,7 @@ public class SaslServerFactoryImpl implements SaslServerFactory
         allMechanisms.add( new Mechanism( "JIVE-SHAREDSECRET", true, false ) );
         allMechanisms.add( new Mechanism( "EXTERNAL", false, false ) );
         allMechanisms.add( new Mechanism( PasswordResetToken.MECH_NAME, false, true));
+        allMechanisms.add( new Mechanism( PasswordResetRequest.MECH_NAME, false, true));
     }
 
     @Override
@@ -117,6 +118,9 @@ public class SaslServerFactoryImpl implements SaslServerFactory
 
             case PasswordResetToken.MECH_NAME:
                 return new PasswordResetToken(cbh);
+
+            case PasswordResetRequest.MECH_NAME:
+                return new PasswordResetRequest(cbh);
 
             case JiveSharedSecretSaslServer.NAME:
                 return new JiveSharedSecretSaslServer();

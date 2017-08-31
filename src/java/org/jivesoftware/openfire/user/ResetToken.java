@@ -21,12 +21,18 @@ public class ResetToken {
         this.expiry = new Date();
         this.token = StringUtils.randomString(20);
     }
+    public ResetToken(Long ttl) {
+        this.expiry = new Date(new Date().getTime() + ttl);
+        this.token = StringUtils.randomString(20);
+    }
     public ResetToken(String encoded) {
         StringTokenizer toks = new StringTokenizer(encoded, "|");
         long expiry = new Long(toks.nextToken());
         this.expiry = new Date(expiry);
         this.token = toks.nextToken();
     }
+
+    public String getToken() { return this.token; }
 
     public boolean matches(ResetToken other) {
         if (this.expiry.before(other.expiry) || this.expiry.equals(other.expiry) || other.expiry.equals(new Date(0L))) {

@@ -76,15 +76,16 @@ public class PasswordResetRequest implements SaslServer {
                 );
 
                 throw new SaslFailureException(Failure.TEMPORARY_AUTH_FAILURE);
+            } else {
+                throw new SaslFailureException("Email didn't match", Failure.NOT_AUTHORIZED);
             }
         } catch (UserNotFoundException e) {
-            throw new SaslFailureException(Failure.NOT_AUTHORIZED);
+            throw new SaslFailureException("User not found", e, Failure.NOT_AUTHORIZED);
         } catch (UnsupportedCallbackException e) {
-            throw new SaslFailureException(Failure.NOT_AUTHORIZED);
+            throw new SaslFailureException("Unsupported callback", e, Failure.NOT_AUTHORIZED);
         } catch (IOException e) {
-            throw new SaslFailureException(Failure.NOT_AUTHORIZED);
+            throw new SaslFailureException("IOException", e, Failure.NOT_AUTHORIZED);
         }
-        throw new SaslFailureException(Failure.NOT_AUTHORIZED);
     }
 
     @Override

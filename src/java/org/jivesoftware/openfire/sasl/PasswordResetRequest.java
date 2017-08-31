@@ -75,10 +75,14 @@ public class PasswordResetRequest implements SaslServer {
                         "Here is your password reset token: " + token.getToken()
                 );
 
-                throw new SaslFailureException(Failure.TEMPORARY_AUTH_FAILURE);
+                throw new SaslFailureException("Password reset sent", Failure.TEMPORARY_AUTH_FAILURE);
             } else {
                 throw new SaslFailureException("Email didn't match", Failure.NOT_AUTHORIZED);
             }
+
+        } catch (SaslFailureException err) {
+            // rethrow SaslFailureExceptions as it's also an IOException
+            throw err;
         } catch (UserNotFoundException e) {
             throw new SaslFailureException("User not found", e, Failure.NOT_AUTHORIZED);
         } catch (UnsupportedCallbackException e) {

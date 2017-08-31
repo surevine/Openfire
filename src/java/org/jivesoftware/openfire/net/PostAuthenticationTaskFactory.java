@@ -22,15 +22,13 @@ public class PostAuthenticationTaskFactory {
     Set<String> availableTasks(User user) {
         Set<String> tasks = new HashSet<>();
         Map<String,String> userProperties = user.getProperties();
+        if (userProperties.containsKey("openfire.password.reset")) {
+            tasks.add("PASSWORD-RESET");
+        }
         if (userProperties.containsKey("openfire.totp.secret")) {
             tasks.add("TOTP");
-        } else {
-            if (userProperties.containsKey("openfire.password.reset")) {
-                tasks.add("PASSWORD-RESET");
-            }
-            if (!userProperties.containsKey("openfire.totp.secret") && JiveGlobals.getBooleanProperty("openfire.totp", false)) {
-                tasks.add("TOTP-INIT");
-            }
+        } else if (JiveGlobals.getBooleanProperty("openfire.totp", false)) {
+            tasks.add("TOTP-INIT");
         }
         return tasks;
     }

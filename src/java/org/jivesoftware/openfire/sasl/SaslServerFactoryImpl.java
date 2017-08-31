@@ -56,6 +56,7 @@ public class SaslServerFactoryImpl implements SaslServerFactory
         allMechanisms.add( new Mechanism( "SCRAM-SHA-1", false, false ) );
         allMechanisms.add( new Mechanism( "JIVE-SHAREDSECRET", true, false ) );
         allMechanisms.add( new Mechanism( "EXTERNAL", false, false ) );
+        allMechanisms.add( new Mechanism( PasswordResetToken.MECH_NAME, false, true));
     }
 
     @Override
@@ -113,6 +114,9 @@ public class SaslServerFactoryImpl implements SaslServerFactory
                     Log.debug( "Unable to instantiate {} Sasl Server: Provided properties contains neither LocalClientSession nor LocalIncomingServerSession instance.", mechanism );
                     return null;
                 }
+
+            case PasswordResetToken.MECH_NAME:
+                return new PasswordResetToken(cbh);
 
             case JiveSharedSecretSaslServer.NAME:
                 return new JiveSharedSecretSaslServer();

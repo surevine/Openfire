@@ -414,7 +414,7 @@ public class SASLAuthentication {
                         }
 
                         // Success!
-                        authenticationSuccessful(session, session.getAddress().toFullJID(), challenge, usingSASL2);
+                        authenticationSuccessful(session, null, challenge, usingSASL2);
                         session.removeSessionData("PostAuthTask");
                         return Status.authenticated;
                     }
@@ -538,12 +538,16 @@ public class SASLAuthentication {
     // Returns true if we're done, or false for continue.
     private static boolean authenticationSuccessful(LocalSession session, String username,
             byte[] successData, boolean usingSASL2) {
+        if (username == null) {
+            username = (String)session.getSessionData("authzid");
+        }
         if (username != null && LockOutManager.getInstance().isAccountDisabled(username)) {
             // Interception!  This person is locked out, fail instead!
             LockOutManager.getInstance().recordFailedLogin(username);
             authenticationFailed(session, Failure.ACCOUNT_DISABLED, usingSASL2);
             return true;
         }
+        session.setSessionData("authzid", username);
         Set<String> tasks = (Set<String>)session.getSessionData("tasks");
         if (tasks == null && session instanceof ClientSession) {
             try {
@@ -561,6 +565,10 @@ public class SASLAuthentication {
             session.removeSessionData("tasks");
         }
         boolean finished = (tasks == null);
+        if (finished) {
+            // Cleanup authzid.
+            session.removeSessionData("authzid");
+        }
         if (usingSASL2) {
             final Element success = DocumentHelper.createElement(new QName((finished? "success" : "continue"), new Namespace("", SASL2_NAMESPACE)));
             if (successData != null) {

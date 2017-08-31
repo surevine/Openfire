@@ -22,7 +22,7 @@ public class PasswordResetRequest implements SaslServer {
     private boolean completed = false;
     private String username = null;
     private CallbackHandler cbh = null;
-    public static final String MECH_NAME = "PASSWORD-RESET-TRIGGER";
+    public static final String MECH_NAME = "PASSWORD-RESET-REQUEST";
     public static final String USERPROP_TOKEN = "openfire.password-reset-token";
 
     public PasswordResetRequest(CallbackHandler cbh) throws SaslException {

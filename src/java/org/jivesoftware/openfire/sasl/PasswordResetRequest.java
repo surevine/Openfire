@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 public class PasswordResetRequest implements SaslServer {
-    private boolean completed = false;
     private String username = null;
     private CallbackHandler cbh = null;
     public static final String MECH_NAME = "PASSWORD-RESET-REQUEST";
@@ -42,7 +41,6 @@ public class PasswordResetRequest implements SaslServer {
             return null;
         }
         try {
-            completed = true;
             StringTokenizer tokens = new StringTokenizer(new String(bytes, StandardCharsets.UTF_8), "\0");
             username = tokens.nextToken();
             String email = tokens.nextToken();
@@ -52,9 +50,7 @@ public class PasswordResetRequest implements SaslServer {
             cbh.handle(new Callback[]{acb});
             if(acb.isAuthorized()) {
                 username = acb.getAuthorizedID();
-                completed = true;
             } else {
-                completed = true;
                 username = null;
                 throw new SaslException("PASSWORD-RESET-REQUEST: user not authorized: "+username);
             }
@@ -74,13 +70,13 @@ public class PasswordResetRequest implements SaslServer {
                         "Here is your password reset token: " + token.getToken()
                 );
 
-                throw new SaslFailureException(Failure.TEMPORARY_AUTH_FAILURE);
+                throw new SaslFailureException(Failure.NOT_AUTHORIZED);
             }
         } catch (Exception e) {
-            throw new SaslFailureException(Failure.TEMPORARY_AUTH_FAILURE);
+            throw new SaslFailureException(Failure.NOT_AUTHORIZED);
         }
 
-        throw new SaslFailureException(Failure.TEMPORARY_AUTH_FAILURE);
+        throw new SaslFailureException(Failure.NOT_AUTHORIZED);
     }
 
     @Override
@@ -111,6 +107,5 @@ public class PasswordResetRequest implements SaslServer {
     @Override
     public void dispose() throws SaslException {
         username = null;
-        completed = false;
     }
 }

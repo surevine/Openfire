@@ -5,6 +5,8 @@ import org.jivesoftware.openfire.user.User;
 import org.jivesoftware.openfire.user.UserManager;
 import org.jivesoftware.openfire.user.UserNotFoundException;
 
+import org.jivesoftware.openfire.net.PasswordResetTask;
+
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.UnsupportedCallbackException;
@@ -64,8 +66,7 @@ public class PasswordResetToken implements SaslServer {
                 ResetToken offered = new ResetToken(null, access_token);
                 if (offered.matches(stored)) {
                     // User should now change their password.
-                    userProperties.put("openfire.password.reset", new Date().toString());
-                    userProperties.remove(USERPROP_TOKEN);
+                    userProperties.put(PasswordResetTask.USERPROP_RESET_REQUIRED, new Date().toString());
                     return null;
                 }
             }

@@ -23,7 +23,6 @@ public class PasswordResetRequest implements SaslServer {
     private String username = null;
     private CallbackHandler cbh = null;
     public static final String MECH_NAME = "PASSWORD-RESET-REQUEST";
-    public static final String USERPROP_TOKEN = "openfire.password-reset-token";
 
     public PasswordResetRequest(CallbackHandler cbh) throws SaslException {
         this.cbh = cbh;
@@ -63,7 +62,7 @@ public class PasswordResetRequest implements SaslServer {
             Map<String, String> userProperties = user.getProperties();
             if (user.getEmail().equals(email)) {
                 ResetToken token = new ResetToken(1000L * 60L * 60L); // one hour
-                userProperties.put(USERPROP_TOKEN, token.toString());
+                userProperties.put(PasswordResetToken.USERPROP_TOKEN, token.toString());
 
                 EmailService.getInstance().sendMessage(
                         user.getName(),
@@ -75,21 +74,13 @@ public class PasswordResetRequest implements SaslServer {
                         "Here is your password reset token: " + token.getToken()
                 );
 
-                throw new SaslFailureException("Password reset sent", Failure.TEMPORARY_AUTH_FAILURE);
-            } else {
-                throw new SaslFailureException("Email didn't match", Failure.NOT_AUTHORIZED);
+                throw new SaslFailureException(Failure.TEMPORARY_AUTH_FAILURE);
             }
-
-        } catch (SaslFailureException err) {
-            // rethrow SaslFailureExceptions as it's also an IOException
-            throw err;
-        } catch (UserNotFoundException e) {
-            throw new SaslFailureException("User not found", e, Failure.NOT_AUTHORIZED);
-        } catch (UnsupportedCallbackException e) {
-            throw new SaslFailureException("Unsupported callback", e, Failure.NOT_AUTHORIZED);
-        } catch (IOException e) {
-            throw new SaslFailureException("IOException", e, Failure.NOT_AUTHORIZED);
+        } catch (Exception e) {
+            throw new SaslFailureException(Failure.TEMPORARY_AUTH_FAILURE);
         }
+
+        throw new SaslFailureException(Failure.TEMPORARY_AUTH_FAILURE);
     }
 
     @Override

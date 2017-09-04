@@ -554,7 +554,7 @@ public class SASLAuthentication {
         if (tasks == null && session instanceof ClientSession) {
             try {
                 User user = UserManager.getInstance().getUser(username);
-                tasks = PostAuthenticationTaskFactory.getInstance().availableTasks(user);
+                tasks = PostAuthenticationTaskFactory.getInstance().availableTasks(session, user);
                 if (tasks.isEmpty()) tasks = null;
                 session.setSessionData("tasks", tasks);
             } catch (UserNotFoundException e) {

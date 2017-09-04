@@ -21,11 +21,13 @@ public class DeviceKeyGen extends IQHandler {
         DeviceKeyMap keyMap = new DeviceKeyMap(barejid.getNode());
         Element query = packet.getChildElement();
         String deviceId = query.attributeValue("device-id");
-        DeviceKeyMap.DeviceKeyInfo keyInfo = keyMap.create(deviceId);
+        String deviceName = query.attributeValue("device-name");
+        DeviceKeyMap.DeviceKeyInfo keyInfo = keyMap.create(deviceId, deviceName);
         keyMap.store();
         IQ response = IQ.createResultIQ(packet);
         Element secret = response.setChildElement("create", "urn:xmpp:devicekey");
         secret.addAttribute("device-id", keyInfo.deviceId);
+        secret.addAttribute("device-name", keyInfo.deviceName);
         secret.setText(keyInfo.secret);
         return response;
     }

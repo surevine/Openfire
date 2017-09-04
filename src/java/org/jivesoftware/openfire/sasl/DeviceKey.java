@@ -4,6 +4,8 @@ import org.dom4j.Element;
 import org.jivesoftware.openfire.IQHandlerInfo;
 import org.jivesoftware.openfire.auth.UnauthorizedException;
 import org.jivesoftware.openfire.handler.IQHandler;
+import org.jivesoftware.openfire.session.LocalClientSession;
+import org.jivesoftware.openfire.session.LocalSession;
 import org.jivesoftware.openfire.user.DeviceKeyMap;
 import org.jivesoftware.openfire.user.User;
 import org.jivesoftware.openfire.user.UserManager;
@@ -28,10 +30,17 @@ public class DeviceKey implements SaslServer{
     private boolean completed;
     private String username;
     private CallbackHandler cbh;
+    private LocalClientSession session;
+    public static final String MECH_NAME = "DEVICE-KEY";
+
+    public DeviceKey(LocalSession session, CallbackHandler cbh) {
+        this.cbh = cbh;
+        this.session = (LocalClientSession)session;
+    }
 
     @Override
     public String getMechanismName() {
-        return "DEVICE-KEY";
+        return MECH_NAME;
     }
 
     @Override
@@ -49,8 +58,7 @@ public class DeviceKey implements SaslServer{
                 completed = true;
             } else {
                 completed = true;
-                username = "Unreal Username";
-                throw new SaslException("PASSWORD-RESET-TOKEN: user not authorized: "+username);
+                throw new SaslException("DEVICE-KEY: user not authorized: "+username);
             }
             DeviceKeyMap keyMap = new DeviceKeyMap(username);
             DeviceKeyMap.DeviceKeyInfo keyInfo = keyMap.getDeviceKeyInfo(deviceId);
@@ -60,8 +68,14 @@ public class DeviceKey implements SaslServer{
                 throw new SaslFailureException(Failure.TEMPORARY_AUTH_FAILURE, "Algorithms unsupported, probably");
             }
             if (!candidate.equals(hmac)) {
-                throw new SaslFailureException(Failure.NOT_AUTHORIZED, "HMAC Mismatch");
+                if (keyInfo.real) {
+                    throw new SaslFailureException(Failure.NOT_AUTHORIZED, "HMAC Mismatch");
+                } else {
+                    throw new SaslFailureException(Failure.NOT_AUTHORIZED, "HMAC mismatch");
+                }
             }
+            // AUTHENTICATED
+            session.setSessionData("openfire.totp.suppress", "DEVICE-KEY");
         } catch (UnsupportedCallbackException e) {
             throw new SaslFailureException(Failure.TEMPORARY_AUTH_FAILURE, "Callback unsupported.");
         } catch (IOException e) {
@@ -78,18 +92,18 @@ public class DeviceKey implements SaslServer{
 
     @Override
     public String getAuthorizationID() {
-        if (!completed) throw new IllegalStateException("Password reset not completed");
+        if (!completed) throw new IllegalStateException("DEVICE-KEY not completed");
         return username;
     }
 
     @Override
     public byte[] unwrap(byte[] bytes, int i, int i1) throws SaslException {
-        throw new IllegalStateException("Unwrap for password reset");
+        throw new IllegalStateException("Unwrap for DEVICE-KEY");
     }
 
     @Override
     public byte[] wrap(byte[] bytes, int i, int i1) throws SaslException {
-        throw new IllegalStateException("Unwrap for password reset");
+        throw new IllegalStateException("Unwrap for DEVICE-KEY");
     }
 
     @Override
@@ -101,7 +115,7 @@ public class DeviceKey implements SaslServer{
                 return null;
             }
         } else {
-            throw new IllegalStateException("PLAIN authentication not completed");
+            throw new IllegalStateException("DEVICE-KEY authentication not completed");
         }
     }
 

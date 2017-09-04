@@ -7,6 +7,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -16,30 +17,36 @@ public class DeviceKeyMap {
     private Map<String,DeviceKeyInfo> devices;
     public static final String ALGORITHM = "HmacSHA256";
     public static final String PROPNAME = "openfire.device.keys";
-    public final DeviceKeyInfo faked = new DeviceKeyInfo("This is a fake one", true);
+    public final DeviceKeyInfo faked = new DeviceKeyInfo("fake-id", "This is a fake one", true);
 
     public class DeviceKeyInfo {
         public final String deviceId;
         public final String secret;
+        public final String deviceName;
         public int counter;
         public boolean real = true;
+        public long expiry;
 
-        public DeviceKeyInfo(String deviceId, boolean real) {
+        public DeviceKeyInfo(String deviceId, String deviceName, boolean real) {
             this.deviceId = deviceId;
+            this.deviceName = deviceName.replace('|', '_');
             this.secret = StringUtils.randomString(40);
             this.counter = 0;
+            this.expiry = (new Date()).getTime() + (3600 * 6); // Six hours expiry. Configurable?
             this.real = real;
         }
 
         public DeviceKeyInfo(String parseMe) {
             StringTokenizer tokens = new StringTokenizer(parseMe, "|");
             this.deviceId = tokens.nextToken();
+            this.deviceName = tokens.nextToken();
             this.secret = tokens.nextToken();
+            this.expiry = new Long(tokens.nextToken());
             this.counter = new Integer(tokens.nextToken());
         }
 
         public String toString() {
-            return this.deviceId + "|" + this.secret + "|" + this.counter;
+            return this.deviceId + "|" + this.deviceName + "|" + this.secret + "|" + this.expiry + "|" + this.counter;
         }
 
         public String generateHash() {
@@ -57,8 +64,8 @@ public class DeviceKeyMap {
         }
     }
 
-    public DeviceKeyInfo create(String deviceId) {
-        DeviceKeyInfo keyInfo =new DeviceKeyInfo(deviceId, true);
+    public DeviceKeyInfo create(String deviceId, String deviceName) {
+        DeviceKeyInfo keyInfo =new DeviceKeyInfo(deviceId, deviceName, true);
         devices.put(deviceId, keyInfo);
         return keyInfo;
     }
@@ -82,7 +89,10 @@ public class DeviceKeyMap {
 
     public DeviceKeyInfo getDeviceKeyInfo(String deviceId) {
         if (devices.containsKey(deviceId)) {
-            return devices.get(deviceId);
+            DeviceKeyInfo keyInfo = devices.get(deviceId);
+            if (keyInfo.expiry >= (new Date()).getTime()) {
+                return keyInfo;
+            }
         }
         return faked;
     }
@@ -91,8 +101,10 @@ public class DeviceKeyMap {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         boolean one = false;
+        long now = (new Date()).getTime();
         for (Map.Entry<String,DeviceKeyInfo> e : devices.entrySet()) {
             if (!e.getValue().real) continue;
+            if (e.getValue().expiry < now) continue;
             if (one) {
                 sb.append(';');
             }

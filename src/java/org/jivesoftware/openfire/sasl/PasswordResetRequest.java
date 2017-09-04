@@ -23,6 +23,33 @@ public class PasswordResetRequest implements SaslServer {
     private CallbackHandler cbh = null;
     public static final String MECH_NAME = "PASSWORD-RESET-REQUEST";
 
+    private static ResetEmailProvider resetEmailProvider = new DefaultResetEmailProvider();
+
+    public static void setResetEmailProvider(ResetEmailProvider provider) {
+        resetEmailProvider = provider;
+    }
+
+    public interface ResetEmailProvider {
+        public void sendMessage(User user, ResetToken resetToken);
+    }
+
+    private static class DefaultResetEmailProvider implements ResetEmailProvider {
+        @Override
+        public void sendMessage(User user, ResetToken resetToken) {
+
+            EmailService.getInstance().sendMessage(
+                    user.getName(),
+                    user.getEmail(),
+                    "admin",
+                    "admin@" + XMPPServer.getInstance().getServerInfo().getXMPPDomain(),
+                    "Password Reset",
+                    "Here is your password reset token: " + resetToken.getToken(),
+                    "Here is your password reset token: " + resetToken.getToken()
+            );
+
+        }
+    }
+
     public PasswordResetRequest(CallbackHandler cbh) throws SaslException {
         this.cbh = cbh;
     }
@@ -60,15 +87,7 @@ public class PasswordResetRequest implements SaslServer {
                 ResetToken token = new ResetToken(1000L * 60L * 60L); // one hour
                 userProperties.put(PasswordResetToken.USERPROP_TOKEN, token.toString());
 
-                EmailService.getInstance().sendMessage(
-                        user.getName(),
-                        user.getEmail(),
-                        "admin",
-                        "admin@" + XMPPServer.getInstance().getServerInfo().getXMPPDomain(),
-                        "Password Reset",
-                        "Here is your password reset token: " + token.getToken(),
-                        "Here is your password reset token: " + token.getToken()
-                );
+                resetEmailProvider.sendMessage(user, token);
 
                 throw new SaslFailureException(Failure.NOT_AUTHORIZED);
             }

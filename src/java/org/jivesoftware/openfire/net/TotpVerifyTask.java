@@ -17,6 +17,7 @@ public class TotpVerifyTask implements PostAuthenticationTask {
     private boolean completed = false;
     private static GoogleAuthenticator googleAuthenticator = null;
     private String totpSecret = null;
+    private int remainingAttempts = JiveGlobals.getIntProperty("openfire.totp.retries", 3);
     public TotpVerifyTask(User user) throws SaslFailureException {
         if (!JiveGlobals.getBooleanProperty("openfire.totp", false)) {
             throw new SaslFailureException(Failure.INVALID_MECHANISM, "TOTP not enabled for this service");
@@ -53,9 +54,13 @@ public class TotpVerifyTask implements PostAuthenticationTask {
         }
         Log.debug("Authorizing secret: {}, code: {}", totpSecret, totpCode);
         boolean OK = googleAuthenticator.authorize(totpSecret, totpCode);
-        this.completed = true;
-        if (!OK) {
-            throw new SaslFailureException(Failure.NOT_AUTHORIZED, "TOTP code error");
+        if (OK) {
+            this.completed = true;
+        } else {
+            --remainingAttempts;
+            if (remainingAttempts <= 0) {
+                throw new SaslFailureException(Failure.NOT_AUTHORIZED, "TOTP code error");
+            }
         }
         return null;
     }

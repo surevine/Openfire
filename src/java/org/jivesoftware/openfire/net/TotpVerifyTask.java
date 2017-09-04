@@ -10,6 +10,8 @@ import com.warrenstrange.googleauth.GoogleAuthenticator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.security.sasl.Sasl;
+
 public class TotpVerifyTask implements PostAuthenticationTask {
     private static final Logger Log = LoggerFactory.getLogger(TotpVerifyTask.class);
 
@@ -29,6 +31,13 @@ public class TotpVerifyTask implements PostAuthenticationTask {
         this.user = user;
     }
 
+    private void handleVerifyFailure(Failure failure, String reason) throws SaslFailureException {
+        --remainingAttempts;
+        if (remainingAttempts <= 0) {
+            throw new SaslFailureException(failure, reason);
+        }
+    }
+
     @Override
     public byte[] evaluateResponse(byte[] response) throws SaslFailureException {
         // if code not provided along with <next>, respond with empty challenge
@@ -38,7 +47,8 @@ public class TotpVerifyTask implements PostAuthenticationTask {
 
         // Expecting 6 ASCII digits.
         if (response.length != 6) {
-            throw new SaslFailureException(Failure.MALFORMED_REQUEST, "TOTP code too short");
+            handleVerifyFailure(Failure.MALFORMED_REQUEST, "TOTP code too short");
+            return null;
         }
         int totpCode = 0;
         for (byte responseByte : response) {
@@ -46,7 +56,8 @@ public class TotpVerifyTask implements PostAuthenticationTask {
                 totpCode *= 10;
                 totpCode += (responseByte - '0');
             } else {
-                throw new SaslFailureException(Failure.INCORRECT_ENCODING, "TOTP code expected as ASCII");
+                handleVerifyFailure(Failure.INCORRECT_ENCODING, "TOTP code expected as ASCII");
+                return null;
             }
         }
         if (googleAuthenticator == null) {
@@ -57,10 +68,7 @@ public class TotpVerifyTask implements PostAuthenticationTask {
         if (OK) {
             this.completed = true;
         } else {
-            --remainingAttempts;
-            if (remainingAttempts <= 0) {
-                throw new SaslFailureException(Failure.NOT_AUTHORIZED, "TOTP code error");
-            }
+            this.handleVerifyFailure(Failure.NOT_AUTHORIZED, "TOTP code error");
         }
         return null;
     }

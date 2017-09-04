@@ -17,7 +17,7 @@ public class DeviceKeyGen extends IQHandler {
 
     @Override
     public IQ handleIQ(IQ packet) throws UnauthorizedException {
-        JID barejid = packet.getTo();
+        JID barejid = packet.getFrom();
         DeviceKeyMap keyMap = new DeviceKeyMap(barejid.getNode());
         Element query = packet.getChildElement();
         String deviceId = query.attributeValue("device-id");

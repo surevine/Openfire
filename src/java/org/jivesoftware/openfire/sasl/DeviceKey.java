@@ -48,7 +48,7 @@ public class DeviceKey implements SaslServer{
         if (bytes == null || bytes.length == 0) return null;
         try {
             StringTokenizer tokens = new StringTokenizer(new String(bytes, StandardCharsets.UTF_8), "\0");
-            String username = tokens.nextToken();
+            username = tokens.nextToken();
             String deviceId = tokens.nextToken();
             String hmac = tokens.nextToken();
             AuthorizeCallback acb = new AuthorizeCallback(username, username);

@@ -32,7 +32,7 @@ public class DeviceKeyMap {
             this.deviceName = deviceName.replace('|', '_');
             this.secret = StringUtils.randomString(40);
             this.counter = 0;
-            this.expiry = (new Date()).getTime() + (3600 * 6); // Six hours expiry. Configurable?
+            this.expiry = (new Date()).getTime() + (3600 * 24 * 10); // Ten days expiry. Configurable?
             this.real = real;
         }
 

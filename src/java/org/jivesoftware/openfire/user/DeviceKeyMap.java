@@ -71,6 +71,7 @@ public class DeviceKeyMap {
     }
 
     public DeviceKeyMap(String username) {
+        this.username = username;
         devices = new HashMap<>();
         try {
             User user = UserManager.getInstance().getUser(username);

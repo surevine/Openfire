@@ -51,14 +51,14 @@ public class DeviceKey implements SaslServer{
             String username = tokens.nextToken();
             String deviceId = tokens.nextToken();
             String hmac = tokens.nextToken();
-            AuthorizeCallback acb = new AuthorizeCallback(username,username);
+            AuthorizeCallback acb = new AuthorizeCallback(username, username);
             cbh.handle(new Callback[]{acb});
-            if(acb.isAuthorized()) {
+            if (acb.isAuthorized()) {
                 username = acb.getAuthorizedID();
                 completed = true;
             } else {
                 completed = true;
-                throw new SaslException("DEVICE-KEY: user not authorized: "+username);
+                throw new SaslException("DEVICE-KEY: user not authorized: " + username);
             }
             DeviceKeyMap keyMap = new DeviceKeyMap(username);
             DeviceKeyMap.DeviceKeyInfo keyInfo = keyMap.getDeviceKeyInfo(deviceId);
@@ -76,10 +76,12 @@ public class DeviceKey implements SaslServer{
             }
             // AUTHENTICATED
             session.setSessionData("openfire.totp.suppress", "DEVICE-KEY");
+        } catch (SaslFailureException e) {
+            throw e;
         } catch (UnsupportedCallbackException e) {
-            throw new SaslFailureException(Failure.TEMPORARY_AUTH_FAILURE, "Callback unsupported.");
+            throw new SaslFailureException("Callback unsupported.", e, Failure.TEMPORARY_AUTH_FAILURE);
         } catch (IOException e) {
-            throw new SaslFailureException(Failure.TEMPORARY_AUTH_FAILURE, "Callback exception.");
+            throw new SaslFailureException("Callback exception.", e, Failure.TEMPORARY_AUTH_FAILURE);
         }
         return null;
     }

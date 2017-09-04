@@ -2,6 +2,7 @@ package org.jivesoftware.openfire.net;
 
 import org.jivesoftware.openfire.sasl.Failure;
 import org.jivesoftware.openfire.sasl.SaslFailureException;
+import org.jivesoftware.openfire.session.LocalSession;
 import org.jivesoftware.openfire.user.User;
 import org.jivesoftware.util.JiveGlobals;
 
@@ -19,14 +20,16 @@ public class PostAuthenticationTaskFactory {
         return instance;
     }
 
-    Set<String> availableTasks(User user) {
+    Set<String> availableTasks(LocalSession session, User user) {
         Set<String> tasks = new HashSet<>();
         Map<String,String> userProperties = user.getProperties();
         if (userProperties.containsKey("openfire.password.reset")) {
             tasks.add("PASSWORD-RESET");
         }
         if (userProperties.containsKey("openfire.totp.secret")) {
-            tasks.add("TOTP");
+            if (session.getSessionData("openfire.totp.suppress") == null) {
+                tasks.add("TOTP");
+            }
         } else if (JiveGlobals.getBooleanProperty("openfire.totp", false)) {
             tasks.add("TOTP-INIT");
         }

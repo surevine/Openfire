@@ -56,8 +56,9 @@ public class SaslServerFactoryImpl implements SaslServerFactory
         allMechanisms.add( new Mechanism( "SCRAM-SHA-1", false, false ) );
         allMechanisms.add( new Mechanism( "JIVE-SHAREDSECRET", true, false ) );
         allMechanisms.add( new Mechanism( "EXTERNAL", false, false ) );
-        allMechanisms.add( new Mechanism( PasswordResetToken.MECH_NAME, false, true));
-        allMechanisms.add( new Mechanism( PasswordResetRequest.MECH_NAME, false, true));
+        allMechanisms.add( new Mechanism( PasswordResetToken.MECH_NAME, false, true ) );
+        allMechanisms.add( new Mechanism( PasswordResetRequest.MECH_NAME, false, true ) );
+        allMechanisms.add( new Mechanism( DeviceKey.MECH_NAME, false, false ) );
     }
 
     @Override
@@ -92,6 +93,18 @@ public class SaslServerFactoryImpl implements SaslServerFactory
                 {
                     final LocalSession session = (LocalSession) props.get( LocalSession.class.getCanonicalName() );
                     return new AnonymousSaslServer( session );
+                }
+
+            case DeviceKey.MECH_NAME:
+                if ( !props.containsKey( LocalSession.class.getCanonicalName() ) )
+                {
+                    Log.debug( "Unable to instantiate {} SaslServer: Provided properties do not contain a LocalSession instance.", mechanism );
+                    return null;
+                }
+                else
+                {
+                    final LocalSession session = (LocalSession) props.get( LocalSession.class.getCanonicalName() );
+                    return new DeviceKey( session, cbh );
                 }
 
             case "EXTERNAL":

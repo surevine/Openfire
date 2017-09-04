@@ -1,9 +1,15 @@
 package org.jivesoftware.openfire.sasl;
 
+import org.dom4j.Element;
+import org.jivesoftware.openfire.IQHandlerInfo;
+import org.jivesoftware.openfire.auth.UnauthorizedException;
+import org.jivesoftware.openfire.handler.IQHandler;
 import org.jivesoftware.openfire.user.DeviceKeyMap;
 import org.jivesoftware.openfire.user.User;
 import org.jivesoftware.openfire.user.UserManager;
 import org.jivesoftware.openfire.user.UserNotFoundException;
+import org.xmpp.packet.IQ;
+import org.xmpp.packet.JID;
 
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
@@ -30,6 +36,7 @@ public class DeviceKey implements SaslServer{
 
     @Override
     public byte[] evaluateResponse(byte[] bytes) throws SaslException {
+        if (bytes == null || bytes.length == 0) return null;
         try {
             StringTokenizer tokens = new StringTokenizer(new String(bytes, StandardCharsets.UTF_8), "\0");
             String username = tokens.nextToken();
@@ -103,4 +110,5 @@ public class DeviceKey implements SaslServer{
         username = null;
         completed = false;
     }
+
 }

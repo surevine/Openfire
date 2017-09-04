@@ -82,6 +82,8 @@ public class DeviceKey implements SaslServer{
             throw new SaslFailureException("Callback unsupported.", e, Failure.TEMPORARY_AUTH_FAILURE);
         } catch (IOException e) {
             throw new SaslFailureException("Callback exception.", e, Failure.TEMPORARY_AUTH_FAILURE);
+        } catch (Exception e) {
+            throw new SaslFailureException("Unknown exception.", e, Failure.TEMPORARY_AUTH_FAILURE);
         }
         return null;
     }

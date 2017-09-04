@@ -69,9 +69,9 @@ public class DeviceKey implements SaslServer{
             }
             if (!candidate.equals(hmac)) {
                 if (keyInfo.real) {
-                    throw new SaslFailureException(Failure.NOT_AUTHORIZED, "HMAC Mismatch");
+                    throw new SaslFailureException(Failure.NOT_AUTHORIZED, "HMAC Mismatch for device: " + keyInfo.deviceId);
                 } else {
-                    throw new SaslFailureException(Failure.NOT_AUTHORIZED, "HMAC mismatch");
+                    throw new SaslFailureException(Failure.NOT_AUTHORIZED, "HMAC mismatch for devices: " + deviceId + " " + keyInfo.deviceId);
                 }
             }
             // AUTHENTICATED

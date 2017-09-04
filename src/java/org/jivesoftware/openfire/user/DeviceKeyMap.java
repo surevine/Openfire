@@ -17,7 +17,7 @@ public class DeviceKeyMap {
     private Map<String,DeviceKeyInfo> devices;
     public static final String ALGORITHM = "HmacSHA256";
     public static final String PROPNAME = "openfire.device.keys";
-    public final DeviceKeyInfo faked = new DeviceKeyInfo("fake-id", "This is a fake one", true);
+    public final DeviceKeyInfo faked = new DeviceKeyInfo("fake-id", "This is a fake one", false);
 
     public class DeviceKeyInfo {
         public final String deviceId;

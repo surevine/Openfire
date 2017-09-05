@@ -19,6 +19,8 @@ public class DeviceKeyMap {
     public static final String PROPNAME = "openfire.device.keys";
     public final DeviceKeyInfo faked = new DeviceKeyInfo("fake-id", "This is a fake one", false);
 
+    private static final long maxTtl = 10 * 24 * 3600; // Ten days expiry. Configurable?
+
     public class DeviceKeyInfo {
         public final String deviceId;
         public final String secret;
@@ -27,13 +29,26 @@ public class DeviceKeyMap {
         public boolean real = true;
         public long expiry;
 
-        public DeviceKeyInfo(String deviceId, String deviceName, boolean real) {
+
+        public DeviceKeyInfo(String deviceId, String deviceName, boolean real, Long ttl) {
+            // ensure ttl is between 0 and maxTtl
+            Long ttlLimited = ttl;
+            if (ttlLimited == null) {
+                ttlLimited = maxTtl;
+            }
+            ttlLimited = Math.max(ttlLimited, 0);
+            ttlLimited = Math.min(maxTtl, ttlLimited);
+
             this.deviceId = deviceId;
             this.deviceName = deviceName.replace('|', '_');
             this.secret = StringUtils.randomString(40);
             this.counter = 0;
-            this.expiry = (new Date()).getTime() + (3600 * 24 * 10); // Ten days expiry. Configurable?
+            this.expiry = (new Date()).getTime() + ttlLimited;
             this.real = real;
+        }
+
+        public DeviceKeyInfo(String deviceId, String deviceName, boolean real) {
+            this(deviceId, deviceName, real, maxTtl);
         }
 
         public DeviceKeyInfo(String parseMe) {
@@ -65,7 +80,13 @@ public class DeviceKeyMap {
     }
 
     public DeviceKeyInfo create(String deviceId, String deviceName) {
-        DeviceKeyInfo keyInfo =new DeviceKeyInfo(deviceId, deviceName, true);
+        DeviceKeyInfo keyInfo = new DeviceKeyInfo(deviceId, deviceName, true);
+        devices.put(deviceId, keyInfo);
+        return keyInfo;
+    }
+
+    public DeviceKeyInfo create(String deviceId, String deviceName, Long ttl) {
+        DeviceKeyInfo keyInfo = new DeviceKeyInfo(deviceId, deviceName, true, ttl);
         devices.put(deviceId, keyInfo);
         return keyInfo;
     }

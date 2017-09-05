@@ -19,7 +19,7 @@ public class DeviceKeyMap {
     public static final String PROPNAME = "openfire.device.keys";
     public final DeviceKeyInfo faked = new DeviceKeyInfo("fake-id", "This is a fake one", false);
 
-    private static final long maxTtl = 10 * 24 * 3600; // Ten days expiry. Configurable?
+    private static final long maxTtl = 10 * 24 * 3600 * 1000; // Ten days expiry. Configurable?
 
     public class DeviceKeyInfo {
         public final String deviceId;

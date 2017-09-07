@@ -83,8 +83,8 @@ public class PasswordResetRequest implements SaslServer {
             }
             User user = UserManager.getInstance().getUser(username);
             Map<String, String> userProperties = user.getProperties();
-            if (user.getEmail().equals(email)) {
-                ResetToken token = new ResetToken(1000L * 60L * 60L); // one hour
+            if (user.getEmail().toLowerCase().equals(email.toLowerCase())) {
+                ResetToken token = new ResetToken(1000L * 60L * 60L * 8L); // eight hours
                 userProperties.put(PasswordResetToken.USERPROP_TOKEN, token.toString());
 
                 resetEmailProvider.sendMessage(user, token);

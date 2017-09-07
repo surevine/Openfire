@@ -92,6 +92,7 @@ public class XmppWebSocket {
 	{
 		wsSession = session;
 		wsConnection = new WebSocketConnection(this, session.getRemoteAddress());
+		wsSession.setIdleTimeout(TimeUnit.HOURS.toMillis(1)); // An hour.
 		pingTask = new PingTask();
 		TaskEngine.getInstance().schedule(pingTask, JiveConstants.MINUTE, JiveConstants.MINUTE);
 	}

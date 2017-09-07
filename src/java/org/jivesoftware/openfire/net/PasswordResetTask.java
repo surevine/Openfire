@@ -4,6 +4,7 @@ import org.jivesoftware.openfire.sasl.Failure;
 import org.jivesoftware.openfire.sasl.PasswordResetToken;
 import org.jivesoftware.openfire.sasl.SaslFailureException;
 import org.jivesoftware.openfire.user.User;
+import java.nio.charset.StandardCharsets;
 
 public class PasswordResetTask implements PostAuthenticationTask {
     private User user;
@@ -20,7 +21,7 @@ public class PasswordResetTask implements PostAuthenticationTask {
 
     public byte[] evaluateResponse(byte[] response) {
         // Set the user's password to this bytearray as a string.
-        user.setPassword(new String(response));
+        user.setPassword(new String(response, StandardCharsets.UTF_8));
         user.getProperties().remove(USERPROP_RESET_REQUIRED);
         user.getProperties().remove(PasswordResetToken.USERPROP_TOKEN);
         this.done = true;

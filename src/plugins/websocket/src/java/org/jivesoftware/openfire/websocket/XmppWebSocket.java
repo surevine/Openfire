@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.Locale;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.dom4j.Document;

@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.Locale;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.dom4j.Document;
@@ -275,7 +276,7 @@ public class XmppWebSocket {
         } else if (!FRAMING_NAMESPACE.equals(stanza.getNamespace().getURI())) {
             // Validate the stream namespace (https://tools.ietf.org/html/rfc7395#section-3.3.2)
             streamError = new StreamError(StreamError.Condition.invalid_namespace);
-            Log.warn("Closing session due to invalid namespace in stream header. Namespace: " + stanza.getNamespace().getURI());
+            Log.warn("Closing session due to invalid namespace in stream header. TvxPluginConstants: " + stanza.getNamespace().getURI());
     	} else if (!validateHost(host)) {
             streamError = new StreamError(StreamError.Condition.host_unknown);
             Log.warn("Closing session due to incorrect hostname in stream header. Host: " + host);

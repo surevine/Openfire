@@ -25,6 +25,10 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.dom4j.Element;
+import org.jivesoftware.openfire.XMPPServer;
+import org.jivesoftware.openfire.labelling.AccessControlDecisionFunction;
+import org.jivesoftware.openfire.labelling.SecurityLabel;
+import org.jivesoftware.openfire.labelling.SecurityLabelException;
 import org.jivesoftware.util.LocaleUtils;
 import org.jivesoftware.util.cache.CacheFactory;
 import org.xmpp.forms.DataForm;
@@ -41,8 +45,8 @@ import org.xmpp.packet.Message;
  */
 public class LeafNode extends Node {
 
-    private static final String genIdSeed = UUID.randomUUID().toString();
-    private static final AtomicLong sequenceCounter = new AtomicLong();
+	private static final String genIdSeed = UUID.randomUUID().toString();
+	private static final AtomicLong sequenceCounter = new AtomicLong();
 
     /**
      * Flag that indicates whether to persist items to storage. Note that when the
@@ -83,7 +87,7 @@ public class LeafNode extends Node {
     }
 
     @Override
-    protected void configure(FormField field) throws NotAcceptableException {
+	protected void configure(FormField field) throws NotAcceptableException {
         List<String> values;
         String booleanValue;
         if ("pubsub#persist_items".equals(field.getVariable())) {
@@ -103,7 +107,7 @@ public class LeafNode extends Node {
     }
 
     @Override
-    void postConfigure(DataForm completedForm) {
+	void postConfigure(DataForm completedForm) {
         List<String> values;
         if (!persistPublishedItems) {
             // Always save the last published item when not configured to use persistent items
@@ -119,7 +123,7 @@ public class LeafNode extends Node {
     }
 
     @Override
-    protected void addFormFields(DataForm form, boolean isEditing) {
+	protected void addFormFields(DataForm form, boolean isEditing) {
         super.addFormFields(form, isEditing);
 
         FormField typeField = form.getField("pubsub#node_type");
@@ -161,13 +165,13 @@ public class LeafNode extends Node {
     }
 
     @Override
-    protected void deletingNode() {
+	protected void deletingNode() {
     }
 
-    public synchronized void setLastPublishedItem(PublishedItem item)
-    {
-        if ((lastPublished == null) || (item != null) && item.getCreationDate().after(lastPublished.getCreationDate()))
-            lastPublished = item;
+	public synchronized void setLastPublishedItem(PublishedItem item)
+	{
+		if ((lastPublished == null) || (item != null) && item.getCreationDate().after(lastPublished.getCreationDate()))
+			lastPublished = item;
     }
 
     public int getMaxPayloadSize() {
@@ -230,22 +234,24 @@ public class LeafNode extends Node {
                 itemID = item.attributeValue("id");
                 List entries = item.elements();
                 payload = entries.isEmpty() ? null : (Element) entries.get(0);
+                SecurityLabel securityLabel = (entries.size() < 2) ? null : new SecurityLabel((Element)entries.get(1));
                 
                 // Make sure that the published item has a unique ID if NOT assigned by publisher
                 if (itemID == null) {
-                    itemID = genIdSeed + sequenceCounter.getAndIncrement();
+                	itemID = genIdSeed + sequenceCounter.getAndIncrement();
                 }
 
                 // Create a new published item
                 newItem = new PublishedItem(this, publisher, itemID, new Date(CacheFactory.getClusterTime()));
                 newItem.setPayload(payload);
+                newItem.setSecurityLabel(securityLabel);
                 // Add the new item to the list of published items
                 newPublishedItems.add(newItem);
                 setLastPublishedItem(newItem);
                 // Add the new published item to the queue of items to add to the database. The
                 // queue is going to be processed by another thread
                 if (isPersistPublishedItems()) {
-                    PubSubPersistenceManager.savePublishedItem(newItem);
+                	PubSubPersistenceManager.savePublishedItem(newItem);
                 }
             }
         }
@@ -326,6 +332,16 @@ public class LeafNode extends Node {
         items.addAttribute("node", getNodeID());
         
         for (PublishedItem publishedItem : publishedItems) {
+            AccessControlDecisionFunction acdf = XMPPServer.getInstance().getAccessControlDecisionFunction();
+            SecurityLabel securityLabel = null;
+            if (acdf != null) {
+                try {
+                    securityLabel = acdf.check(acdf.getClearance(originalRequest.getFrom()), publishedItem.getSecurityLabel(), originalRequest.getFrom());
+                } catch (SecurityLabelException e) {
+                    continue;
+                }
+            }
+
             Element item = items.addElement("item");
             if (isItemRequired()) {
                 item.addAttribute("id", publishedItem.getID());
@@ -333,6 +349,9 @@ public class LeafNode extends Node {
             if ((forceToIncludePayload || isPayloadDelivered()) &&
                     publishedItem.getPayload() != null) {
                 item.add(publishedItem.getPayload().createCopy());
+                if (securityLabel != null) {
+                    item.add(securityLabel.getElement().createCopy());
+                }
             }
         }
         // Send the result
@@ -353,7 +372,7 @@ public class LeafNode extends Node {
     }
 
     @Override
-    public List<PublishedItem> getPublishedItems() {
+	public List<PublishedItem> getPublishedItems() {
         return getPublishedItems(getMaxPublishedItems());
     }
 
@@ -384,11 +403,11 @@ public class LeafNode extends Node {
     }
 
     @Override
-    public synchronized PublishedItem getLastPublishedItem() {
-        if (lastPublished == null){
-            lastPublished = PubSubPersistenceManager.getLastPublishedItem(this);
-        }
-        return lastPublished;
+	public synchronized PublishedItem getLastPublishedItem() {
+    	if (lastPublished == null){
+    		lastPublished = PubSubPersistenceManager.getLastPublishedItem(this);
+    	}
+    	return lastPublished;
     }
 
     /**
@@ -397,7 +416,7 @@ public class LeafNode extends Node {
      * @return true if the last published item is going to be sent to new subscribers.
      */
     @Override
-    public boolean isSendItemSubscribe() {
+	public boolean isSendItemSubscribe() {
         return sendItemSubscribe;
     }
 

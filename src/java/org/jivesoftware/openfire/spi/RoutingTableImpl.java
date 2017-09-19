@@ -28,9 +28,12 @@ import org.jivesoftware.openfire.component.ExternalComponentManager;
 import org.jivesoftware.openfire.container.BasicModule;
 import org.jivesoftware.openfire.forward.Forwarded;
 import org.jivesoftware.openfire.handler.PresenceUpdateHandler;
+import org.jivesoftware.openfire.roster.RosterItem;
+import org.jivesoftware.openfire.roster.RosterManager;
 import org.jivesoftware.openfire.server.OutgoingSessionPromise;
 import org.jivesoftware.openfire.server.RemoteServerManager;
 import org.jivesoftware.openfire.session.*;
+import org.jivesoftware.openfire.user.UserNotFoundException;
 import org.jivesoftware.util.JiveGlobals;
 import org.jivesoftware.util.cache.Cache;
 import org.jivesoftware.util.cache.CacheFactory;
@@ -553,10 +556,32 @@ public class RoutingTableImpl extends BasicModule implements RoutingTable, Clust
             return true; // Not offline.
         }
 
+        boolean broadcast = false;
+
         if (packet.getType() == Message.Type.groupchat) {
-            // Surreal message type; cannot occur.
-            Log.debug("Groupchat stanza to bare JID discarded: {}", packet.toXML());
-            return false; // Maybe offline has an idea?
+            JID mixChannel = packet.getFrom();
+            if (mixChannel.getResource() == null) {
+                // Might be MIX.
+                RosterManager rosterManager = XMPPServer.getInstance().getRosterManager();
+                try {
+                    RosterItem rosterItem = rosterManager.getRoster(recipientJID.getNode()).getRosterItem(mixChannel);
+                    if (rosterItem == null) {
+                        Log.info("No such MIX channel while routing message: {}", mixChannel.toString());
+                        Log.debug("Groupchat stanza to bare JID discarded: {}", packet.toXML());
+                        return false;
+                    }
+                    broadcast = true;
+                } catch (UserNotFoundException e) {
+                    Log.warn("User not found when routing to bare JID: ", e);
+                    return false;
+                }
+            } else {
+                // Surreal message type; cannot occur.
+                Log.debug("Groupchat stanza to bare JID discarded: {}", packet.toXML());
+                return false; // Maybe offline has an idea?
+            }
+        } else if (packet.getType() == Message.Type.headline) {
+            broadcast = true;
         }
 
         if (nonNegativePrioritySessions.isEmpty()) {
@@ -567,7 +592,7 @@ public class RoutingTableImpl extends BasicModule implements RoutingTable, Clust
 
         // Check for message carbons enabled sessions and send the message to them.
         for (ClientSession session : nonNegativePrioritySessions) {
-            if (packet.getType() == Message.Type.headline) {
+            if (broadcast) {
                 // Headline messages are broadcast.
                 session.process(packet);
             // Deliver to each session, if is message carbons enabled.
@@ -580,7 +605,7 @@ public class RoutingTableImpl extends BasicModule implements RoutingTable, Clust
             }
         }
 
-        if (packet.getType() == Message.Type.headline) {
+        if (broadcast) {
             return true;
         }
 

@@ -13,7 +13,7 @@
         * jUnit in your Ant or Java classpath
 -->
 
-<project name="Openfire XMPP Server" default="openfire" basedir="..">
+<project name="Openfire XMPP Server" default="openfire" basedir=".." xmlns:jacoco="antlib:org.jacoco.ant">
 
     <description>
         Openfire build script.
@@ -50,6 +50,7 @@
     <property name="lib.web.dir" value="${web.dir}/WEB-INF/lib"/>
     <property name="i18n.basename" value="openfire_i18n"/>
     <property name="i18n.default.locale" value="en"/>
+	<property name="database.upgrade.dir" value="${src.dir}/database/upgrade"/>
 
     <property name="work.dir" value="${basedir}/work"/>
     <property name="temp.build.dir" value="${work.dir}/tempbuild"/>
@@ -161,6 +162,9 @@
     <taskdef name="junit" classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask">
         <classpath refid="ant.dependencies" />
     </taskdef>
+	<taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
+	    <classpath refid="ant.dependencies"/>
+	</taskdef>
 
     <!-- ======================================================================================= -->
     <!-- PATHs / PATTERNSETs / FILTERSETs                                                        -->
@@ -203,6 +207,7 @@
     <path id="compile.dependencies">
         <path refid="ant.dependencies"/>
         <path refid="javadoc.dependencies"/>
+    	<fileset dir="${lib.dist.dir}" includes="*.jar"/>
     </path>
 
     <path id="jspc.dependencies">
@@ -217,6 +222,9 @@
         <fileset dir="${lib.build.dir}" includes="junit.jar"/>
         <fileset dir="${lib.build.dir}" includes="hamcrest-core.jar"/>
         <fileset dir="${lib.dist.dir}" includes="slf4j-log4j12.jar"/>
+    	<fileset dir="${lib.dist.dir}" includes="hsqldb.jar"/>
+    	<fileset dir="${lib.dist.dir}" includes="*.jar"/>
+
         <!-- <fileset dir="${ant.home}/lib" includes="clover.jar" /> -->
     </path>
 
@@ -230,6 +238,12 @@
     </patternset>
 
     <patternset id="test.sources">
+        <include name="**/*Test.java"/>
+        <include name="**/*Utils.java"/>
+        <exclude name="**/CheckChainTrustedTest.java" if="skipResourceIntensiveTests"/>
+    </patternset>
+
+    <patternset id="tests">
         <include name="**/*Test.java"/>
         <exclude name="**/CheckChainTrustedTest.java" if="skipResourceIntensiveTests"/>
     </patternset>
@@ -516,7 +530,7 @@
               message="Can't find openfire, run 'ant openfire' or specify with -Dtarget.openfireHome."/>
 
         <condition property="run.debug"
-                   value="-Xdebug -Xint -server -Xnoagent -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8000">
+                   value="-Xdebug -Xint -server -Xnoagent -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000">
             <isset property="debug"/>
         </condition>
 
@@ -713,25 +727,30 @@
 
         <!-- Run jUnit -->
         <mkdir dir="${test.results.dest.dir}"/>
-        <junit printsummary="yes" haltonfailure="yes" fork="yes" dir="${test.dest.dir}" includeantruntime="false">
-	    <sysproperty key="openfireHome" value="${target.openfireHome}"/>
-
-            <!-- We must add our own classes to the classpath for testing -->
-            <classpath>
-                <path refid="test.dependencies"/>
-                <pathelement path="${test.dest.dir}"/>
-                <pathelement path="${test.classes.dest.dir}"/>
-                <pathelement path="${test.resources.dest.dir}"/>
-            </classpath>
-
-            <formatter type="xml"/>
-
-            <batchtest todir="${test.results.dest.dir}">
-                <fileset dir="${src.test.java.dir}">
-                    <patternset refid="test.sources"/>
-                </fileset>
-            </batchtest>
-        </junit>
+    	<jacoco:coverage destfile="${test.results.dest.dir}/jacoco.exec">
+	        <junit printsummary="yes" haltonfailure="yes" fork="yes" forkmode="perTest" dir="${test.dest.dir}" includeantruntime="false" showoutput="true">
+	        	
+		    	<sysproperty key="openfireHome" value="${target.openfireHome}"/>
+	        	<sysproperty key="databaseUpgradeDir" value="${database.upgrade.dir}"/>
+	
+	            <!-- We must add our own classes to the classpath for testing -->
+	            <classpath>
+	                <path refid="test.dependencies"/>
+	                <pathelement path="${test.dest.dir}"/>
+	                <pathelement path="${test.classes.dest.dir}"/>
+	                <pathelement path="${test.resources.dest.dir}"/>
+	            </classpath>
+	
+	            <formatter type="xml"/>
+	        	<formatter type="plain" usefile="false" /> <!-- to screen -->
+	
+	            <batchtest todir="${test.results.dest.dir}">
+	                <fileset dir="${src.test.java.dir}">
+	                    <patternset refid="tests"/>
+	                </fileset>
+	            </batchtest>
+	        </junit>
+    	</jacoco:coverage>
     </target>
 
     <!-- openfireHome ========================================================================== -->
@@ -1847,13 +1866,13 @@
             <arg line="-uc"/>
         </exec>
 
-	<!-- Copy the resulting files into target -->
-	<copy todir="${debian.release.dir}">
+        <!-- Copy the resulting files into target -->
+        <copy todir="${debian.release.dir}">
             <fileset dir="${debian.work.dir}/.." followsymlinks="false">
-		<include name="**/*.deb" />
-		<include name="**/*.changes" />
-		<include name="**/*.dsc" />
-		<include name="**/*.gz" />
+                <include name="**/*.deb" />
+                <include name="**/*.changes" />
+                <include name="**/*.dsc" />
+                <include name="**/*.gz" />
             </fileset>
         </copy>
     </target>

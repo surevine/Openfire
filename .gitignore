@@ -1,9 +1,11 @@
 target/
 work/
 *.class
+build/projects/test
 
 # Ignore Intellij Idea project files
 *.iml
+*.iws
 *.ipr
 .idea
 atlassian-ide-plugin.xml
@@ -21,3 +23,9 @@ out/
 nbproject/
 nbbuild/
 /bin/
+
+scrapbook.sql
+
+src/plugins/spiffing/
+src/plugins/threatvineExchange/
+plugins.built

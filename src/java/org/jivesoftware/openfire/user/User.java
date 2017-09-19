@@ -24,13 +24,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.AbstractMap;
-import java.util.AbstractSet;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.jivesoftware.database.DbConnectionManager;
@@ -39,6 +33,7 @@ import org.jivesoftware.openfire.auth.AuthFactory;
 import org.jivesoftware.openfire.auth.ConnectionException;
 import org.jivesoftware.openfire.auth.InternalUnauthenticatedException;
 import org.jivesoftware.openfire.event.UserEventDispatcher;
+import org.jivesoftware.openfire.labelling.Clearance;
 import org.jivesoftware.openfire.roster.Roster;
 import org.jivesoftware.util.StringUtils;
 import org.jivesoftware.util.cache.CacheSizes;
@@ -88,6 +83,7 @@ public class User implements Cacheable, Externalizable, Result {
     private String email;
     private Date creationDate;
     private Date modificationDate;
+    private String clearance;
 
     private Map<String,String> properties = null;
 
@@ -226,6 +222,17 @@ public class User implements Cacheable, Externalizable, Result {
     
     public void setIterations(int iterations) {
     	this.iterations = iterations;
+    }
+
+    public String getClearance() {
+        if (this.clearance == null) {
+            this.clearance = getProperties().get("clearance");
+        }
+        return this.clearance;
+    }
+
+    public void setClearance(String clearance) {
+        this.clearance = clearance;
     }
 
     public String getName() {

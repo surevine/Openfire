@@ -168,17 +168,17 @@ public class PubSubPersistenceManager {
     private static final String DELETE_SUBSCRIPTIONS =
             "DELETE FROM ofPubsubSubscription WHERE serviceID=? AND nodeID=?";
     private static final String LOAD_ITEMS =
-            "SELECT id,jid,creationDate,payload FROM ofPubsubItem " +
+            "SELECT id,jid,creationDate,payload,label FROM ofPubsubItem " +
             "WHERE serviceID=? AND nodeID=? ORDER BY creationDate DESC";
     private static final String LOAD_ITEM =
-            "SELECT jid,creationDate,payload FROM ofPubsubItem " +
+            "SELECT jid,creationDate,payload,label FROM ofPubsubItem " +
             "WHERE serviceID=? AND nodeID=? AND id=?";
     private static final String LOAD_LAST_ITEM =
-            "SELECT id,jid,creationDate,payload FROM ofPubsubItem " +
+            "SELECT id,jid,creationDate,payload,label FROM ofPubsubItem " +
             "WHERE serviceID=? AND nodeID=? ORDER BY creationDate DESC";
     private static final String ADD_ITEM =
-            "INSERT INTO ofPubsubItem (serviceID,nodeID,id,jid,creationDate,payload) " +
-            "VALUES (?,?,?,?,?,?)";
+            "INSERT INTO ofPubsubItem (serviceID,nodeID,id,jid,creationDate,payload,label) " +
+            "VALUES (?,?,?,?,?,?,?)";
     private static final String DELETE_ITEM =
             "DELETE FROM ofPubsubItem WHERE serviceID=? AND nodeID=? AND id=?";
     private static final String DELETE_ITEMS =
@@ -1367,6 +1367,7 @@ public class PubSubPersistenceManager {
                 pstmt.setString(4, item.getPublisher().toString());
                 pstmt.setString(5, StringUtils.dateToMillis(item.getCreationDate()));
                 pstmt.setString(6, item.getPayloadXML());
+                pstmt.setString(7, item.getSecurityLabelXML());
                 if (batch) { pstmt.addBatch(); }
                 else { 
                 	try { pstmt.execute(); }
@@ -1620,6 +1621,9 @@ public class PubSubPersistenceManager {
                 if (rs.getString(4) != null) {
                 	item.setPayloadXML(rs.getString(4));
                 }
+                if (rs.getString(5) != null) {
+                    item.setSecurityLabelXML(rs.getString(5));
+                }
                 // Add the published item to the node
 				if (descending)
 					results.add(item);
@@ -1675,7 +1679,10 @@ public class PubSubPersistenceManager {
                 item = new PublishedItem(node, publisher, itemID, creationDate);
                 // Add the extra fields to the published item
                 if (rs.getString(4) != null) {
-                	item.setPayloadXML(rs.getString(4));
+                    item.setPayloadXML(rs.getString(4));
+                }
+                if (rs.getString(5) != null) {
+                    item.setSecurityLabelXML(rs.getString(5));
                 }
             }
         }
@@ -1725,6 +1732,9 @@ public class PubSubPersistenceManager {
 	                        if (rs.getString(3) != null) {
 	                        	result.setPayloadXML(rs.getString(3));
 	                        }
+	                        if (rs.getString(4) != null) {
+                                result.setSecurityLabelXML(rs.getString(4));
+                            }
 	                        itemCache.put(itemKey, result);
 	                		log.debug("Loaded item into cache from DB");
 	                    }

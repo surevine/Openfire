@@ -1012,7 +1012,7 @@ public class CertificateManager {
         // add subjectAlternativeName extension
         boolean critical = subjectDN.getRDNs().length == 0;
         ASN1Sequence othernameSequence = new DERSequence(new ASN1Encodable[]{
-                new ASN1ObjectIdentifier("1.3.6.1.5.5.7.8.5"), new DERUTF8String( domain )});
+                new ASN1ObjectIdentifier("1.3.6.1.5.5.7.8.5"), new DERTaggedObject(true, 0, new DERUTF8String(domain))});
         GeneralName othernameGN = new GeneralName(GeneralName.otherName, othernameSequence);
         GeneralNames subjectAltNames = new GeneralNames(new GeneralName[]{othernameGN});
         certBuilder.addExtension(Extension.subjectAlternativeName, critical, subjectAltNames);

@@ -75,6 +75,7 @@ public class XmppWebSocket {
     private WebSocketConnection wsConnection;
     private LocalClientSession xmppSession;
     private boolean startedSASL = false;
+    private boolean usingSASL2 = false;
     private Status saslStatus;
     private TimerTask pingTask;
 
@@ -219,11 +220,22 @@ public class XmppWebSocket {
                 startedSASL = true;
                 // Process authentication stanza
                 xmppSession.incrementClientPacketCount();
-                saslStatus = SASLAuthentication.handle(xmppSession, stanza);
+                saslStatus = SASLAuthentication.handle(xmppSession, stanza, usingSASL2);
+            } else if ("authenticate".equals(tag)) {
+                // User is trying to authenticate using SASL
+                startedSASL = true;
+                usingSASL2 = true;
+                // Process authentication stanza
+                xmppSession.incrementClientPacketCount();
+                saslStatus = SASLAuthentication.handle(xmppSession, stanza, usingSASL2);
             } else if (startedSASL && "response".equals(tag) || "abort".equals(tag)) {
                 // User is responding to SASL challenge. Process response
                 xmppSession.incrementClientPacketCount();
-                saslStatus = SASLAuthentication.handle(xmppSession, stanza);
+                saslStatus = SASLAuthentication.handle(xmppSession, stanza, usingSASL2);
+                if (saslStatus == SASLAuthentication.Status.failed) {
+                    startedSASL = false;
+                    usingSASL2 = false;
+                }
             } else if (STREAM_HEADER.equals(tag)) {
                 // restart the stream
                 openStream(stanza.attributeValue(QName.get("lang", XMLConstants.XML_NS_URI), "en"), stanza.attributeValue("from"));

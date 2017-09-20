@@ -348,6 +348,14 @@
             <version>9.4-1201-jdbc4</version>
         </dependency>
 
+        <!-- mix -->
+        <dependency>
+            <groupId>org.hibernate.javax.persistence</groupId>
+            <artifactId>hibernate-jpa-2.1-api</artifactId>
+            <version>1.0.0.Final</version>
+        </dependency>
+
+
         <!-- Test Scope -->
         <dependency>
             <groupId>junit</groupId>
@@ -361,6 +369,7 @@
             <version>1.0</version>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <repositories>

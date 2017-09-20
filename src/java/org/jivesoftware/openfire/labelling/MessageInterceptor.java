@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmpp.packet.*;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -87,12 +88,12 @@ public class MessageInterceptor implements PacketInterceptor {
                         newItems.addAttribute("node", items.attributeValue("node"));
                         String clearanceTo = acdf.getClearance(iq.getTo());
                         String clearanceFrom = acdf.getClearance(iq.getFrom());
-                        for (Element item : items.elements()) {
+                        for (Element item : (List<Element>) items.elements()) {
                             String id = item.attributeValue("id");
-                            Element payload = item.elements().get(0);
+                            Element payload = (Element)item.elements().get(0);
                             SecurityLabel secLabel = null;
                             if (item.elements().size() > 1) {
-                                secLabel = new SecurityLabel(item.elements().get(1));
+                                secLabel = new SecurityLabel((Element)item.elements().get(1));
                             }
                             try {
                                 acdf.check(clearanceFrom, secLabel, null);

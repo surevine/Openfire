@@ -49,6 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmpp.packet.PacketError;
 import org.xmpp.packet.StreamError;
+import java.util.concurrent.TimeUnit;
 
 import javax.xml.XMLConstants;
 
@@ -91,6 +92,7 @@ public class XmppWebSocket {
     {
         wsSession = session;
         wsConnection = new WebSocketConnection(this, session.getRemoteAddress());
+        wsSession.setIdleTimeout(TimeUnit.HOURS.toMillis(1)); // An hour.
         pingTask = new PingTask();
         TaskEngine.getInstance().schedule(pingTask, JiveConstants.MINUTE, JiveConstants.MINUTE);
     }

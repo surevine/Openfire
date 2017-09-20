@@ -57,11 +57,11 @@ public class MixXmppServiceImplTest {
 		
 		mockRouter = mockery.mock(PacketRouter.class);
 		
-		mockServiceHandler1 = mockery.mock(MixServicePacketHandler.class);
-		mockServiceHandler2 = mockery.mock(MixServicePacketHandler.class);
+		mockServiceHandler1 = mockery.mock(MixServicePacketHandler.class, "mockServiceHandler1");
+		mockServiceHandler2 = mockery.mock(MixServicePacketHandler.class, "mockServiceHandler2");
 		
-		mockChannelHandler1 = mockery.mock(MixChannelPacketHandler.class);
-		mockChannelHandler2 = mockery.mock(MixChannelPacketHandler.class);
+		mockChannelHandler1 = mockery.mock(MixChannelPacketHandler.class, "mockChannelHandler1");
+		mockChannelHandler2 = mockery.mock(MixChannelPacketHandler.class, "mockChannelHandler2");
 		
 		mockServiceHandlers = Arrays.asList(mockServiceHandler1, mockServiceHandler2);
 		mockChannelHandlers = Arrays.asList(mockChannelHandler1, mockChannelHandler2);

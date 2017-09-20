@@ -70,12 +70,12 @@ public class MixPersistenceManagerImplTest {
 
 		mixPersistenceManager = new MixPersistenceManagerImpl(jiveProperties, mockXmppService, testIdentityManager,
 				testIdentityManager, testIdentityManager, mockMAS);
-		
+
 		mockery.checking(new Expectations() {
 			{
 				allowing(mockMixService).getServiceDomain();
 				will(returnValue("shakespeare.example.com"));
-				
+
 				allowing(mockXmppService).route(with(any(Message.class)));
 			}
 		});
@@ -86,7 +86,7 @@ public class MixPersistenceManagerImplTest {
 		// The Embedded database needs somewhere to store temporary files
 
 		System.out.println("Database script dir is " + System.getProperty(DATABASE_UPGRADE_DIR));
-		
+
 		String scriptDir = System.getProperty(DATABASE_UPGRADE_DIR) + File.separator + "27" + File.separator;
 		Path hsqldbDirPath = Paths.get(scriptDir + File.separator + "hsqldb");
 		Files.createDirectory(hsqldbDirPath);
@@ -104,7 +104,7 @@ public class MixPersistenceManagerImplTest {
 
 		TestSchemaManager.executeSQLScript(conn, new FileInputStream(resourceName), Boolean.TRUE);
 	}
-	
+
 	private static final String DATABASE_UPGRADE_DIR = "databaseUpgradeDir";
 
 	@AfterClass
@@ -167,7 +167,7 @@ public class MixPersistenceManagerImplTest {
 		});
 
 		assertEquals(1, mixPersistenceManager.loadChannels(mockMixService).size());
-		
+
 	}
 
 	@Test
@@ -178,22 +178,22 @@ public class MixPersistenceManagerImplTest {
 		mc = mixPersistenceManager.save(mc);
 		assertNotNull(mc);
 		assertNotNull(mc.getID());
-		
+
 		Connection conn = DbConnectionManager.getConnection();
 		PreparedStatement stmt = conn.prepareStatement(
 				"SELECT * FROM " + MixPersistenceManagerImpl.CHANNEL_TABLE_NAME + "  WHERE channelID=?");
 		stmt.setLong(1, mc.getID());
 
 		ResultSet rs = stmt.executeQuery();
-		
+
 		assertTrue(rs.next());
-		
+
 		mixPersistenceManager.delete(mc);
-		
+
 		rs = stmt.executeQuery();
-		
+
 		assertFalse(rs.next());
-		
+
 	}
 
 
@@ -222,24 +222,24 @@ public class MixPersistenceManagerImplTest {
 		stmt.setString(1, TEST_USERS_JID.toString());
 
 		ResultSet rs = stmt.executeQuery();
-		
+
 		assertTrue(rs.next());
-		
+
 		// Now delete and make sure its cascaded
 		mixPersistenceManager.delete(toPersist);
-		
+
 		rs = stmt.executeQuery();
-		
+
 		assertFalse(rs.next());
 
 	}
-	
+
 	@Test
 	public void thatParticipantsSubscriptionsAreUpdated() throws MixPersistenceException, CannotUpdateMixChannelSubscriptionException {
 		// Create a channel
 		MixChannel mc = mixPersistenceManager.save(new LocalMixChannel(mockMixService, TEST_MIX_CHANNEL_NAME,
 				new JID(TEST_USER, TEST_SERVICE_DOMAIN, null), mockXmppService, mixPersistenceManager, mockMAS));
-		
+
 		Set<String> subscriptions = new HashSet<String>(
 				Arrays.asList("urn:xmpp:mix:nodes:messages", "urn:xmpp:mix:nodes:participants"));
 
@@ -247,16 +247,16 @@ public class MixPersistenceManagerImplTest {
 		MixChannelParticipant toPersist = new LocalMixChannelParticipant(TEST_USER_PROXY_JID, TEST_USERS_JID, mc,
 				subscriptions, ChannelJidVisibilityPreference.NO_PREFERENCE, null);
 		toPersist = mixPersistenceManager.save(toPersist);
-		
+
 		assertEquals(2, toPersist.getSubscriptions().size());
-		
+
 		toPersist.setSubscriptions(new HashSet<String>(Arrays.asList("urn:xmpp:mix:nodes:participants")));
-		
+
 		// Update subscriptions with reduced set
 		toPersist = mixPersistenceManager.update(toPersist);
-		
+
 		assertEquals(1, toPersist.getSubscriptions().size());
-		
+
 		// Tidy up
 		mixPersistenceManager.delete(toPersist);
 	}
@@ -281,13 +281,13 @@ public class MixPersistenceManagerImplTest {
 			long limit = Integer.MAX_VALUE;
 			return ThreadLocalRandom.current().nextLong(limit);
 		}
-		
+
 	}
-	
+
 	/**
 	 * More or less a copy of the Openfire SchemaManager to allow the upgrade
 	 * script to be executed.
-	 * 
+	 *
 	 * @author garethf
 	 *
 	 */

@@ -4,6 +4,7 @@ import org.dom4j.Element;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.commands.AdHocCommand;
 import org.jivesoftware.openfire.commands.SessionData;
+import org.jivesoftware.openfire.user.UserNotFoundException;
 import org.jivesoftware.openfire.user.UserWrapper;
 import org.xmpp.forms.DataForm;
 import org.xmpp.forms.FormField;
@@ -89,7 +90,15 @@ public class GetUserAdditionalProperty extends AdHocCommand {
         form.addReportedField("key", "Additional user property key", FormField.Type.text_single);
         form.addReportedField("value", "Additional user property value", FormField.Type.text_single);
 
-        String propertyValue = lookupProperty(account.getNode(), propertyKey);
+        String propertyValue;
+        try {
+            propertyValue = lookupProperty(account.getNode(), propertyKey);
+        } catch (UserNotFoundException e) {
+            Element note = command.addElement("note");
+            note.addAttribute("type", "error");
+            note.setText("Invalid accountjid supplied.");
+            return;
+        }
 
         Map<String,Object> fields = new HashMap<>();
         fields.put(PROPERTY_KEY_VAR, propertyKey);
@@ -106,7 +115,7 @@ public class GetUserAdditionalProperty extends AdHocCommand {
      * @param key to find the value of
      * @return the value of any matching property
      */
-    private String lookupProperty(String username, String key) {
+    private String lookupProperty(String username, String key) throws UserNotFoundException {
         return getPropertyStore().getPropertyValue(username, key);
     }
 

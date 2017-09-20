@@ -41,4 +41,4 @@ CREATE TABLE ofMixChannelParticipantSubscription (
   FOREIGN KEY (participantID_fk) REFERENCES ofMixChannelParticipant(mcpID)
 );
 
-UPDATE ofVersion SET version = 24 WHERE name = 'openfire';
+UPDATE ofVersion SET version = 27 WHERE name = 'openfire';

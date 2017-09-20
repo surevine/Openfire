@@ -89,16 +89,20 @@ public class ParticipantJidVisibilityVoterTest {
 				put(ChannelJidVisibilityPreference.PREFER_HIDDEN, PolicyVoterOutcome.DENY);
 			}});
 		}};
-		
+
+		Integer channelI = 0;
 		for(final ChannelJidVisibilityMode channelMode : truthTable.keySet()) {
-			final MixChannel channel = mockery.mock(MixChannel.class);
+		    channelI++;
+			final MixChannel channel = mockery.mock(MixChannel.class, "mockMixChannel" + channelI);
 			
 			mockery.checking(new Expectations() {{
 				allowing(channel).getJidVisibilityMode(); will(returnValue(channelMode));
 			}});
-			
+
+			Integer participantI = 0;
 			for(final ChannelJidVisibilityPreference userMode : truthTable.get(channelMode).keySet()) {
-				final MixChannelParticipant participant = mockery.mock(MixChannelParticipant.class);
+			    participantI++;
+				final MixChannelParticipant participant = mockery.mock(MixChannelParticipant.class, "mockMixChannel"+channelI+"-Participant" + participantI.toString());
 				
 				mockery.checking(new Expectations() {{
 					allowing(participant).getJidVisibilityPreference(); will(returnValue(userMode));

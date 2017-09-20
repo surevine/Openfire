@@ -28,9 +28,9 @@ public class VoterBasedPermissionPolicyTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testForceAllowStopsVoting() {
-		final PermissionVoter<String> voter1 = mockery.mock(PermissionVoter.class);
-		final PermissionVoter<String> voter2 = mockery.mock(PermissionVoter.class);
-		
+        final PermissionVoter<String> voter1 = mockery.mock(PermissionVoter.class, "mockVoter1");
+        final PermissionVoter<String> voter2 = mockery.mock(PermissionVoter.class, "mockVoter2");
+
 		final MixRequestContext context = mockery.mock(MixRequestContext.class);
 		final String subject = "test";
 		final Action action = Action.VIEW;
@@ -50,10 +50,10 @@ public class VoterBasedPermissionPolicyTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testDenyStopsVoting() {
-		final PermissionVoter<String> voter1 = mockery.mock(PermissionVoter.class);
-		final PermissionVoter<String> voter2 = mockery.mock(PermissionVoter.class);
-		final PermissionVoter<String> voter3 = mockery.mock(PermissionVoter.class);
-		
+        final PermissionVoter<String> voter1 = mockery.mock(PermissionVoter.class, "mockVoter1");
+        final PermissionVoter<String> voter2 = mockery.mock(PermissionVoter.class, "mockVoter2");
+        final PermissionVoter<String> voter3 = mockery.mock(PermissionVoter.class, "mockVoter3");
+
 		final MixRequestContext context = mockery.mock(MixRequestContext.class);
 		final String subject = "test";
 		final Action action = Action.VIEW;
@@ -74,9 +74,9 @@ public class VoterBasedPermissionPolicyTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testAllow() {
-		final PermissionVoter<String> voter1 = mockery.mock(PermissionVoter.class);
-		final PermissionVoter<String> voter2 = mockery.mock(PermissionVoter.class);
-		final PermissionVoter<String> voter3 = mockery.mock(PermissionVoter.class);
+		final PermissionVoter<String> voter1 = mockery.mock(PermissionVoter.class, "mockVoter1");
+		final PermissionVoter<String> voter2 = mockery.mock(PermissionVoter.class, "mockVoter2");
+		final PermissionVoter<String> voter3 = mockery.mock(PermissionVoter.class, "mockVoter3");
 		
 		final MixRequestContext context = mockery.mock(MixRequestContext.class);
 		final String subject = "test";

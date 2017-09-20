@@ -52,7 +52,7 @@ public class GetUserAdditionalPropertyTest {
     }
 
     @Test
-    public void testCanRequestASingleProperty() {
+    public void testCanRequestASingleProperty() throws Exception {
 
         final String username = "user";
         final String accountJid = username + "@localhost";
@@ -76,7 +76,7 @@ public class GetUserAdditionalPropertyTest {
             one(mockUserWrapper).getPropertyValue(username, propertyToLookup);
             will(returnValue(expectedPropertyValue));
 
-            allowing(mockXMPPServer).isLocal(with(a(JID.class)));
+            allowing(mockXMPPServer).isLocal(with(any(JID.class)));
             will(returnValue(true));
 
         }});
@@ -94,7 +94,7 @@ public class GetUserAdditionalPropertyTest {
     }
 
     @Test
-    public void testResponseContainsReportedTableHeader() {
+    public void testResponseContainsReportedTableHeader() throws Exception {
 
         final String username = "user";
         final String accountJid = username + "@localhost";
@@ -118,7 +118,7 @@ public class GetUserAdditionalPropertyTest {
             one(mockUserWrapper).getPropertyValue(username, propertyToLookup);
             will(returnValue(expectedPropertyValue));
 
-            allowing(mockXMPPServer).isLocal(with(a(JID.class)));
+            allowing(mockXMPPServer).isLocal(with(any(JID.class)));
             will(returnValue(true));
         }});
 
@@ -135,8 +135,8 @@ public class GetUserAdditionalPropertyTest {
         final Element reported = x.element("reported");
         assertNotNull("Response should contain reported element", reported);
         assertEquals("Reported element should contain 2 fields", 2,  reported.elements().size());
-        assertEquals("Reported element should contain key field", "key",  reported.elements().get(0).attribute("var").getValue());
-        assertEquals("Reported element should contain value field", "value",  reported.elements().get(1).attribute("var").getValue());
+        assertEquals("Reported element should contain key field", "key",  ((Element) reported.elements().get(0)).attribute("var").getValue());
+        assertEquals("Reported element should contain value field", "value",  ((Element) reported.elements().get(1)).attribute("var").getValue());
     }
 
     @Test
@@ -320,7 +320,7 @@ public class GetUserAdditionalPropertyTest {
             one(mockSessionData).getData();
             will(returnValue(requestData));
 
-            allowing(mockXMPPServer).isLocal(with(a(JID.class)));
+            allowing(mockXMPPServer).isLocal(with(any(JID.class)));
             will(returnValue(false));
 
         }});
@@ -339,7 +339,7 @@ public class GetUserAdditionalPropertyTest {
     }
 
     @Test
-    public void testNonExistentKeyReturnsEmptyValue() {
+    public void testNonExistentKeyReturnsEmptyValue() throws Exception {
 
         final String username = "user";
         final String accountJid = username + "@localhost";
@@ -360,7 +360,7 @@ public class GetUserAdditionalPropertyTest {
             one(mockUserWrapper).getPropertyValue(username, propertyToLookup);
             will(returnValue(null));
 
-            allowing(mockXMPPServer).isLocal(with(a(JID.class)));
+            allowing(mockXMPPServer).isLocal(with(any(JID.class)));
             will(returnValue(true));
 
         }});

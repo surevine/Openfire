@@ -73,7 +73,7 @@ public class SetUserAdditionalPropertyTest {
             one(mockSessionData).getData();
             will(returnValue(requestData));
 
-            allowing(mockXMPPServer).isLocal(with(a(JID.class)));
+            allowing(mockXMPPServer).isLocal(with(any(JID.class)));
             will(returnValue(true));
 
             one(mockUserWrapper).setProperty(username, propertyToSet, propertyValue);
@@ -114,7 +114,7 @@ public class SetUserAdditionalPropertyTest {
             one(mockSessionData).getData();
             will(returnValue(requestData));
 
-            allowing(mockXMPPServer).isLocal(with(a(JID.class)));
+            allowing(mockXMPPServer).isLocal(with(any(JID.class)));
             will(returnValue(true));
 
             one(mockUserWrapper).setProperty(username, propertyToSet, propertyValue);
@@ -360,7 +360,7 @@ public class SetUserAdditionalPropertyTest {
             one(mockSessionData).getData();
             will(returnValue(requestData));
 
-            allowing(mockXMPPServer).isLocal(with(a(JID.class)));
+            allowing(mockXMPPServer).isLocal(with(any(JID.class)));
             will(returnValue(false));
 
         }});

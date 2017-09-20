@@ -14,7 +14,7 @@ public class UserWrapper {
      * @param propertyName the name of the property to return its value.
      * @return the value of the specified property for the given username.
      */
-    public String getPropertyValue(String username, String propertyName) {
+    public String getPropertyValue(String username, String propertyName) throws UserNotFoundException{
         return User.getPropertyValue(username, propertyName);
     }
 

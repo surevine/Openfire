@@ -327,6 +327,7 @@ CREATE TABLE ofPubsubItem (
   jid                 VARCHAR(1024) NOT NULL,
   creationDate        CHAR(15)      NOT NULL,
   payload             VARCHAR(4000) NULL,
+  label               VARCHAR(4000) NULL,
   CONSTRAINT ofPubsubItem_pk PRIMARY KEY (serviceID, nodeID, id)
 );
 

@@ -68,6 +68,7 @@ public class User implements Cacheable, Externalizable, Result {
     private String email;
     private Date creationDate;
     private Date modificationDate;
+    private String clearance;
 
     private Map<String,String> properties = null;
 
@@ -187,6 +188,17 @@ public class User implements Cacheable, Externalizable, Result {
 
     public void setIterations(int iterations) {
     	this.iterations = iterations;
+    }
+
+    public String getClearance() {
+        if (this.clearance == null) {
+            this.clearance = getProperties().get("clearance");
+        }
+        return this.clearance;
+    }
+
+    public void setClearance(String clearance) {
+        this.clearance = clearance;
     }
 
     public String getName() {

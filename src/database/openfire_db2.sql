@@ -340,6 +340,7 @@ CREATE TABLE ofPubsubItem (
   jid                 VARCHAR(1024) NOT NULL,
   creationDate        CHAR(15)      NOT NULL,
   payload             CLOB,
+  label               CLOB,
   CONSTRAINT ofPubsubItem_pk PRIMARY KEY (serviceID, nodeID, id)
 );
 

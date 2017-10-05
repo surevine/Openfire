@@ -151,10 +151,15 @@ public class HttpSession extends LocalClientSession {
         List<Element> elements = new ArrayList<>();
 
         if (getAuthToken() == null) {
-	        Element sasl = SASLAuthentication.getSASLMechanismsElement(this);
+	        Element sasl = SASLAuthentication.getSASLMechanismsElement(this, false);
 	        if (sasl != null) {
 	            elements.add(sasl);
 	        }
+	        Element sasl2;
+	        sasl2 = SASLAuthentication.getSASLMechanismsElement(this, true);
+	        if (sasl2 != null) {
+	            elements.add(sasl2);
+            }
         }
 
         if (XMPPServer.getInstance().getIQRegisterHandler().isInbandRegEnabled()) {

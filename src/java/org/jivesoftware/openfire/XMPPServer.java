@@ -475,6 +475,7 @@ public class XMPPServer {
         loadModule(OfflineMessageStrategy.class.getName());
         loadModule(OfflineMessageStore.class.getName());
         loadModule(VCardManager.class.getName());
+        loadModule(DeviceKeyGen.class.getName());
         // Load standard modules
         loadModule(IQBindHandler.class.getName());
         loadModule(IQSessionEstablishmentHandler.class.getName());

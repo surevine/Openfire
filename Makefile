@@ -11,7 +11,7 @@ clean:
 	cd build && ant clean
 
 dpkg:
-	cd build && ant installer.debian
+	cd build && ant installer.debian -Dno.package=true -Dno.javadoc=true
 
 plugins:
 	cd build && ant plugins

@@ -23,6 +23,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.dom4j.Element;
+import org.jivesoftware.openfire.XMPPServer;
+import org.jivesoftware.openfire.labelling.AccessControlDecisionFunction;
+import org.jivesoftware.openfire.labelling.SecurityLabel;
+import org.jivesoftware.openfire.labelling.SecurityLabelException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 
@@ -34,6 +40,7 @@ import org.xmpp.packet.Message;
  * @author Matt Tucker
  */
 public class NodeAffiliate {
+    private static final Logger Log = LoggerFactory.getLogger(NodeAffiliate.class);
 
     private JID jid;
     private Node node;
@@ -86,7 +93,7 @@ public class NodeAffiliate {
      */
     void sendPublishedNotifications(Message notification, Element event, LeafNode leafNode,
             List<PublishedItem> publishedItems) {
-
+        boolean anythingToSend = false;
         if (!publishedItems.isEmpty()) {
             Map<List<NodeSubscription>, List<PublishedItem>> itemsBySubs =
                     getItemsBySubscriptions(leafNode, publishedItems);
@@ -97,6 +104,7 @@ public class NodeAffiliate {
                 Element items = event.addElement("items");
                 items.addAttribute("node", getNode().getNodeID());
                 for (PublishedItem publishedItem : itemsBySubs.get(nodeSubscriptions)) {
+                    AccessControlDecisionFunction acdf = XMPPServer.getInstance().getAccessControlDecisionFunction();
                     // FIXME: This was added for compatibility with PEP supporting clients.
                     //        Alternate solution needed when XEP-0163 version > 1.0 is released.
                     //
@@ -113,14 +121,30 @@ public class NodeAffiliate {
                     if (leafNode.isPayloadDelivered()) {
                         item.add(publishedItem.getPayload().createCopy());
                     }
+                    // Add security label, after checking.
+                    if (acdf != null) {
+                        try {
+                            SecurityLabel securityLabel = acdf.check(acdf.getClearance(this.jid), publishedItem.getSecurityLabel(), this.jid);
+                            notification.deleteExtension(SecurityLabel.NAME, SecurityLabel.NAMESPACE);
+                            if (securityLabel != null) {
+                                notification.addExtension(securityLabel);
+                            }
+                        } catch (SecurityLabelException e) {
+                            Log.debug("Dropped item publish due to SecurityLabel: ", e);
+                            continue;
+                        }
+                    }
+                    anythingToSend = true;
                     // Add leaf leafNode information if affiliated leafNode and node
                     // where the item was published are different
                     if (leafNode != getNode()) {
                         item.addAttribute("node", leafNode.getNodeID());
                     }
                 }
-                // Send the event notification
-                sendEventNotification(notification, nodeSubscriptions);
+                if (anythingToSend) {
+                    // Send the event notification
+                    sendEventNotification(notification, nodeSubscriptions);
+                }
                 // Remove the added items information
                 event.remove(items);
             }
@@ -159,11 +183,12 @@ public class NodeAffiliate {
      */
     void sendDeletionNotifications(Message notification, Element event, LeafNode leafNode,
             List<PublishedItem> publishedItems) {
-
+        AccessControlDecisionFunction acdf = XMPPServer.getInstance().getAccessControlDecisionFunction();
         if (!publishedItems.isEmpty()) {
             Map<List<NodeSubscription>, List<PublishedItem>> itemsBySubs =
                     getItemsBySubscriptions(leafNode, publishedItems);
 
+            boolean anythingToSend = false;
             // Send one notification for published items that affect the same subscriptions
             for (List<NodeSubscription> nodeSubscriptions : itemsBySubs.keySet()) {
                 // Add items information
@@ -175,9 +200,21 @@ public class NodeAffiliate {
                     if (leafNode.isItemRequired()) {
                         item.addAttribute("id", publishedItem.getID());
                     }
+                    // Add security label, after checking.
+                    if (acdf != null) {
+                        try {
+                            SecurityLabel securityLabel = acdf.check(acdf.getClearance(this.jid), publishedItem.getSecurityLabel(), this.jid);
+                        } catch (SecurityLabelException e) {
+                            Log.debug("Dropped item publish due to SecurityLabel: ", e);
+                            continue;
+                        }
+                    }
+                    anythingToSend = true;
                 }
-                // Send the event notification
-                sendEventNotification(notification, nodeSubscriptions);
+                if (anythingToSend) {
+                    // Send the event notification
+                    sendEventNotification(notification, nodeSubscriptions);
+                }
                 // Remove the added items information
                 event.remove(items);
             }
@@ -224,14 +261,14 @@ public class NodeAffiliate {
         else {
             // Affiliate should have at most one subscription per unique JID
             if (!notifySubscriptions.isEmpty()) {
-                List<JID> subs = new ArrayList<>();
-                for(NodeSubscription subscription: notifySubscriptions) {
-                    JID sub = subscription.getJID();
-                    if (!subs.contains(sub)) {
-                        node.sendEventNotification(sub, notification, null);
-                        subs.add(sub);
-                    }
-                }
+            	List<JID> subs = new ArrayList<>();
+            	for(NodeSubscription subscription: notifySubscriptions) {
+            		JID sub = subscription.getJID();
+            		if (!subs.contains(sub)) {
+            			node.sendEventNotification(sub, notification, null);
+            			subs.add(sub);
+            		}
+            	}
             }
         }
     }
@@ -264,8 +301,8 @@ public class NodeAffiliate {
         for (PublishedItem publishedItem : subsByItem.keySet()) {
             affectedSubscriptions = itemsBySubs.get(subsByItem.get(publishedItem));
             if (affectedSubscriptions == null) {
-                List<PublishedItem> items = new ArrayList<>(publishedItems.size());
-                items.add(publishedItem);
+            	List<PublishedItem> items = new ArrayList<>(publishedItems.size());
+            	items.add(publishedItem);
                 itemsBySubs.put(subsByItem.get(publishedItem), items);
             }
             else {
@@ -276,7 +313,7 @@ public class NodeAffiliate {
     }
 
     @Override
-    public String toString() {
+	public String toString() {
         return super.toString() + " - JID: " + getJID() + " - Affiliation: " +
                 getAffiliation().name();
     }

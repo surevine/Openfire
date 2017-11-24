@@ -328,6 +328,7 @@ CREATE TABLE ofPubsubItem (
   jid                 VARCHAR(1024) NOT NULL,
   creationDate        CHAR(15)      NOT NULL,
   payload             VARCHAR(4000) NULL,
+  label               VARCHAR(4000) NULL,
   CONSTRAINT ofPubsubItem_pk PRIMARY KEY (serviceID, nodeID, id)
 );
 
@@ -372,6 +373,50 @@ CREATE TABLE ofPubsubDefaultConf (
   CONSTRAINT ofPubsubDefaultConf_pk PRIMARY KEY (serviceID, leaf)
 );
 
+CREATE TABLE ofMixService (
+  serviceID           BIGINT        NOT NULL,
+  subdomain           VARCHAR(255)  NOT NULL,
+  description         VARCHAR(255),
+  isHidden            INTEGER       NOT NULL,
+  CONSTRAINT ofMixService_pk PRIMARY KEY (subdomain)
+);
+CREATE INDEX ofMixService_serviceid_idx ON ofMixService(serviceID);
+
+-- Entry for default conference service
+INSERT INTO ofMixService (serviceID, subdomain, isHidden) VALUES (1, 'mix', 0);
+
+CREATE TABLE ofMixChannel (
+  channelID           BIGINT        NOT NULL,
+  creationDate        CHAR(15)      NOT NULL,
+  modificationDate    CHAR(15)      NOT NULL,
+  name                VARCHAR(50)   NOT NULL,
+  owner               VARCHAR(1024)  NOT NULL,
+  jidVisibility       INTEGER       NOT NULL,
+  CONSTRAINT ofMixChannel_pk PRIMARY KEY (channelID)
+);
+
+CREATE INDEX ofMixChannel_name_idx ON ofMixChannel(name);
+
+CREATE TABLE ofMixChannelParticipant (
+  mcpID               				BIGINT        	NOT NULL,
+  realJid             				VARCHAR(1024)   NOT NULL,
+  proxyJid            				VARCHAR(1024)   NOT NULL,
+  nickName                          VARCHAR(1024),
+  channelJidVisibilityPreference 	INTEGER  		NOT NULL,
+  channelID_fk       				BIGINT          NOT NULL,
+  CONSTRAINT ofMixChannelParticipant_pk PRIMARY KEY (mcpID),
+  FOREIGN KEY (channelID_fk) REFERENCES ofMixChannel(channelID)
+);
+
+CREATE TABLE ofMixChannelParticipantSubscription (
+  mcpSubsID 	        BIGINT        	NOT NULL,
+  nodeName              VARCHAR(255)    NOT NULL,
+  participantID_fk      BIGINT          NOT NULL,
+  CONSTRAINT mcpSubsID_pk PRIMARY KEY (mcpSubsID),
+  FOREIGN KEY (participantID_fk) REFERENCES ofMixChannelParticipant(mcpID)
+);
+
+
 // Finally, insert default table values.
 
 INSERT INTO ofID (idType, id) VALUES (18, 1);
@@ -379,7 +424,7 @@ INSERT INTO ofID (idType, id) VALUES (19, 1);
 INSERT INTO ofID (idType, id) VALUES (23, 1);
 INSERT INTO ofID (idType, id) VALUES (26, 2);
 
-INSERT INTO ofVersion (name, version) VALUES ('openfire', 26);
+INSERT INTO ofVersion (name, version) VALUES ('openfire', 27);
 
 // Entry for admin user
 INSERT INTO ofUser (username, plainPassword, name, email, creationDate, modificationDate)

@@ -25,6 +25,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.jivesoftware.openfire.XMPPServer;
+import org.jivesoftware.openfire.labelling.SecurityLabel;
 import org.jivesoftware.openfire.pep.PEPServiceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,8 +63,8 @@ public class PublishedItem implements Serializable {
             xmlReaders.add(xmlReader);
         }    	
     }
-    
-    /**
+	
+	/**
      * JID of the entity that published the item to the node. This is the full JID
      * of the publisher.
      */
@@ -71,7 +72,7 @@ public class PublishedItem implements Serializable {
     /**
      * The node where the item was published.
      */
-    private volatile transient LeafNode node;
+	private volatile transient LeafNode node;
     /**
      * The id for the node where the item was published.
      */
@@ -92,11 +93,19 @@ public class PublishedItem implements Serializable {
      * The optional payload is included when publishing the item. This value
      * is created from the payload XML and cached as/when needed.
      */
-    private volatile transient Element payload;
+	private volatile transient Element payload;
     /**
      * XML representation of the payload (for serialization)
      */
     private String payloadXML;
+    /**
+     * Security Label (XEP-0314)
+     */
+    private volatile transient SecurityLabel securityLabel;
+    /**
+     * XML representation of the security label.
+     */
+    private String securityLabelXML;
     
     /**
      * Creates a published item
@@ -129,23 +138,23 @@ public class PublishedItem implements Serializable {
      * @return the leaf node where this item was published.
      */
     public LeafNode getNode() {
-        if (node == null) {
-            synchronized (this) {
-                if (node == null) {
-                    if (XMPPServer.getInstance().getPubSubModule().getServiceID().equals(serviceId))
-                    {
-                        node = (LeafNode) XMPPServer.getInstance().getPubSubModule().getNode(nodeId);
-                    }
-                    else
-                    {
-                        PEPServiceManager serviceMgr = XMPPServer.getInstance().getIQPEPHandler().getServiceManager();
-                        node = serviceMgr.hasCachedService(new JID(serviceId)) ? (LeafNode) serviceMgr.getPEPService(
-                                serviceId).getNode(nodeId) : null;
-                    }
-                }
-            }
-        }
-        return node;
+    	if (node == null) {
+			synchronized (this) {
+				if (node == null) {
+					if (XMPPServer.getInstance().getPubSubModule().getServiceID().equals(serviceId))
+					{
+						node = (LeafNode) XMPPServer.getInstance().getPubSubModule().getNode(nodeId);
+					}
+					else
+					{
+						PEPServiceManager serviceMgr = XMPPServer.getInstance().getIQPEPHandler().getServiceManager();
+						node = serviceMgr.hasCachedService(new JID(serviceId)) ? (LeafNode) serviceMgr.getPEPService(
+								serviceId).getNode(nodeId) : null;
+					}
+				}
+			}
+    	}
+    	return node;
     }
 
     /**
@@ -183,24 +192,24 @@ public class PublishedItem implements Serializable {
      * @return the payload included when publishing the item or <tt>null</tt> if none was found.
      */
     public Element getPayload() {
-        if (payload == null && payloadXML != null) {
-            synchronized (this) {
-                if (payload == null) {
-                    // payload initialized as XML string from DB
-                    SAXReader xmlReader = null;
-                    try {
-                        xmlReader = xmlReaders.take();
-                        payload = xmlReader.read(new StringReader(payloadXML)).getRootElement(); 
-                    } catch (Exception ex) {
-                         log.error("Failed to parse payload XML", ex);
-                    } finally {
-                        if (xmlReader != null) {
-                            xmlReaders.add(xmlReader);
-                        }
-                    }
-                }
-            }
-        }
+    	if (payload == null && payloadXML != null) {
+    		synchronized (this) {
+				if (payload == null) {
+		    		// payload initialized as XML string from DB
+		            SAXReader xmlReader = null;
+		    		try {
+		    			xmlReader = xmlReaders.take();
+		    			payload = xmlReader.read(new StringReader(payloadXML)).getRootElement(); 
+		    		} catch (Exception ex) {
+		    			 log.error("Failed to parse payload XML", ex);
+		    		} finally {
+		    			if (xmlReader != null) {
+		    				xmlReaders.add(xmlReader);
+		    			}
+		    		}
+				}
+			}
+    	}
         return payload;
     }
 
@@ -224,8 +233,8 @@ public class PublishedItem implements Serializable {
      *        if none was found.
      */
     void setPayloadXML(String payloadXML) {
-        this.payloadXML = payloadXML;
-        this.payload = null; // will be recreated only if needed
+    	this.payloadXML = payloadXML;
+    	this.payload = null; // will be recreated only if needed
     }
 
     /**
@@ -243,6 +252,71 @@ public class PublishedItem implements Serializable {
             payloadXML = null;
         } else {
             payloadXML = payload.asXML();
+        }
+    }
+
+    /**
+     * Returns the securityLabel included when publishing the item.
+     *
+     * @return the securityLabel included when publishing the item or <tt>null</tt> if none was found.
+     */
+    public SecurityLabel getSecurityLabel() {
+        if (securityLabel == null && securityLabelXML != null) {
+            synchronized (this) {
+                if (securityLabel == null) {
+                    // payload initialized as XML string from DB
+                    SAXReader xmlReader = null;
+                    try {
+                        xmlReader = xmlReaders.take();
+                        securityLabel = new SecurityLabel(xmlReader.read(new StringReader(securityLabelXML)).getRootElement());
+                    } catch (Exception ex) {
+                        log.error("Failed to parse payload XML", ex);
+                    } finally {
+                        if (xmlReader != null) {
+                            xmlReaders.add(xmlReader);
+                        }
+                    }
+                }
+            }
+        }
+        return securityLabel;
+    }
+
+    /**
+     * Returns a textual representation of the security label or <tt>null</tt> if no payload
+     * was specified with the item.
+     *
+     * @return a textual representation of the security label or null if no security label was specified
+     *         with the item.
+     */
+    public String getSecurityLabelXML() {
+        return securityLabelXML;
+    }
+
+    /**
+     * Sets the security label included when publishing the item.
+     *
+     * @param securityLabelXML the label included when publishing the item or <tt>null</tt>
+     *        if none was found.
+     */
+    void setSecurityLabelXML(String securityLabelXML) {
+        this.securityLabelXML = securityLabelXML;
+        this.securityLabel = null; // will be recreated only if needed
+    }
+
+    /**
+     * Sets the label included when publishing the item.
+     *
+     * @param securityLabel the label included when publishing the item or <tt>null</tt>
+     *        if none was found.
+     */
+    void setSecurityLabel(SecurityLabel securityLabel) {
+        this.securityLabel = securityLabel;
+        // Update XML representation of the payload
+        if (securityLabel == null) {
+            securityLabelXML = null;
+        } else {
+            securityLabelXML = securityLabel.getElement().asXML();
         }
     }
 
@@ -281,10 +355,10 @@ public class PublishedItem implements Serializable {
      * @return Unique identifier for this item
      */
     public String getItemKey() {
-        return getItemKey(nodeId,id);
+    	return getItemKey(nodeId,id);
     }
 
-    /**
+	/**
      * Returns a string that uniquely identifies this published item
      * in the following format: <i>nodeId:itemId</i>
      * @param node Node for the published item
@@ -292,7 +366,7 @@ public class PublishedItem implements Serializable {
      * @return Unique identifier for this item
      */
     public static String getItemKey(LeafNode node, String itemId) {
-        return getItemKey(node.getNodeID(), itemId);
+    	return getItemKey(node.getNodeID(), itemId);
     }
 
     /**
@@ -303,7 +377,7 @@ public class PublishedItem implements Serializable {
      * @return Unique identifier for this item
      */
     public static String getItemKey(String nodeId, String itemId) {
-        return new StringBuilder(nodeId)
-            .append(':').append(itemId).toString();
+    	return new StringBuilder(nodeId)
+    		.append(':').append(itemId).toString();
     }
 }

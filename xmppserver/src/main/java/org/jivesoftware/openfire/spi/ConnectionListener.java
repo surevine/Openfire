@@ -232,7 +232,8 @@ public class ConnectionListener
         }
         else
         {
-            connectionAcceptor = new MINAConnectionAcceptor( generateConnectionConfiguration() );
+            connectionAcceptor = new NettyConnectionAcceptor( generateConnectionConfiguration() );
+//            connectionAcceptor = new MINAConnectionAcceptor( generateConnectionConfiguration() );
         }
 
         connectionAcceptor.start();

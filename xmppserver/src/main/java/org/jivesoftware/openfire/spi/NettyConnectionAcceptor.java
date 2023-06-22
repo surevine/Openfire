@@ -1,5 +1,10 @@
 package org.jivesoftware.openfire.spi;
 
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.*;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.executor.ExecutorFilter;
@@ -33,7 +38,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Guus der Kinderen, guus.der.kinderen@gmail.com
  */
-class MINAConnectionAcceptor extends ConnectionAcceptor
+class NettyConnectionAcceptor extends ConnectionAcceptor
 {
     private final Logger Log;
     private final String name;
@@ -51,12 +56,12 @@ class MINAConnectionAcceptor extends ConnectionAcceptor
     /**
      * Instantiates, but not starts, a new instance.
      */
-    public MINAConnectionAcceptor( ConnectionConfiguration configuration )
+    public NettyConnectionAcceptor(ConnectionConfiguration configuration )
     {
         super( configuration );
 
         this.name = configuration.getType().toString().toLowerCase() + ( configuration.getTlsPolicy() == Connection.TLSPolicy.legacyMode ? "_ssl" : "" );
-        Log = LoggerFactory.getLogger( MINAConnectionAcceptor.class.getName() + "[" + name + "]" );
+        Log = LoggerFactory.getLogger( NettyConnectionAcceptor.class.getName() + "[" + name + "]" );
 
         switch ( configuration.getType() )
         {
@@ -86,73 +91,73 @@ class MINAConnectionAcceptor extends ConnectionAcceptor
     @Override
     public synchronized void start()
     {
-        if ( socketAcceptor != null )
-        {
-            Log.warn( "Unable to start acceptor (it is already started!)" );
-            return;
-        }
+        System.out.println("RUNNING NETTY!");
 
-        try
-        {
-            // Configure the thread pool that is to be used.
-            final int initialSize = ( configuration.getMaxThreadPoolSize() / 4 ) + 1;
-            final ExecutorFilter executorFilter = new ExecutorFilter( initialSize, configuration.getMaxThreadPoolSize(), 60, TimeUnit.SECONDS );
-            final ThreadPoolExecutor eventExecutor = (ThreadPoolExecutor) executorFilter.getExecutor();
-            final ThreadFactory threadFactory = new NamedThreadFactory( name + "-thread-", eventExecutor.getThreadFactory(), true, null );
-            eventExecutor.setThreadFactory( threadFactory );
+        // NioEventLoopGroup is a multithreaded event loop that handles I/O operation.
+        // Netty provides various EventLoopGroup implementations for different kind of transports.
+        // We are implementing a server-side application in this example, and therefore two
+        // NioEventLoopGroup will be used. The first one, often called 'boss', accepts an incoming connection.
+        // The second one, often called 'worker', handles the traffic of the accepted connection once the boss
+        // accepts the connection and registers the accepted connection to the worker. How many Threads are
+        // used and how they are mapped to the created Channels depends on the EventLoopGroup implementation
+        // and may be even configurable via a constructor.
+        EventLoopGroup bossGroup = new NioEventLoopGroup();
+        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        try {
+            // ServerBootstrap is a helper class that sets up a server. You can set up the server using
+            // a Channel directly. However, please note that this is a tedious process, and you do not
+            // need to do that in most cases.
+            ServerBootstrap serverBootstrap = new ServerBootstrap();
+            serverBootstrap.group(bossGroup, workerGroup)
+                // Here, we specify to use the NioServerSocketChannel class which is used to
+                // instantiate a new Channel to accept incoming connections.
+                .channel(NioServerSocketChannel.class)
+                // The handler specified here will always be evaluated by a newly accepted Channel.
+                // The ChannelInitializer is a special handler that is purposed to help a user configure
+                // a new Channel. It is most likely that you want to configure the ChannelPipeline of the
+                // new Channel by adding some handlers such as DiscardServerHandler to implement your
+                // network application. As the application gets complicated, it is likely that you will add
+                // more handlers to the pipeline and extract this anonymous class into a top-level
+                // class eventually.
+                .childHandler(new ChannelInitializer<SocketChannel>() {
+                    @Override
+                    public void initChannel(SocketChannel ch) throws Exception {
+                        ch.pipeline().addLast(new EchoServerHandler());
+                    }
+                })
+                // You can also set the parameters which are specific to the Channel implementation.
+                // We are writing a TCP/IP server, so we are allowed to set the socket options such as
+                // tcpNoDelay and keepAlive. Please refer to the apidocs of ChannelOption and the specific
+                // ChannelConfig implementations to get an overview about the supported ChannelOptions.
+                .option(ChannelOption.SO_BACKLOG, 128)
+                // option() is for the NioServerSocketChannel that accepts incoming connections.
+                // childOption() is for the Channels accepted by the parent ServerChannel,
+                // which is NioSocketChannel in this case.
+                .childOption(ChannelOption.SO_KEEPALIVE, true);
 
-            // Construct a new socket acceptor, and configure it.
-            socketAcceptor = buildSocketAcceptor();
+            // Bind to the port and start the server to accept incoming connections.
+            // We bind to the port 8080 of all NICs (network interface cards) in the machine. You can now
+            // call the bind() method as many times as you want (with different bind addresses.)
+            ChannelFuture channelFuture = serverBootstrap.bind(new InetSocketAddress( configuration.getBindAddress(), configuration.getPort() )).sync();
 
-            if (JMXManager.isEnabled()) {
-                // Register a 'vanilla' Openfire MBean, that provides consistent exposure of thread pool executors.
-                final ThreadPoolExecutorDelegateMBean mBean = new ThreadPoolExecutorDelegate(eventExecutor);
-                this.executorServiceObjectName = JMXManager.tryRegister(mBean, ThreadPoolExecutorDelegateMBean.BASE_OBJECT_NAME + name);
-            }
+            // Wait until the server socket is closed.
+            // In this example, this does not happen, but you can do that to gracefully
+            // shut down your server.
+            channelFuture.channel().closeFuture().sync();
 
-            final DefaultIoFilterChainBuilder filterChain = socketAcceptor.getFilterChain();
-            filterChain.addFirst( ConnectionManagerImpl.EXECUTOR_FILTER_NAME, executorFilter );
-
-            // Add the XMPP codec filter
-            filterChain.addAfter( ConnectionManagerImpl.EXECUTOR_FILTER_NAME, ConnectionManagerImpl.XMPP_CODEC_FILTER_NAME, new ProtocolCodecFilter( new XMPPCodecFactory() ) );
-
-            // Kill sessions whose outgoing queues keep growing and fail to send traffic
-            filterChain.addAfter( ConnectionManagerImpl.XMPP_CODEC_FILTER_NAME, ConnectionManagerImpl.CAPACITY_FILTER_NAME, new StalledSessionsFilter() );
-
-            // Ports can be configured to start connections in SSL (as opposed to upgrade a non-encrypted socket to an encrypted one, typically using StartTLS)
-            if ( configuration.getTlsPolicy() == Connection.TLSPolicy.legacyMode )
-            {
-                final SslFilter sslFilter = encryptionArtifactFactory.createServerModeSslFilter();
-                filterChain.addAfter( ConnectionManagerImpl.EXECUTOR_FILTER_NAME, ConnectionManagerImpl.TLS_FILTER_NAME, sslFilter );
-            }
-
-            // Throttle sessions who send data too fast
-            if ( configuration.getMaxBufferSize() > 0 )
-            {
-                socketAcceptor.getSessionConfig().setMaxReadBufferSize( configuration.getMaxBufferSize() );
-                Log.debug( "Throttling read buffer for connections to max={} bytes", configuration.getMaxBufferSize() );
-            }
-
-            // Start accepting connections
-            socketAcceptor.setHandler( connectionHandler );
-            socketAcceptor.bind( new InetSocketAddress( configuration.getBindAddress(), configuration.getPort() ) );
-        }
-        catch ( Exception e )
-        {
+        } catch (InterruptedException e) {
             System.err.println( "Error starting " + configuration.getPort() + ": " + e.getMessage() );
             Log.error( "Error starting: " + configuration.getPort(), e );
             // Reset for future use.
-            if (executorServiceObjectName != null) {
-                JMXManager.tryUnregister(executorServiceObjectName);
-                executorServiceObjectName = null;
-            }
-            if (socketAcceptor != null) {
-                try {
-                    socketAcceptor.unbind();
-                } finally {
-                    socketAcceptor = null;
-                }
-            }
+//            if (executorServiceObjectName != null) {
+//                JMXManager.tryUnregister(executorServiceObjectName);
+//                executorServiceObjectName = null;
+//            }
+
+
+        } finally {
+            workerGroup.shutdownGracefully();
+            bossGroup.shutdownGracefully();
         }
     }
 
@@ -288,5 +293,35 @@ class MINAConnectionAcceptor extends ConnectionAcceptor
         socketSessionConfig.setTcpNoDelay( JiveGlobals.getBooleanProperty( "xmpp.socket.tcp-nodelay", socketSessionConfig.isTcpNoDelay() ) );
 
         return socketAcceptor;
+    }
+
+
+
+    private static class EchoServerHandler extends ChannelInboundHandlerAdapter {
+
+        @Override
+        public void handlerAdded(ChannelHandlerContext ctx) {
+            System.out.println("Echo handler added");
+        }
+
+        @Override
+        public void handlerRemoved(ChannelHandlerContext ctx) {
+            System.out.println("Echo handler removed");
+        }
+
+        @Override
+        public void channelRead(ChannelHandlerContext ctx, Object msg) {
+            ctx.write(msg);
+            ctx.flush();
+            // Note that we did not release the received message unlike we did in the DISCARD example.
+            // It is because Netty releases it for you when it is written out to the wire.
+        }
+
+        @Override
+        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+            // Close the connection when an exception is raised.
+            cause.printStackTrace();
+            ctx.close();
+        }
     }
 }

@@ -99,7 +99,7 @@ public class ServerStanzaHandler extends StanzaHandler {
     void createSession(String serverName, XmlPullParser xpp, Connection connection) throws XmlPullParserException
     {
         // The connected client is a server so create an IncomingServerSession
-        // TODO Finish implementation
+        // TODO Finish implementation, this is required for netty migration (see ClientStanzaHandler#createSession() which has been implemented)
         //session = LocalIncomingServerSession.createSession(serverName, xpp, connection);
         throw new UnsupportedOperationException("Server stanza handler pending implementation");
     }

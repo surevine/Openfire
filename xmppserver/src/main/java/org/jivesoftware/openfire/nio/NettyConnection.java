@@ -16,10 +16,13 @@
 
 package org.jivesoftware.openfire.nio;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.ssl.SslHandler;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.jivesoftware.openfire.Connection;
 import org.jivesoftware.openfire.ConnectionCloseListener;
@@ -176,30 +179,25 @@ public class NettyConnection implements Connection {
 
     @Override
     public Certificate[] getLocalCertificates() {
-        SSLSession sslSession = (SSLSession) ioSession.getAttribute(SslFilter.SSL_SECURED);
-        if (sslSession != null) {
-            return sslSession.getLocalCertificates();
+        SslHandler sslhandler = (SslHandler) channelHandlerContext.channel().pipeline().get("ssl");
+
+        if (sslhandler != null) {
+            return sslhandler.engine().getSession().getLocalCertificates();
         }
         return new Certificate[0];
     }
 
     @Override
     public Certificate[] getPeerCertificates() {
-//        SslHandler sslhandler = (SslHandler) channelHandlerContext.channel().pipeline().get("ssl");
-//        try {
-//            sslhandler.engine().getSession().getPeerCertificateChain()[0].getSubjectDN()
-//        } catch (SSLPeerUnverifiedException e) {
-//            throw new RuntimeException(e);
-//        });
+        SslHandler sslhandler = (SslHandler) channelHandlerContext.channel().pipeline().get("ssl");
         try {
-            SSLSession sslSession = (SSLSession) ioSession.getAttribute(SslFilter.SSL_SECURED);
-            if (sslSession != null) {
-                return sslSession.getPeerCertificates();
+            if (sslhandler != null) {
+                return sslhandler.engine().getSession().getPeerCertificates();
             }
         } catch (SSLPeerUnverifiedException e) {
             if (Log.isTraceEnabled()) {
                 // This is perfectly acceptable when mutual authentication is not enforced by Openfire configuration.
-                Log.trace( "Peer does not offer certificates in session: " + session, e);
+                Log.trace("Peer does not offer certificates in session: " + session, e);
             }
         }
         return new Certificate[0];
@@ -207,14 +205,16 @@ public class NettyConnection implements Connection {
 
     @Override
     public Optional<String> getTLSProtocolName() {
-        return Optional.ofNullable((SSLSession) ioSession.getAttribute(SslFilter.SSL_SECURED))
-            .map(SSLSession::getProtocol);
+        SslHandler sslhandler = (SslHandler) channelHandlerContext.channel().pipeline().get("ssl");
+//        return Optional.ofNullable(sslhandler.engine().getSession().getProtocol());
+        return Optional.empty();
     }
 
     @Override
     public Optional<String> getCipherSuiteName() {
-        return Optional.ofNullable((SSLSession) ioSession.getAttribute(SslFilter.SSL_SECURED))
-            .map(SSLSession::getCipherSuite);
+        SslHandler sslhandler = (SslHandler) channelHandlerContext.channel().pipeline().get("ssl");
+//        return Optional.ofNullable(sslhandler.engine().getSession().getCipherSuite());
+        return Optional.empty();
     }
 
     @Override
@@ -255,15 +255,16 @@ public class NettyConnection implements Connection {
             rawEndStream += "</stream:stream>";
 
             try {
-                deliverRawText0(rawEndStream);
+                deliverRawText(rawEndStream);
             } catch (Exception e) {
                 Log.error("Failed to deliver stream close tag: " + e.getMessage());
             }
 
             try {
-                ioSession.closeOnFlush();
+                // TODO don't block, handle errors async with custom ChannelFutureListener
+                this.channelHandlerContext.close().addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE).sync();
             } catch (Exception e) {
-                Log.error("Exception while closing MINA session", e);
+                Log.error("Exception while closing Netty session", e);
             }
             notifyCloseListeners(); // clean up session, etc.
             closeListeners.clear();
@@ -300,7 +301,7 @@ public class NettyConnection implements Connection {
     @Override
     public void reinit(LocalSession owner) {
         session = owner;
-        StanzaHandler stanzaHandler = (StanzaHandler)ioSession.getAttribute(ConnectionHandler.HANDLER);
+        StanzaHandler stanzaHandler = this.channelHandlerContext.channel().attr(NettyConnectionHandler.HANDLER).get();
         stanzaHandler.setSession(owner);
 
         // ConnectionCloseListeners are registered with their session instance as a callback object. When re-initializing,
@@ -344,7 +345,8 @@ public class NettyConnection implements Connection {
             boolean errorDelivering = false;
             try {
                 ChannelFuture f = channelHandlerContext.write(packet.getElement().asXML());
-                f.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+                // TODO don't block, handle errors async with custom ChannelFutureListener
+                f.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE).sync();
             }
             catch (Exception e) {
                 Log.debug("Error delivering packet:\n" + packet, e);
@@ -374,7 +376,8 @@ public class NettyConnection implements Connection {
             ChannelFuture f = channelHandlerContext.write(text.getBytes(StandardCharsets.UTF_8));
 
             try {
-                f.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+                // TODO don't block, handle errors async with custom ChannelFutureListener
+                f.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE).sync();
             }
             catch (Exception e) {
                 Log.debug("Error delivering raw text:\n" + text, e);

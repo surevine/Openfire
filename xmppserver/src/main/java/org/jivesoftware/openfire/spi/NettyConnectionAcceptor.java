@@ -42,7 +42,7 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
 {
     private final Logger Log;
     private final String name;
-    private final ConnectionHandler connectionHandler;
+    private final NettyServerConnectionHandler connectionHandler;
 
     private final EncryptionArtifactFactory encryptionArtifactFactory;
 
@@ -63,23 +63,25 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
         this.name = configuration.getType().toString().toLowerCase() + ( configuration.getTlsPolicy() == Connection.TLSPolicy.legacyMode ? "_ssl" : "" );
         Log = LoggerFactory.getLogger( NettyConnectionAcceptor.class.getName() + "[" + name + "]" );
 
-        switch ( configuration.getType() )
-        {
-             case SOCKET_S2S:
-                connectionHandler = new ServerConnectionHandler( configuration );
-                break;
-            case SOCKET_C2S:
-                connectionHandler = new ClientConnectionHandler( configuration );
-                break;
-            case COMPONENT:
-                connectionHandler = new ComponentConnectionHandler( configuration );
-                break;
-            case CONNECTION_MANAGER:
-                connectionHandler = new MultiplexerConnectionHandler( configuration );
-                break;
-            default:
-                throw new IllegalStateException( "This implementation does not support the connection type as defined in the provided configuration: " + configuration.getType() );
-        }
+        connectionHandler = new NettyServerConnectionHandler( configuration );
+
+//        switch ( configuration.getType() )
+//        {
+//             case SOCKET_S2S:
+//                connectionHandler = new ServerConnectionHandler( configuration );
+//                break;
+//            case SOCKET_C2S:
+//                connectionHandler = new ClientConnectionHandler( configuration );
+//                break;
+//            case COMPONENT:
+//                connectionHandler = new ComponentConnectionHandler( configuration );
+//                break;
+//            case CONNECTION_MANAGER:
+//                connectionHandler = new MultiplexerConnectionHandler( configuration );
+//                break;
+//            default:
+//                throw new IllegalStateException( "This implementation does not support the connection type as defined in the provided configuration: " + configuration.getType() );
+//        }
 
         this.encryptionArtifactFactory = new EncryptionArtifactFactory( configuration );
     }
@@ -122,7 +124,7 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(new EchoServerHandler());
+                        ch.pipeline().addLast(connectionHandler);
                     }
                 })
                 // You can also set the parameters which are specific to the Channel implementation.
@@ -293,35 +295,5 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
         socketSessionConfig.setTcpNoDelay( JiveGlobals.getBooleanProperty( "xmpp.socket.tcp-nodelay", socketSessionConfig.isTcpNoDelay() ) );
 
         return socketAcceptor;
-    }
-
-
-
-    private static class EchoServerHandler extends ChannelInboundHandlerAdapter {
-
-        @Override
-        public void handlerAdded(ChannelHandlerContext ctx) {
-            System.out.println("Echo handler added");
-        }
-
-        @Override
-        public void handlerRemoved(ChannelHandlerContext ctx) {
-            System.out.println("Echo handler removed");
-        }
-
-        @Override
-        public void channelRead(ChannelHandlerContext ctx, Object msg) {
-            ctx.write(msg);
-            ctx.flush();
-            // Note that we did not release the received message unlike we did in the DISCARD example.
-            // It is because Netty releases it for you when it is written out to the wire.
-        }
-
-        @Override
-        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-            // Close the connection when an exception is raised.
-            cause.printStackTrace();
-            ctx.close();
-        }
     }
 }

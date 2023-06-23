@@ -38,10 +38,11 @@ import org.xmpp.packet.StreamError;
 import java.nio.charset.StandardCharsets;
 
 /**
- * A ConnectionHandler is responsible for creating new sessions, destroying sessions and delivering
+ * A NettyConnectionHandler is responsible for creating new sessions, destroying sessions and delivering
  * received XML stanzas to the proper StanzaHandler.
  *
- * @author Gaston Dombiak
+ * @author Matthew Vivian
+ * @author Alex Gidman
  */
 @Sharable
 public abstract class NettyConnectionHandler extends ChannelInboundHandlerAdapter {

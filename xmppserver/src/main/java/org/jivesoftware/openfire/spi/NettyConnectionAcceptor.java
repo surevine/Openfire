@@ -44,7 +44,7 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
 {
     private final Logger Log;
     private final String name;
-    private final NettyServerConnectionHandler connectionHandler;
+    private final NettyConnectionHandler connectionHandler;
 
     private final EncryptionArtifactFactory encryptionArtifactFactory;
 
@@ -65,7 +65,17 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
         this.name = configuration.getType().toString().toLowerCase() + ( configuration.getTlsPolicy() == Connection.TLSPolicy.legacyMode ? "_ssl" : "" );
         Log = LoggerFactory.getLogger( NettyConnectionAcceptor.class.getName() + "[" + name + "]" );
 
-        connectionHandler = new NettyServerConnectionHandler( configuration );
+        switch ( configuration.getType() ) {
+            case SOCKET_S2S:
+                connectionHandler = new NettyServerConnectionHandler( configuration );
+                break;
+            case SOCKET_C2S:
+                connectionHandler = new NettyClientConnectionHandler( configuration );
+                break;
+            default:
+                throw new IllegalStateException( "This implementation does not support the connection type as defined in the provided configuration: " + configuration.getType() );
+        }
+//        connectionHandler = new NettyServerConnectionHandler( configuration );
 
 //        switch ( configuration.getType() )
 //        {

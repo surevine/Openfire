@@ -17,6 +17,15 @@ import org.jivesoftware.util.SystemProperty;
  */
 public class NettyServerConnectionHandler extends NettyConnectionHandler
 {
+    /**
+     * Enable / disable backup delivery of stanzas to the XMPP server itself when a stanza failed to be delivered on a
+     * server-to-server connection. When disabled, stanzas that can not be delivered on the connection are discarded.
+     */
+    public static final SystemProperty<Boolean> BACKUP_PACKET_DELIVERY_ENABLED = SystemProperty.Builder.ofType(Boolean.class)
+            .setKey("xmpp.server.netty-backup-packet-delivery.enabled") // TODO - rename once MINA-specific is removed and NettyServerConnectionHandler becomes ServerConnectionHandler
+            .setDefaultValue(true)
+            .setDynamic(true)
+            .build();
 
     public NettyServerConnectionHandler(ConnectionConfiguration configuration)
     {
@@ -38,17 +47,6 @@ public class NettyServerConnectionHandler extends NettyConnectionHandler
 
     // TBD V
 
-
-
-    /**
-     * Enable / disable backup delivery of stanzas to the XMPP server itself when a stanza failed to be delivered on a
-     * server-to-server connection. When disabled, stanzas that can not be delivered on the connection are discarded.
-     */
-    public static final SystemProperty<Boolean> BACKUP_PACKET_DELIVERY_ENABLED = SystemProperty.Builder.ofType(Boolean.class)
-        .setKey("xmpp.server.backup-packet-delivery.enabled")
-        .setDefaultValue(true)
-        .setDynamic(true)
-        .build();
 
 
     int getMaxIdleTime()

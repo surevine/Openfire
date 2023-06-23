@@ -394,20 +394,17 @@ public class NettyConnection implements Connection {
     public void startTLS(boolean clientMode, boolean directTLS) throws Exception {
 
         final EncryptionArtifactFactory factory = new EncryptionArtifactFactory( configuration );
+        // TODO implement ssl filter
 //        final SslFilter filter;
-        if ( clientMode )
-        {
+        if ( clientMode ) {
 //            filter = factory.createClientModeSslFilter();
-        }
-        else
-        {
+        } else {
 //            filter = factory.createServerModeSslFilter();
         }
 
 //        ioSession.getFilterChain().addBefore(EXECUTOR_FILTER_NAME, TLS_FILTER_NAME, filter);
 
-        if (!directTLS)
-        {
+        if (!directTLS) {
 //            ioSession.getFilterChain().addAfter(TLS_FILTER_NAME, STARTTLS_FILTER_NAME, new StartTlsFilter());
         }
 

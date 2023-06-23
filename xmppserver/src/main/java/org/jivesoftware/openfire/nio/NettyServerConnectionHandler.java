@@ -11,7 +11,7 @@ import org.jivesoftware.util.SystemProperty;
 
 /**
  * ConnectionHandler that knows which subclass of {@link StanzaHandler} should be created and how to build and configure
- * a {@link NIOConnection}.
+ * a {@link NettyConnection}.
  *
  * @author Guus der Kinderen, guus.der.kinderen@gmail.com
  */

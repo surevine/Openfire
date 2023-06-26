@@ -16,6 +16,7 @@
 
 package org.jivesoftware.openfire.nio;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -372,22 +373,24 @@ public class NettyConnection implements Connection {
     public void deliverRawText(String text) {
         if (!isClosed()) {
             boolean errorDelivering = false;
+            ByteBuf buff = channelHandlerContext.alloc().buffer();
+            buff.writeBytes(text.getBytes(StandardCharsets.UTF_8));
+            ChannelFuture f = channelHandlerContext.writeAndFlush(buff);
 
-            ChannelFuture f = channelHandlerContext.write(text.getBytes(StandardCharsets.UTF_8));
-
-            try {
+//            try {
                 // TODO don't block, handle errors async with custom ChannelFutureListener
-                f.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE).sync();
-            }
-            catch (Exception e) {
-                Log.debug("Error delivering raw text:\n" + text, e);
-                errorDelivering = true;
-            }
+                f.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE); // Removed the sync so this won't throw
+//            }
+//            catch (Exception e) {
+//                Log.error("Error delivering raw text:\n" + text, e);
+//                e.printStackTrace();
+//                errorDelivering = true;
+//            }
 
             // Attempt to close the connection if delivering text fails.
-            if (errorDelivering) {
-                close();
-            }
+//            if (errorDelivering) {
+//                close();
+//            }
         }
     }
 

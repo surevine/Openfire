@@ -14,11 +14,12 @@ import org.jivesoftware.util.SystemProperty;
 public class NettyClientConnectionHandler extends NettyConnectionHandler{
 
     /**
-     * Enable / disable backup delivery of stanzas to the XMPP server itself when a stanza failed to be delivered on a
-     * server-to-server connection. When disabled, stanzas that can not be delivered on the connection are discarded.
+     * Enable / disable backup delivery of stanzas to the 'offline message store' of the corresponding user when a stanza
+     * failed to be delivered on a client connection. When disabled, stanzas that can not be delivered on the connection
+     * are discarded.
      */
     public static final SystemProperty<Boolean> BACKUP_PACKET_DELIVERY_ENABLED = SystemProperty.Builder.ofType(Boolean.class)
-        .setKey("xmpp.server.netty-backup-packet-delivery.enabled") // TODO - rename once MINA-specific is removed and NettyServerConnectionHandler becomes ServerConnectionHandler
+        .setKey("xmpp.client.netty-backup-packet-delivery.enabled") // TODO - rename once MINA-specific is removed and NettyClientConnectionHandler becomes ClientConnectionHandler
         .setDefaultValue(true)
         .setDynamic(true)
         .build();
@@ -29,7 +30,7 @@ public class NettyClientConnectionHandler extends NettyConnectionHandler{
 
     @Override
     NettyConnection createNettyConnection(ChannelHandlerContext ctx) {
-        final PacketDeliverer backupDeliverer = BACKUP_PACKET_DELIVERY_ENABLED.getValue() ? XMPPServer.getInstance().getPacketDeliverer() : null;
+        final PacketDeliverer backupDeliverer = BACKUP_PACKET_DELIVERY_ENABLED.getValue() ? new OfflinePacketDeliverer() : null;
         return new NettyConnection(ctx, backupDeliverer, configuration);
     }
 

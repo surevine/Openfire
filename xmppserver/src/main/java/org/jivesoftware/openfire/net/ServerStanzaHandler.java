@@ -105,7 +105,7 @@ public class ServerStanzaHandler extends StanzaHandler {
         try {
             session = LocalIncomingServerSession.createSession(serverName, xpp, connection, false);
         } catch (IOException e) {
-            Log.error(e);
+            Log.error(e.getMessage());
         }
 //        throw new UnsupportedOperationException("Server stanza handler pending implementation");
     }

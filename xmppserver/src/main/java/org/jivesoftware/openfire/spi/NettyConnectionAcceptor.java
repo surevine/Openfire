@@ -42,6 +42,16 @@ import java.util.concurrent.TimeUnit;
  */
 class NettyConnectionAcceptor extends ConnectionAcceptor
 {
+    // NioEventLoopGroup is a multithreaded event loop that handles I/O operation.
+    // Netty provides various EventLoopGroup implementations for different kind of transports.
+    // We are implementing a server-side application in this example, and therefore two
+    // NioEventLoopGroup will be used. The first one, often called 'boss', accepts an incoming connection.
+    // The second one, often called 'worker', handles the traffic of the accepted connection once the boss
+    // accepts the connection and registers the accepted connection to the worker. How many Threads are
+    // used and how they are mapped to the created Channels depends on the EventLoopGroup implementation
+    // and may be even configurable via a constructor.
+    private static final EventLoopGroup BOSS_GROUP = new NioEventLoopGroup();
+    private static final EventLoopGroup WORKER_GROUP = new NioEventLoopGroup();
     private final Logger Log;
     private final String name;
     private final NettyConnectionHandler connectionHandler;
@@ -107,61 +117,52 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
     {
         System.out.println("RUNNING NETTY!");
 
-        // NioEventLoopGroup is a multithreaded event loop that handles I/O operation.
-        // Netty provides various EventLoopGroup implementations for different kind of transports.
-        // We are implementing a server-side application in this example, and therefore two
-        // NioEventLoopGroup will be used. The first one, often called 'boss', accepts an incoming connection.
-        // The second one, often called 'worker', handles the traffic of the accepted connection once the boss
-        // accepts the connection and registers the accepted connection to the worker. How many Threads are
-        // used and how they are mapped to the created Channels depends on the EventLoopGroup implementation
-        // and may be even configurable via a constructor.
-        EventLoopGroup bossGroup = new NioEventLoopGroup();
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        Channel channel = null;
         try {
             // ServerBootstrap is a helper class that sets up a server. You can set up the server using
             // a Channel directly. However, please note that this is a tedious process, and you do not
             // need to do that in most cases.
             ServerBootstrap serverBootstrap = new ServerBootstrap();
-            serverBootstrap.group(bossGroup, workerGroup)
-                // Here, we specify to use the NioServerSocketChannel class which is used to
-                // instantiate a new Channel to accept incoming connections.
-                .channel(NioServerSocketChannel.class)
-                // The handler specified here will always be evaluated by a newly accepted Channel.
-                // The ChannelInitializer is a special handler that is purposed to help a user configure
-                // a new Channel. It is most likely that you want to configure the ChannelPipeline of the
-                // new Channel by adding some handlers such as DiscardServerHandler to implement your
-                // network application. As the application gets complicated, it is likely that you will add
-                // more handlers to the pipeline and extract this anonymous class into a top-level
-                // class eventually.
-                .childHandler(new ChannelInitializer<SocketChannel>() {
-                    @Override
-                    public void initChannel(SocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(connectionHandler);
-                    }
-                })
-                // You can also set the parameters which are specific to the Channel implementation.
-                // We are writing a TCP/IP server, so we are allowed to set the socket options such as
-                // tcpNoDelay and keepAlive. Please refer to the apidocs of ChannelOption and the specific
-                // ChannelConfig implementations to get an overview about the supported ChannelOptions.
-                .option(ChannelOption.SO_BACKLOG, 128)
-                // option() is for the NioServerSocketChannel that accepts incoming connections.
-                // childOption() is for the Channels accepted by the parent ServerChannel,
-                // which is NioSocketChannel in this case.
-                .childOption(ChannelOption.SO_KEEPALIVE, true);
+            serverBootstrap.group(BOSS_GROUP, WORKER_GROUP)
+                    // Here, we specify to use the NioServerSocketChannel class which is used to
+                    // instantiate a new Channel to accept incoming connections.
+                    .channel(NioServerSocketChannel.class)
+                    // The handler specified here will always be evaluated by a newly accepted Channel.
+                    // The ChannelInitializer is a special handler that is purposed to help a user configure
+                    // a new Channel. It is most likely that you want to configure the ChannelPipeline of the
+                    // new Channel by adding some handlers such as DiscardServerHandler to implement your
+                    // network application. As the application gets complicated, it is likely that you will add
+                    // more handlers to the pipeline and extract this anonymous class into a top-level
+                    // class eventually.
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        public void initChannel(SocketChannel ch) throws Exception {
+                            ch.pipeline().addLast(connectionHandler);
+                        }
+                    })
+                    // You can also set the parameters which are specific to the Channel implementation.
+                    // We are writing a TCP/IP server, so we are allowed to set the socket options such as
+                    // tcpNoDelay and keepAlive. Please refer to the apidocs of ChannelOption and the specific
+                    // ChannelConfig implementations to get an overview about the supported ChannelOptions.
+                    .option(ChannelOption.SO_BACKLOG, 128)
+                    // option() is for the NioServerSocketChannel that accepts incoming connections.
+                    // childOption() is for the Channels accepted by the parent ServerChannel,
+                    // which is NioSocketChannel in this case.
+                    .childOption(ChannelOption.SO_KEEPALIVE, true);
 
             // Bind to the port and start the server to accept incoming connections.
             // We bind to the port 8080 of all NICs (network interface cards) in the machine. You can now
             // call the bind() method as many times as you want (with different bind addresses.)
-            ChannelFuture channelFuture = serverBootstrap.bind(new InetSocketAddress( configuration.getBindAddress(), configuration.getPort() )).sync();
+            channel = serverBootstrap.bind(new InetSocketAddress(configuration.getBindAddress(), configuration.getPort())).sync().channel();
 
             // Wait until the server socket is closed.
             // In this example, this does not happen, but you can do that to gracefully
             // shut down your server.
-            channelFuture.channel().closeFuture().sync();
+//            channelFuture.channel().closeFuture().sync();
 
         } catch (InterruptedException e) {
-            System.err.println( "Error starting " + configuration.getPort() + ": " + e.getMessage() );
-            Log.error( "Error starting: " + configuration.getPort(), e );
+            System.err.println("Error starting " + configuration.getPort() + ": " + e.getMessage());
+            Log.error("Error starting: " + configuration.getPort(), e);
             // Reset for future use.
 //            if (executorServiceObjectName != null) {
 //                JMXManager.tryUnregister(executorServiceObjectName);
@@ -170,8 +171,16 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
 
 
         } finally {
-            workerGroup.shutdownGracefully();
-            bossGroup.shutdownGracefully();
+            if (channel != null) {
+//                try {
+//                    channel.closeFuture().sync();
+//                } catch (InterruptedException e) {
+//                    System.err.println("Error closing " + configuration.getPort() + ": " + e.getMessage());
+//                    Log.error("Error closing: " + configuration.getPort(), e);
+//                }
+            }
+            WORKER_GROUP.shutdownGracefully();
+            BOSS_GROUP.shutdownGracefully();
         }
     }
 

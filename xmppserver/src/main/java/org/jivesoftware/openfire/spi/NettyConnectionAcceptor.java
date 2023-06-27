@@ -5,6 +5,8 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
 import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
 import org.apache.mina.filter.executor.ExecutorFilter;
 import org.apache.mina.filter.ssl.SslFilter;
@@ -128,6 +130,8 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
+                            ch.pipeline().addLast(new StringDecoder());
+                            ch.pipeline().addLast(new StringEncoder());
                             ch.pipeline().addLast(connectionHandler);
                         }
                     })
@@ -142,8 +146,7 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
 
             // Bind to the port and start the server to accept incoming connections.
-            // We bind to the port 8080 of all NICs (network interface cards) in the machine. You can now
-            // call the bind() method as many times as you want (with different bind addresses.)
+            // You can now call the bind() method as many times as you want (with different bind addresses.)
             this.mainChannel = serverBootstrap.bind(new InetSocketAddress(configuration.getBindAddress(), configuration.getPort())).sync().channel();
 
         } catch (InterruptedException e) {

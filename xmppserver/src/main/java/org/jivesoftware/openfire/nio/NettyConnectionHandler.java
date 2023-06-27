@@ -20,6 +20,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.AttributeKey;
 import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
@@ -45,7 +46,7 @@ import java.nio.charset.StandardCharsets;
  * @author Alex Gidman
  */
 @Sharable
-public abstract class NettyConnectionHandler extends ChannelInboundHandlerAdapter {
+public abstract class NettyConnectionHandler extends SimpleChannelInboundHandler<String> {
 
     private static final Logger Log = LoggerFactory.getLogger(NettyConnectionHandler.class);
     static final AttributeKey<XMLLightweightParser> XML_PARSER = AttributeKey.valueOf("XML-PARSER");
@@ -101,7 +102,7 @@ public abstract class NettyConnectionHandler extends ChannelInboundHandlerAdapte
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) {
-        System.out.println("Netty XMPP handler added");
+        System.out.println("Netty XMPP handler added: " + ctx.channel().localAddress());
         //        ConnectionHandler.sessionOpened()
 
         // TODO - do we want a separate parser per-channel?
@@ -127,15 +128,13 @@ public abstract class NettyConnectionHandler extends ChannelInboundHandlerAdapte
 
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) {
-        System.out.println("Netty XMPP handler removed");
+        System.out.println("Netty XMPP handler removed: " + ctx.channel().localAddress());
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+    public void channelRead0(ChannelHandlerContext ctx, String message) {
         // org.jivesoftware.openfire.nio.ConnectionHandler.messageReceived
 
-        try {
-            String message =  ((ByteBuf) msg).toString(CharsetUtil.UTF_8);
 
             // Get the parser to use to process stanza. For optimization there is going
             // to be a parser for each running thread. Each Filter will be executed
@@ -158,9 +157,6 @@ public abstract class NettyConnectionHandler extends ChannelInboundHandlerAdapte
                     connection.close(new StreamError(StreamError.Condition.internal_server_error, "An error occurred while processing data raw inbound data."));
                 }
             }
-        } finally {
-            ReferenceCountUtil.release(msg);
-        }
 
 //        ctx.write(msg); // Echo
 //        ctx.flush();

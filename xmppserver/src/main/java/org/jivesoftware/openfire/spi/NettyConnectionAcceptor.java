@@ -116,7 +116,7 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
     @Override
     public synchronized void start()
     {
-        System.out.println("RUNNING NETTY!");
+        System.out.println("Running Netty on port: " + getPort());
 
         try {
             // ServerBootstrap is a helper class that sets up a server. You can set up the server using
@@ -158,6 +158,7 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
         } catch (InterruptedException e) {
             System.err.println("Error starting " + configuration.getPort() + ": " + e.getMessage());
             Log.error("Error starting: " + configuration.getPort(), e);
+            closeMainChannel();
         }
     }
 
@@ -166,6 +167,7 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
      */
     @Override
     public synchronized void stop() {
+        System.out.println("Stop called for port: " + getPort());
         if (executorServiceObjectName != null) {
             JMXManager.tryUnregister(executorServiceObjectName);
             executorServiceObjectName = null;
@@ -174,18 +176,9 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
             socketAcceptor.unbind();
             socketAcceptor = null;
         }
-        // Wait until the server socket is closed.
-        // In this example, this does not happen, but you can do that to gracefully
-        // shut down your server.
-        if (this.mainChannel != null) {
-            try {
-                mainChannel.closeFuture().sync();
-            } catch (InterruptedException e) {
-                Log.error("Unable to close channel: " + mainChannel);
-            }
-        }
-        WORKER_GROUP.shutdownGracefully();
-        BOSS_GROUP.shutdownGracefully();
+        closeMainChannel();
+//        WORKER_GROUP.shutdownGracefully();
+//        BOSS_GROUP.shutdownGracefully();
     }
 
     /**
@@ -251,6 +244,20 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
         {
             socketAcceptor.getSessionConfig().setMaxReadBufferSize( configuration.getMaxBufferSize() );
             Log.debug( "Throttling read buffer for connections to max={} bytes", configuration.getMaxBufferSize() );
+        }
+    }
+
+    public void closeMainChannel() {
+        // Wait until the server socket is closed.
+        // In this example, this does not happen, but you can do that to gracefully
+        // shut down your server.
+        if (this.mainChannel != null) {
+            try {
+                Log.info("Closing channel " + mainChannel);
+                mainChannel.closeFuture().sync();
+            } catch (InterruptedException e) {
+                Log.error("Unable to close channel: " + mainChannel);
+            }
         }
     }
 

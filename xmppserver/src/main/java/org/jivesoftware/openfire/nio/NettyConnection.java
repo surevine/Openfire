@@ -345,9 +345,8 @@ public class NettyConnection implements Connection {
         else {
             boolean errorDelivering = false;
             try {
-                ChannelFuture f = channelHandlerContext.write(packet.getElement().asXML());
-                // TODO don't block, handle errors async with custom ChannelFutureListener
-                f.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE).sync();
+                ChannelFuture f = channelHandlerContext.writeAndFlush(packet.getElement().asXML());
+                // TODO handle errors?
             }
             catch (Exception e) {
                 Log.debug("Error delivering packet:\n" + packet, e);
@@ -374,10 +373,11 @@ public class NettyConnection implements Connection {
         if (!isClosed()) {
             boolean errorDelivering = false;
             ChannelFuture f = channelHandlerContext.writeAndFlush(text);
+            // TODO handle errors?
 
 //            try {
                 // TODO don't block, handle errors async with custom ChannelFutureListener
-                f.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE); // Removed the sync so this won't throw
+//                f.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE); // Removed the sync so this won't throw
 //            }
 //            catch (Exception e) {
 //                Log.error("Error delivering raw text:\n" + text, e);

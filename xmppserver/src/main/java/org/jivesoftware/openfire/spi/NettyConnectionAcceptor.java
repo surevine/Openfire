@@ -5,22 +5,15 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.util.concurrent.EventExecutor;
-import io.netty.util.concurrent.OrderedEventExecutor;
 import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
-import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.executor.ExecutorFilter;
 import org.apache.mina.filter.ssl.SslFilter;
 import org.apache.mina.transport.socket.SocketSessionConfig;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.jivesoftware.openfire.Connection;
 import org.jivesoftware.openfire.JMXManager;
-import org.jivesoftware.openfire.mbean.ThreadPoolExecutorDelegate;
-import org.jivesoftware.openfire.mbean.ThreadPoolExecutorDelegateMBean;
-import org.jivesoftware.openfire.net.StalledSessionsFilter;
 import org.jivesoftware.openfire.nio.*;
 import org.jivesoftware.util.JiveGlobals;
-import org.jivesoftware.util.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,9 +23,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * This class is responsible for accepting new (socket) connections, using Java NIO implementation provided by the
@@ -176,9 +167,19 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
             socketAcceptor.unbind();
             socketAcceptor = null;
         }
-        closeMainChannel();
-//        WORKER_GROUP.shutdownGracefully();
-//        BOSS_GROUP.shutdownGracefully();
+        shutdownEventLoopGroups();
+    }
+
+    /**
+     * Shuts down event loop groups if they are not already shutdown - this will close channels.
+     */
+    private void shutdownEventLoopGroups() {
+        if (!BOSS_GROUP.isShuttingDown()) {
+            BOSS_GROUP.shutdownGracefully();
+        }
+        if (!WORKER_GROUP.isShuttingDown()) {
+            WORKER_GROUP.shutdownGracefully();
+        }
     }
 
     /**
@@ -247,19 +248,16 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
         }
     }
 
+    /**
+     * Close the main channel (this is not synchronous and does not verify the channel has closed).
+     */
     public void closeMainChannel() {
-        // Wait until the server socket is closed.
-        // In this example, this does not happen, but you can do that to gracefully
-        // shut down your server.
         if (this.mainChannel != null) {
-            try {
-                Log.info("Closing channel " + mainChannel);
-                mainChannel.closeFuture().sync();
-            } catch (InterruptedException e) {
-                Log.error("Unable to close channel: " + mainChannel);
-            }
+            Log.info("Closing channel " + mainChannel);
+             mainChannel.closeFuture();
         }
     }
+
 
     public synchronized int getPort()
     {

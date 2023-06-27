@@ -56,6 +56,7 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
     private final String name;
     private final NettyConnectionHandler connectionHandler;
 
+    private Channel mainChannel;
     private final EncryptionArtifactFactory encryptionArtifactFactory;
 
     private NioSocketAcceptor socketAcceptor;
@@ -117,7 +118,6 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
     {
         System.out.println("RUNNING NETTY!");
 
-        Channel channel = null;
         try {
             // ServerBootstrap is a helper class that sets up a server. You can set up the server using
             // a Channel directly. However, please note that this is a tedious process, and you do not
@@ -153,34 +153,11 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
             // Bind to the port and start the server to accept incoming connections.
             // We bind to the port 8080 of all NICs (network interface cards) in the machine. You can now
             // call the bind() method as many times as you want (with different bind addresses.)
-            channel = serverBootstrap.bind(new InetSocketAddress(configuration.getBindAddress(), configuration.getPort())).sync().channel();
-
-            // Wait until the server socket is closed.
-            // In this example, this does not happen, but you can do that to gracefully
-            // shut down your server.
-//            channelFuture.channel().closeFuture().sync();
+            this.mainChannel = serverBootstrap.bind(new InetSocketAddress(configuration.getBindAddress(), configuration.getPort())).sync().channel();
 
         } catch (InterruptedException e) {
             System.err.println("Error starting " + configuration.getPort() + ": " + e.getMessage());
             Log.error("Error starting: " + configuration.getPort(), e);
-            // Reset for future use.
-//            if (executorServiceObjectName != null) {
-//                JMXManager.tryUnregister(executorServiceObjectName);
-//                executorServiceObjectName = null;
-//            }
-
-
-        } finally {
-            if (channel != null) {
-//                try {
-//                    channel.closeFuture().sync();
-//                } catch (InterruptedException e) {
-//                    System.err.println("Error closing " + configuration.getPort() + ": " + e.getMessage());
-//                    Log.error("Error closing: " + configuration.getPort(), e);
-//                }
-            }
-            WORKER_GROUP.shutdownGracefully();
-            BOSS_GROUP.shutdownGracefully();
         }
     }
 
@@ -188,17 +165,27 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
      * Stops this acceptor by unbinding the socket acceptor. Does nothing when the instance is not started.
      */
     @Override
-    public synchronized void stop()
-    {
+    public synchronized void stop() {
         if (executorServiceObjectName != null) {
             JMXManager.tryUnregister(executorServiceObjectName);
             executorServiceObjectName = null;
         }
-        if ( socketAcceptor != null )
-        {
+        if ( socketAcceptor != null ) {
             socketAcceptor.unbind();
             socketAcceptor = null;
         }
+        // Wait until the server socket is closed.
+        // In this example, this does not happen, but you can do that to gracefully
+        // shut down your server.
+        if (this.mainChannel != null) {
+            try {
+                mainChannel.closeFuture().sync();
+            } catch (InterruptedException e) {
+                Log.error("Unable to close channel: " + mainChannel);
+            }
+        }
+        WORKER_GROUP.shutdownGracefully();
+        BOSS_GROUP.shutdownGracefully();
     }
 
     /**

@@ -147,7 +147,11 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
 
             // Bind to the port and start the server to accept incoming connections.
             // You can now call the bind() method as many times as you want (with different bind addresses.)
-            this.mainChannel = serverBootstrap.bind(new InetSocketAddress(configuration.getBindAddress(), configuration.getPort())).sync().channel();
+            this.mainChannel = serverBootstrap.bind(
+                new InetSocketAddress(configuration.getBindAddress(),
+                    configuration.getPort()))
+                .sync()
+                .channel();
 
         } catch (InterruptedException e) {
             System.err.println("Error starting " + configuration.getPort() + ": " + e.getMessage());
@@ -162,21 +166,13 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
     @Override
     public synchronized void stop() {
         System.out.println("Stop called for port: " + getPort());
-        if (executorServiceObjectName != null) {
-            JMXManager.tryUnregister(executorServiceObjectName);
-            executorServiceObjectName = null;
-        }
-        if ( socketAcceptor != null ) {
-            socketAcceptor.unbind();
-            socketAcceptor = null;
-        }
-        shutdownEventLoopGroups();
+        closeMainChannel();
     }
 
     /**
      * Shuts down event loop groups if they are not already shutdown - this will close channels.
      */
-    private void shutdownEventLoopGroups() {
+    public static void shutdownEventLoopGroups() {
         if (!BOSS_GROUP.isShuttingDown()) {
             BOSS_GROUP.shutdownGracefully();
         }
@@ -257,7 +253,7 @@ class NettyConnectionAcceptor extends ConnectionAcceptor
     public void closeMainChannel() {
         if (this.mainChannel != null) {
             Log.info("Closing channel " + mainChannel);
-             mainChannel.closeFuture();
+             mainChannel.close();
         }
     }
 

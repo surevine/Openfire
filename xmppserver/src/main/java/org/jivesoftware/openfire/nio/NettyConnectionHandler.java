@@ -16,14 +16,10 @@
 
 package org.jivesoftware.openfire.nio;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.AttributeKey;
-import io.netty.util.CharsetUtil;
-import io.netty.util.ReferenceCountUtil;
 import org.apache.mina.core.session.IoSession;
 import org.dom4j.io.XMPPPacketReader;
 import org.jivesoftware.openfire.Connection;
@@ -107,7 +103,7 @@ public abstract class NettyConnectionHandler extends SimpleChannelInboundHandler
 
         // TODO - do we want a separate parser per-channel?
         // Create a new XML parser for the new connection. The parser will be used by the XMPPDecoder filter.
-        ctx.channel().attr(XML_PARSER).set(new XMLLightweightParser(StandardCharsets.UTF_8));
+        ctx.channel().attr(XML_PARSER).set(new XMLLightweightParser());
 
         // Create a new Connection for the new session
         final NettyConnection nettyConnection = createNettyConnection(ctx);
@@ -135,32 +131,27 @@ public abstract class NettyConnectionHandler extends SimpleChannelInboundHandler
     public void channelRead0(ChannelHandlerContext ctx, String message) {
         // org.jivesoftware.openfire.nio.ConnectionHandler.messageReceived
 
+        // Get the parser to use to process stanza. For optimization there is going
+        // to be a parser for each running thread. Each Filter will be executed
+        // by the Executor placed as the first Filter. So we can have a parser associated
+        // to each Thread
+        final XMPPPacketReader parser = PARSER_CACHE.get();
 
-            // Get the parser to use to process stanza. For optimization there is going
-            // to be a parser for each running thread. Each Filter will be executed
-            // by the Executor placed as the first Filter. So we can have a parser associated
-            // to each Thread
-            final XMPPPacketReader parser = PARSER_CACHE.get();
-
-            // Update counter of read bytes
-            // updateReadBytesCounter(session); TODO maybe replace with https://netty.io/4.0/api/io/netty/handler/traffic/TrafficCounter.html#currentReadBytes--
+        // Update counter of read bytes
+        // updateReadBytesCounter(session); TODO maybe replace with https://netty.io/4.0/api/io/netty/handler/traffic/TrafficCounter.html#currentReadBytes--
 
 
-            //System.out.println("RCVD: " + message);
-            // Let the stanza handler process the received stanza
-            try {
-                ctx.channel().attr(HANDLER).get().process(message, parser);
-            } catch (Throwable e) { // Make sure to catch Throwable, not (only) Exception! See OF-2367
-                Log.error("Closing connection due to error while processing message: {}", message, e);
-                final Connection connection = ctx.channel().attr(CONNECTION).get();
-                if ( connection != null ) {
-                    connection.close(new StreamError(StreamError.Condition.internal_server_error, "An error occurred while processing data raw inbound data."));
-                }
+        //System.out.println("RCVD: " + message);
+        // Let the stanza handler process the received stanza
+        try {
+            ctx.channel().attr(HANDLER).get().process(message, parser);
+        } catch (Throwable e) { // Make sure to catch Throwable, not (only) Exception! See OF-2367
+            Log.error("Closing connection due to error while processing message: {}", message, e);
+            final Connection connection = ctx.channel().attr(CONNECTION).get();
+            if ( connection != null ) {
+                connection.close(new StreamError(StreamError.Condition.internal_server_error, "An error occurred while processing data raw inbound data."));
             }
-
-//        ctx.write(msg); // Echo
-//        ctx.flush();
-        // Netty releases the received message for you when it is written out to the wire.
+        }
     }
 
     @Override

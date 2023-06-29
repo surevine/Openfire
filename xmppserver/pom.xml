@@ -46,7 +46,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M3</version>
+                        <version>3.1.2</version>
                         <configuration>
                             <systemPropertyVariables>
                                 <log4j.configurationFile>${project.build.directory}/test-classes/log4j2-test-mvn.xml</log4j.configurationFile>
@@ -159,7 +159,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M3</version>
+                <version>3.1.2</version>
                 <configuration>
                     <systemPropertyVariables>
                         <log4j.configurationFile>${project.build.directory}/test-classes/log4j2-test-mvn.xml</log4j.configurationFile>
@@ -171,6 +171,25 @@
             </plugin>
         </plugins>
     </build>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>5.9.3</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-bom</artifactId>
+                <version>5.4.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <!-- Ignite Realtime -->
@@ -460,7 +479,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>30.1-jre</version>
+            <version>32.0.1-jre</version>
         </dependency>
         <dependency>
             <groupId>com.github.jgonian</groupId>
@@ -469,39 +488,30 @@
         </dependency>
         <!-- Test Scope -->
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.13.1</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-inline</artifactId>
-            <version>4.9.0</version>
+            <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <!-- Without explicitly defining this dependency of org.mockito:mockity-inline:4.9.0, the mockito code fails for reasons that are beyond me. -->
-            <groupId>net.bytebuddy</groupId>
-            <artifactId>byte-buddy</artifactId>
-            <version>1.12.16</version>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <!-- Without explicitly defining this dependency of org.mockito:mockity-inline:4.9.0, the mockito code fails for reasons that are beyond me. -->
-            <groupId>net.bytebuddy</groupId>
-            <artifactId>byte-buddy-agent</artifactId>
-            <version>1.12.16</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <!-- Without explicitly defining this dependency of org.mockito:mockity-inline:4.9.0, the mockito code fails for reasons that are beyond me. -->
-            <groupId>org.objenesis</groupId>
-            <artifactId>objenesis</artifactId>
-            <version>3.3</version>
-            <scope>test</scope>
-        </dependency>
-
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-all</artifactId>
@@ -512,12 +522,6 @@
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
             <version>3.1.6</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.zapodot</groupId>
-            <artifactId>embedded-ldap-junit</artifactId>
-            <version>0.7</version>
             <scope>test</scope>
         </dependency>
         <dependency>

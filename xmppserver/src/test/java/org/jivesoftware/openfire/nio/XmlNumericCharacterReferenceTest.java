@@ -1,9 +1,24 @@
+/*
+ * Copyright (C) 2023 Ignite Realtime Foundation. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.jivesoftware.openfire.nio;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * This unit tests verifies the correct detection of numeric character references that have invalid numeric values.
@@ -32,7 +47,7 @@ import org.junit.Test;
  * 
  * @author Guus der Kinderen, guus.der.kinderen@gmail.com
  * 
- * @see http://www.w3.org/TR/2008/REC-xml-20081126/#dt-charref
+ * @see <a href="https://www.w3.org/TR/2008/REC-xml-20081126/#dt-charref">Extensible Markup Language (XML) 1.0 (Fifth Edition) section 4.1 Character and Entity References</a>
  */
 public class XmlNumericCharacterReferenceTest {
 
@@ -87,7 +102,7 @@ public class XmlNumericCharacterReferenceTest {
         "&#1114111;", "&#x10FFFF;", "&#01114111;", "&#x010FFFF;", "&#00001114111;", "&#x000010FFFF;", "&#000001114111;", "&#x0000010FFFF;" 
     };
     
-    final String[] notNumericCharacterRefrences = new String[] {
+    final String[] notNumericCharacterReferences = new String[] {
         "&amp;", 
         "&#9", "&#x9", "#9;", "#x9;", "&#1", "&#x1", "#1;", "#x1;",
         "&amp;#9;", "&amp;#x9;", "&amp;#1;", "&amp;#x1;" 
@@ -105,7 +120,7 @@ public class XmlNumericCharacterReferenceTest {
             final boolean result =  XMLLightweightParser.hasIllegalCharacterReferences(reference);
             
             // verify
-            assertFalse("Value \""+reference+"\" is reported to contain an illegal numeric character reference, even though this hard-coded test value should not contain one.", result);
+            assertFalse(result, "Value \""+reference+"\" is reported to contain an illegal numeric character reference, even though this hard-coded test value should not contain one.");
         }
     }
 
@@ -121,7 +136,7 @@ public class XmlNumericCharacterReferenceTest {
             final boolean result =  XMLLightweightParser.hasIllegalCharacterReferences(reference);
             
             // verify
-            assertTrue("No illegal numeric character reference was found in value \""+reference+"\", even though this hard-coded test value should contain one.", result);
+            assertTrue(result, "No illegal numeric character reference was found in value \""+reference+"\", even though this hard-coded test value should contain one.");
         }
     }
 
@@ -132,12 +147,12 @@ public class XmlNumericCharacterReferenceTest {
      */
     @Test
     public void testnotNumericCharacterReferences() throws Exception {
-        for(final String reference : legalNumericCharacterReferences) {
+        for(final String reference : notNumericCharacterReferences) {
             // do magic
             final boolean result =  XMLLightweightParser.hasIllegalCharacterReferences(reference);
-            
+
             // verify
-            assertFalse("Value \""+reference+"\" is reported to contain an illegal numeric character reference, even though this hard-coded test value should not contain a numeric character reference at all.", result);
+            assertFalse(result, "Value \""+reference+"\" is reported to contain an illegal numeric character reference, even though this hard-coded test value should not contain one.");
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Ignite Realtime Foundation. All rights reserved.
+ * Copyright (C) 2022-2023 Ignite Realtime Foundation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,13 +24,15 @@ import org.jivesoftware.database.DbConnectionManager;
 import org.jivesoftware.database.DefaultConnectionProvider;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.event.GroupEventDispatcher;
-import org.jivesoftware.openfire.event.GroupEventListener;
 import org.jivesoftware.util.cache.CacheFactory;
 import org.xmpp.packet.JID;
 
 import java.lang.reflect.Field;
 import java.net.URL;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertThrows;
 
@@ -51,6 +53,7 @@ public class DefaultGroupProviderTest extends DBTestCase
 
     static {
         final URL location = AbstractGroupProvider.class.getResource("/datasets/openfire.script");
+        assert location != null;
         final String fileLocation = location.toString().substring(0, location.toString().lastIndexOf("/")+1) + "openfire";
         URL = "jdbc:hsqldb:"+fileLocation+";ifexists=true";
 
@@ -99,7 +102,7 @@ public class DefaultGroupProviderTest extends DBTestCase
 
         final Field field = GroupEventDispatcher.class.getDeclaredField("listeners");
         field.setAccessible(true);
-        ((List)field.get(null)).clear();
+        ((List<?>)field.get(null)).clear();
         field.setAccessible(false);
     }
 

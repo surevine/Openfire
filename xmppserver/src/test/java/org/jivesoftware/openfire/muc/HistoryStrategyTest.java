@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Ignite Realtime Foundation. All rights reserved.
+ * Copyright (C) 2021-2023 Ignite Realtime Foundation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 package org.jivesoftware.openfire.muc;
 
 import org.jivesoftware.util.StringUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 
@@ -31,7 +31,7 @@ import java.util.ListIterator;
 import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests that verify the implementation of {@link HistoryStrategy}.
@@ -71,6 +71,8 @@ public class HistoryStrategyTest
         assertEquals(input, result);
         assertEquals(input.getType(), ((HistoryStrategy) result).getType());
         assertEquals(input.getMaxNumber(), ((HistoryStrategy) result).getMaxNumber());
+        assertNotNull(input.getChangedSubject());
+        assertNotNull(((HistoryStrategy) result).getChangedSubject());
         assertEquals(input.getChangedSubject().toXML(), ((HistoryStrategy) result).getChangedSubject().toXML());
 
         final AbstractList<String> inputMessageTextHistory = new ArrayList<>();

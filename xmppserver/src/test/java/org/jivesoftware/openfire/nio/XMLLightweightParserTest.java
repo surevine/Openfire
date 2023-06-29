@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Ignite Realtime Foundation. All rights reserved.
+ * Copyright (C) 2021-2023 Ignite Realtime Foundation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,16 @@
 package org.jivesoftware.openfire.nio;
 
 import org.apache.mina.core.buffer.IoBuffer;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.nio.CharBuffer;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Unit tests that verify the functionality as implemented in {@link XMLLightweightParser}
@@ -38,7 +37,7 @@ public class XMLLightweightParserTest {
     private CharsetDecoder encoder;
     private XMLLightweightParser parser;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         parser = new XMLLightweightParser();
 

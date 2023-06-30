@@ -166,6 +166,12 @@ class NettyConnectionAcceptor extends ConnectionAcceptor {
                 // which is NioSocketChannel in this case.
                 .childOption(ChannelOption.SO_KEEPALIVE, true);
 
+            // Throttle sessions to prevent clients from sending data too fast
+            if ( configuration.getMaxBufferSize() > 0 ) {
+                // SO_RCVBUF = Socket Option - Receive Buffer Size in Bytes
+                serverBootstrap.childOption(ChannelOption.SO_RCVBUF, configuration.getMaxBufferSize());
+                Log.debug( "Throttling read buffer for connections to max={} bytes", configuration.getMaxBufferSize() );
+            }
             // Bind to the port and start the server to accept incoming connections.
             // You can now call the bind() method as many times as you want (with different bind addresses.)
             this.mainChannel = serverBootstrap.bind(
@@ -216,7 +222,6 @@ class NettyConnectionAcceptor extends ConnectionAcceptor {
     @Override
     public synchronized void reconfigure(ConnectionConfiguration configuration) {
         this.configuration = configuration;
-
         // TODO reconfigure the netty connection
     }
 

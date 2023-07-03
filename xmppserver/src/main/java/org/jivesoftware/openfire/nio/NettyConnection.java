@@ -16,23 +16,18 @@
 
 package org.jivesoftware.openfire.nio;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.compression.JZlibDecoder;
 import io.netty.handler.codec.compression.JZlibEncoder;
+import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslHandler;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
-import org.apache.mina.core.buffer.IoBuffer;
 import org.jivesoftware.openfire.Connection;
 import org.jivesoftware.openfire.ConnectionCloseListener;
 import org.jivesoftware.openfire.PacketDeliverer;
 import org.jivesoftware.openfire.auth.UnauthorizedException;
 import org.jivesoftware.openfire.net.StanzaHandler;
-import org.jivesoftware.openfire.net.StartTlsFilter;
 import org.jivesoftware.openfire.session.LocalSession;
 import org.jivesoftware.openfire.session.Session;
 import org.jivesoftware.openfire.spi.ConnectionConfiguration;
@@ -44,7 +39,6 @@ import org.xmpp.packet.StreamError;
 
 import javax.annotation.Nullable;
 import javax.net.ssl.SSLPeerUnverifiedException;
-import javax.net.ssl.SSLSession;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -60,7 +54,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static com.jcraft.jzlib.JZlib.Z_BEST_COMPRESSION;
-import static org.jivesoftware.openfire.spi.ConnectionManagerImpl.*;
 
 /**
  * Implementation of {@link Connection} interface specific for Netty connections.
@@ -398,18 +391,21 @@ public class NettyConnection implements Connection {
     public void startTLS(boolean clientMode, boolean directTLS) throws Exception {
 
         final EncryptionArtifactFactory factory = new EncryptionArtifactFactory( configuration );
-        // TODO implement ssl filter
+        SslContext sslContext = factory.createSslContext();
+
 //        final SslFilter filter;
+        final SslHandler sslHandler = sslContext.newHandler(channelHandlerContext.alloc());
         if ( clientMode ) {
 //            filter = factory.createClientModeSslFilter();
         } else {
 //            filter = factory.createServerModeSslFilter();
         }
 
-//        ioSession.getFilterChain().addBefore(EXECUTOR_FILTER_NAME, TLS_FILTER_NAME, filter);
+        channelHandlerContext.pipeline().addFirst(sslHandler);
 
         if (!directTLS) {
 //            ioSession.getFilterChain().addAfter(TLS_FILTER_NAME, STARTTLS_FILTER_NAME, new StartTlsFilter());
+//            channelHandlerContext.pipeline().addFirst(factory.createSslHandler(channelHandlerContext.alloc()));
         }
 
         if ( !clientMode && !directTLS ) {

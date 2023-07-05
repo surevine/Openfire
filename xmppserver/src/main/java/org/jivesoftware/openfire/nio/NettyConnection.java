@@ -64,6 +64,7 @@ import static com.jcraft.jzlib.JZlib.Z_BEST_COMPRESSION;
 public class NettyConnection implements Connection {
 
     private static final Logger Log = LoggerFactory.getLogger(NettyConnection.class);
+    private static final String SSL_HANDLER_NAME = "ssl";
     private ConnectionConfiguration configuration;
 
     /**
@@ -176,7 +177,7 @@ public class NettyConnection implements Connection {
 
     @Override
     public Certificate[] getLocalCertificates() {
-        SslHandler sslhandler = (SslHandler) channelHandlerContext.channel().pipeline().get("ssl");
+        SslHandler sslhandler = (SslHandler) channelHandlerContext.channel().pipeline().get(SSL_HANDLER_NAME);
 
         if (sslhandler != null) {
             return sslhandler.engine().getSession().getLocalCertificates();
@@ -186,7 +187,7 @@ public class NettyConnection implements Connection {
 
     @Override
     public Certificate[] getPeerCertificates() {
-        SslHandler sslhandler = (SslHandler) channelHandlerContext.channel().pipeline().get("ssl");
+        SslHandler sslhandler = (SslHandler) channelHandlerContext.channel().pipeline().get(SSL_HANDLER_NAME);
         try {
             if (sslhandler != null) {
                 return sslhandler.engine().getSession().getPeerCertificates();
@@ -202,16 +203,14 @@ public class NettyConnection implements Connection {
 
     @Override
     public Optional<String> getTLSProtocolName() {
-        SslHandler sslhandler = (SslHandler) channelHandlerContext.channel().pipeline().get("ssl");
-//        return Optional.ofNullable(sslhandler.engine().getSession().getProtocol());
-        return Optional.empty();
+        SslHandler sslhandler = (SslHandler) channelHandlerContext.channel().pipeline().get(SSL_HANDLER_NAME);
+        return Optional.ofNullable(sslhandler.engine().getSession().getProtocol());
     }
 
     @Override
     public Optional<String> getCipherSuiteName() {
-        SslHandler sslhandler = (SslHandler) channelHandlerContext.channel().pipeline().get("ssl");
-//        return Optional.ofNullable(sslhandler.engine().getSession().getCipherSuite());
-        return Optional.empty();
+        SslHandler sslhandler = (SslHandler) channelHandlerContext.channel().pipeline().get(SSL_HANDLER_NAME);
+        return Optional.ofNullable(sslhandler.engine().getSession().getCipherSuite());
     }
 
     @Override
@@ -366,6 +365,7 @@ public class NettyConnection implements Connection {
 
     @Override
     public void deliverRawText(String text) {
+        //System.out.println("Sending: " + text);
         if (!isClosed()) {
             boolean errorDelivering = false;
             ChannelFuture f = channelHandlerContext.writeAndFlush(text);
@@ -393,20 +393,15 @@ public class NettyConnection implements Connection {
         final EncryptionArtifactFactory factory = new EncryptionArtifactFactory( configuration );
         SslContext sslContext = factory.createSslContext();
 
-//        final SslFilter filter;
         final SslHandler sslHandler = sslContext.newHandler(channelHandlerContext.alloc());
+
         if ( clientMode ) {
 //            filter = factory.createClientModeSslFilter();
         } else {
 //            filter = factory.createServerModeSslFilter();
         }
 
-        channelHandlerContext.pipeline().addFirst(sslHandler);
-
-        if (!directTLS) {
-//            ioSession.getFilterChain().addAfter(TLS_FILTER_NAME, STARTTLS_FILTER_NAME, new StartTlsFilter());
-//            channelHandlerContext.pipeline().addFirst(factory.createSslHandler(channelHandlerContext.alloc()));
-        }
+        channelHandlerContext.pipeline().addFirst(SSL_HANDLER_NAME, sslHandler);
 
         if ( !clientMode && !directTLS ) {
             // Indicate the client that the server is ready to negotiate TLS

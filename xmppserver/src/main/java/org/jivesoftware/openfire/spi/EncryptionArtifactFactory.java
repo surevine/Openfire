@@ -345,6 +345,7 @@ public class EncryptionArtifactFactory
                 break;
         }
 
+        builder.protocols(configuration.getEncryptionProtocols());
         builder.startTls(true);
 
         return builder.build();

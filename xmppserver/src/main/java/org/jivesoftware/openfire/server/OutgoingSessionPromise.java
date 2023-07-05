@@ -287,7 +287,7 @@ public class OutgoingSessionPromise {
             Log.trace("Finished processing {}", domainPair);
         }
 
-        private RoutableChannelHandler establishConnection() throws Exception { // TODO: AG - Maybe here?
+        private RoutableChannelHandler establishConnection() throws Exception {
             Log.debug("Start establishing a connection for {}", domainPair);
             // Create a connection to the remote server from the domain where the packet has been sent
             boolean created;

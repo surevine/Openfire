@@ -327,7 +327,7 @@ public class EncryptionArtifactFactory
         }
     }
 
-    public SslContext createSslContext() throws UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, SSLException {
+    public SslContext createServerModeSslContext() throws UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, SSLException {
         getKeyManagers();
         SslContextBuilder builder = SslContextBuilder.forServer(keyManagerFactory);
 
@@ -349,6 +349,14 @@ public class EncryptionArtifactFactory
         builder.startTls(true);
 
         return builder.build();
+    }
+
+    public SslContext createClientModeSslContext() throws SSLException {
+        return SslContextBuilder
+            .forClient()
+            .protocols(configuration.getEncryptionProtocols())
+            .startTls(false)
+            .build();
     }
 
     /**

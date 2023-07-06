@@ -289,24 +289,20 @@ public class LocalOutgoingServerSession extends LocalServerSession implements Ou
                 b.channel(NioSocketChannel.class);
                 b.option(ChannelOption.SO_KEEPALIVE, true);
                 b.handler(new ChannelInitializer<SocketChannel>() {
-
                     @Override
-                    public void initChannel(SocketChannel ch)
-                        throws Exception {
+                    public void initChannel(SocketChannel ch) {
                         final ConnectionManager connectionManager = XMPPServer.getInstance().getConnectionManager();
                         ConnectionConfiguration listenerConfiguration = connectionManager.getListener(ConnectionType.SOCKET_S2S, false).generateConnectionConfiguration();
 
                         ch.pipeline().addLast(new NettyXMPPDecoder());
                         ch.pipeline().addLast(new StringEncoder());
-                        ch.pipeline().addLast(new NettyOutboundConnectionHandler(listenerConfiguration, domainPair) {
-
-
-                        });
+                        ch.pipeline().addLast(new NettyOutboundConnectionHandler(listenerConfiguration, domainPair));
                     }
                 });
 
                 Channel channel = b.connect(domainPair.getRemote(), port).sync().channel();
 
+// TODO handle direct TLS
 //            if (directTLS) {
 //                try {
 //                    connection.startTLS( true, true );
@@ -348,32 +344,31 @@ public class LocalOutgoingServerSession extends LocalServerSession implements Ou
                 int soTimeout = socket.getSoTimeout();
                 socket.setSoTimeout(5000);
 
-
-                channel.close();
+//                channel.close();
 
             } finally {
-                workerGroup.shutdownGracefully();
+//                workerGroup.shutdownGracefully();
             }
         }
-        catch (SSLHandshakeException e)
-        {
+//        catch (SSLHandshakeException e)
+//        {
             // When not doing direct TLS but startTLS, this a failure as described in RFC3620, section 5.4.3.2 "STARTTLS Failure".
-            log.info( "{} negotiation failed. Closing connection (without sending any data such as <failure/> or </stream>).", (directTLS ? "Direct TLS" : "StartTLS" ), e );
+//            log.info( "{} negotiation failed. Closing connection (without sending any data such as <failure/> or </stream>).", (directTLS ? "Direct TLS" : "StartTLS" ), e );
 
             // The receiving entity is expected to close the socket *without* sending any more data (<failure/> nor </stream>).
             // It is probably (see OF-794) best if we, as the initiating entity, therefor don't send any data either.
-            if (connection != null) {
-                connection.forceClose();
-            }
-        }
+//            if (connection != null) {
+//                connection.forceClose();
+//            }
+//        }
         catch (Exception e)
         {
             // This might be RFC3620, section 5.4.2.2 "Failure Case" or even an unrelated problem. Handle 'normally'.
             log.warn( "An exception occurred while creating an encrypted session. Closing connection.", e );
 
-            if (connection != null) {
-                connection.close();
-            }
+//            if (connection != null) {
+//                connection.close();
+//            }
         }
 
         if (ServerDialback.isEnabled())
@@ -597,6 +592,10 @@ public class LocalOutgoingServerSession extends LocalServerSession implements Ou
         super(localDomain, connection, streamID);
         this.socketReader = socketReader;
         socketReader.setSession(this);
+    }
+
+    public LocalOutgoingServerSession(String localDomain, Connection connection, StreamID streamID) {
+        super(localDomain, connection, streamID);
     }
 
     @Override

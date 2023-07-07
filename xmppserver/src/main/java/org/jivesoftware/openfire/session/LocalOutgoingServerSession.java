@@ -18,13 +18,6 @@ package org.jivesoftware.openfire.session;
 
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.*;
-import io.netty.channel.Channel;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.string.StringEncoder;
-import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.XMPPPacketReader;
@@ -35,17 +28,11 @@ import org.jivesoftware.openfire.net.MXParser;
 import org.jivesoftware.openfire.net.SASLAuthentication;
 import org.jivesoftware.openfire.net.SocketConnection;
 import org.jivesoftware.openfire.net.SocketUtil;
-import org.jivesoftware.openfire.nio.NettyConnection;
-import io.netty.channel.socket.SocketChannel;
-import org.jivesoftware.openfire.nio.NettyOutboundConnectionHandler;
-import org.jivesoftware.openfire.nio.NettyXMPPDecoder;
+import org.jivesoftware.openfire.nio.NettySessionInitializer;
 import org.jivesoftware.openfire.server.OutgoingServerSocketReader;
 import org.jivesoftware.openfire.server.RemoteServerManager;
 import org.jivesoftware.openfire.server.ServerDialback;
 import org.jivesoftware.openfire.spi.BasicStreamIDFactory;
-import org.jivesoftware.openfire.spi.ConnectionConfiguration;
-import org.jivesoftware.openfire.spi.ConnectionType;
-import org.jivesoftware.util.JiveGlobals;
 import org.jivesoftware.util.StringUtils;
 import org.jivesoftware.util.TaskEngine;
 import org.slf4j.Logger;
@@ -55,10 +42,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmpp.packet.*;
 
 import javax.annotation.Nonnull;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLHandshakeException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.SocketAddress;
@@ -67,9 +51,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import static org.jivesoftware.openfire.nio.NettyServerConnectionHandler.BACKUP_PACKET_DELIVERY_ENABLED;
 
 /**
  * Server-to-server communication is done using two TCP connections between the servers. One
@@ -98,7 +81,7 @@ public class LocalOutgoingServerSession extends LocalServerSession implements Ou
 
     private static final Interner<JID> remoteAuthMutex = Interners.newWeakInterner();
 
-    private final OutgoingServerSocketReader socketReader;
+    private OutgoingServerSocketReader socketReader;
     private final Collection<DomainPair> outgoingDomainPairs = new HashSet<>();
 
     /**
@@ -277,98 +260,19 @@ public class LocalOutgoingServerSession extends LocalServerSession implements Ou
         Socket socket = socketToXmppDomain.getKey();
         boolean directTLS = socketToXmppDomain.getValue();
 
-//        SocketConnection connection = null;
+        final SocketAddress socketAddress = socket.getRemoteSocketAddress();
+        log.debug( "Opening a new connection to {} {}.", socketAddress, directTLS ? "using directTLS" : "that is initially not encrypted" );
         try {
-            final SocketAddress socketAddress = socket.getRemoteSocketAddress();
-            log.debug( "Opening a new connection to {} {}.", socketAddress, directTLS ? "using directTLS" : "that is initially not encrypted" );
-//            connection = new SocketConnection(XMPPServer.getInstance().getPacketDeliverer(), socket, z); //TODO: AG NettyConnection?
-            EventLoopGroup workerGroup = new NioEventLoopGroup();
-            try {
-                Bootstrap b = new Bootstrap();
-                b.group(workerGroup);
-                b.channel(NioSocketChannel.class);
-                b.option(ChannelOption.SO_KEEPALIVE, true);
-                b.handler(new ChannelInitializer<SocketChannel>() {
-                    @Override
-                    public void initChannel(SocketChannel ch) {
-                        final ConnectionManager connectionManager = XMPPServer.getInstance().getConnectionManager();
-                        ConnectionConfiguration listenerConfiguration = connectionManager.getListener(ConnectionType.SOCKET_S2S, false).generateConnectionConfiguration();
 
-                        ch.pipeline().addLast(new NettyXMPPDecoder());
-                        ch.pipeline().addLast(new StringEncoder());
-                        ch.pipeline().addLast(new NettyOutboundConnectionHandler(listenerConfiguration, domainPair));
-                    }
-                });
-
-                Channel channel = b.connect(domainPair.getRemote(), port).sync().channel();
-
-// TODO handle direct TLS
-//            if (directTLS) {
-//                try {
-//                    connection.startTLS( true, true );
-//                } catch ( SSLException ex ) {
-//                    if ( JiveGlobals.getBooleanProperty(ConnectionSettings.Server.TLS_ON_PLAIN_DETECTION_ALLOW_NONDIRECTTLS_FALLBACK, true) && ex.getMessage().contains( "plaintext connection?" ) ) {
-//                        Log.warn( "Plaintext detected on a new connection that is was started in DirectTLS mode (socket address: {}). Attempting to restart the connection in non-DirectTLS mode.", socketAddress );
-//                        try {
-//                            // Close old socket
-//                            socket.close();
-//                        } catch ( Exception e ) {
-//                            Log.debug( "An exception occurred (and is ignored) while trying to close a socket that was already in an error state.", e );
-//                        }
-//                        socket = new Socket();
-//                        socket.connect( socketAddress, RemoteServerManager.getSocketTimeout() );
-//                        connection = new SocketConnection(XMPPServer.getInstance().getPacketDeliverer(), socket, false);
-//                        directTLS = false;
-//                        Log.info( "Re-established connection to {}. Proceeding without directTLS.", socketAddress );
-//                    } else {
-//                        // Do not retry as non-DirectTLS, rethrow the exception.
-//                        throw ex;
-//                    }
-//                }
-//            }
-
-                log.debug("Send the stream header and wait for response...");
-                StringBuilder sb = new StringBuilder();
-                sb.append("<stream:stream");
-                sb.append(" xmlns:db=\"jabber:server:dialback\"");
-                sb.append(" xmlns:stream=\"http://etherx.jabber.org/streams\"");
-                sb.append(" xmlns=\"jabber:server\"");
-                sb.append(" from=\"").append(domainPair.getLocal()).append("\""); // OF-673
-                sb.append(" to=\"").append(domainPair.getRemote()).append("\"");
-                sb.append(" version=\"1.0\">");
-                channel.writeAndFlush(sb.toString());
-//                connection.deliverRawText(openingStream.toString());
-
-                // Set a read timeout (of 5 seconds) so we don't keep waiting forever
-                // TODO: Netty timeout instead
-                int soTimeout = socket.getSoTimeout();
-                socket.setSoTimeout(5000);
-
-//                channel.close();
-
-            } finally {
-//                workerGroup.shutdownGracefully();
-            }
+            // Wait for the future to give us a session...
+            NettySessionInitializer sessionInitialiser = new NettySessionInitializer(domainPair, port);
+            // Set a read timeout (of 5 seconds) so we don't keep waiting forever
+            return (LocalOutgoingServerSession) sessionInitialiser.init().get(5000, TimeUnit.MILLISECONDS);
         }
-//        catch (SSLHandshakeException e)
-//        {
-            // When not doing direct TLS but startTLS, this a failure as described in RFC3620, section 5.4.3.2 "STARTTLS Failure".
-//            log.info( "{} negotiation failed. Closing connection (without sending any data such as <failure/> or </stream>).", (directTLS ? "Direct TLS" : "StartTLS" ), e );
-
-            // The receiving entity is expected to close the socket *without* sending any more data (<failure/> nor </stream>).
-            // It is probably (see OF-794) best if we, as the initiating entity, therefor don't send any data either.
-//            if (connection != null) {
-//                connection.forceClose();
-//            }
-//        }
         catch (Exception e)
         {
             // This might be RFC3620, section 5.4.2.2 "Failure Case" or even an unrelated problem. Handle 'normally'.
             log.warn( "An exception occurred while creating an encrypted session. Closing connection.", e );
-
-//            if (connection != null) {
-//                connection.close();
-//            }
         }
 
         if (ServerDialback.isEnabled())

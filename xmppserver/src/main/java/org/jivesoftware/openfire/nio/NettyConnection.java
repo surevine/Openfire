@@ -72,7 +72,7 @@ public class NettyConnection implements Connection {
      */
     public static final String CHARSET = "UTF-8";
 
-    private LocalSession session;
+    public LocalSession session;
     private ChannelHandlerContext channelHandlerContext;
 
     final private Map<ConnectionCloseListener, Object> closeListeners = new HashMap<>();

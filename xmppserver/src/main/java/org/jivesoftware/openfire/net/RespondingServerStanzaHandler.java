@@ -1,6 +1,7 @@
 package org.jivesoftware.openfire.net;
 
 import org.dom4j.Element;
+import org.dom4j.Namespace;
 import org.jivesoftware.openfire.Connection;
 import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.auth.UnauthorizedException;
@@ -14,9 +15,11 @@ import org.jivesoftware.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 import org.xmpp.packet.JID;
 
 import java.util.Iterator;
+import java.util.Set;
 
 public class RespondingServerStanzaHandler extends StanzaHandler {
 
@@ -229,7 +232,7 @@ public class RespondingServerStanzaHandler extends StanzaHandler {
 
     @Override
     String getNamespace() {
-        return null;
+        return "jabber:server";
     }
 
     @Override
@@ -251,8 +254,13 @@ public class RespondingServerStanzaHandler extends StanzaHandler {
     }
 
     @Override
-    void createSession(String serverName, XmlPullParser xpp, Connection connection) {
+    void createSession(String serverName, XmlPullParser xpp, Connection connection) throws XmlPullParserException {
         String currentStreamId = xpp.getAttributeValue("", "id");
         session = new LocalOutgoingServerSession(domainPair.getLocal(), connection, BasicStreamIDFactory.createStreamID(currentStreamId));
+    }
+
+    @Override
+    protected String getAdditionalNamespaces() {
+        // TODO: We need to fix this - this is what causes the errors
     }
 }

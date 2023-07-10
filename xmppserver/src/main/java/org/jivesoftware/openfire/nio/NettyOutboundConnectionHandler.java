@@ -1,6 +1,7 @@
 package org.jivesoftware.openfire.nio;
 
 import io.netty.channel.ChannelHandlerContext;
+import org.dom4j.io.XMPPPacketReader;
 import org.jivesoftware.openfire.*;
 import org.jivesoftware.openfire.net.*;
 import org.jivesoftware.openfire.session.*;
@@ -30,5 +31,11 @@ public class NettyOutboundConnectionHandler extends NettyConnectionHandler {
     @Override
     int getMaxIdleTime() {
         return 0;
+    }
+
+    @Override
+    public void handlerAdded(ChannelHandlerContext ctx) {
+        System.out.println("Adding NettyOutboundConnectionHandler");
+        super.handlerAdded(ctx);
     }
 }

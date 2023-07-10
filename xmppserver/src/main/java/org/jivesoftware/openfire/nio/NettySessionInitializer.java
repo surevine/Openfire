@@ -136,6 +136,7 @@ public class NettySessionInitializer {
         sb.append(" to=\"").append(domainPair.getRemote()).append("\"");
         sb.append(" version=\"1.0\">");
         channel.writeAndFlush(sb.toString());
+        System.out.println("Sending: " + sb.toString());
     }
 
 }

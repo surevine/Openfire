@@ -1,15 +1,14 @@
 package org.jivesoftware.openfire.net;
 
+import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
+import org.dom4j.io.XMPPPacketReader;
 import org.jivesoftware.openfire.Connection;
 import org.jivesoftware.openfire.PacketRouter;
 import org.jivesoftware.openfire.auth.UnauthorizedException;
 import org.jivesoftware.openfire.server.ServerDialback;
-import org.jivesoftware.openfire.session.DomainPair;
-import org.jivesoftware.openfire.session.LocalOutgoingServerSession;
-import org.jivesoftware.openfire.session.LocalSession;
-import org.jivesoftware.openfire.session.ServerSession;
+import org.jivesoftware.openfire.session.*;
 import org.jivesoftware.openfire.spi.BasicStreamIDFactory;
 import org.jivesoftware.util.StringUtils;
 import org.slf4j.Logger;
@@ -18,6 +17,8 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmpp.packet.JID;
 
+import java.io.StringReader;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -64,6 +65,21 @@ public class RespondingServerStanzaHandler extends StanzaHandler {
     }
 
     @Override
+    protected void processStanza(String stanza, XMPPPacketReader reader) throws Exception {
+        // We initiate the stream for a RespondingServerStanzaHandler, so we need to re-add the stream namespace
+        Set<Namespace> required_namespaces = new HashSet<Namespace>();
+        required_namespaces.add(DocumentHelper.createNamespace("stream", "http://etherx.jabber.org/streams" ));
+        connection.setAdditionalNamespaces(required_namespaces);
+        super.processStanza(stanza, reader);
+    }
+
+    @Override
+    protected boolean isStartOfStream(String xml) {
+        // We initiate the stream so it is never the start of the stream when we see <stream:stream - instead, check if session has started
+        return !sessionCreated;
+    }
+
+    @Override
     boolean processUnknowPacket(Element doc) throws UnauthorizedException {
         String rootTagName = doc.getName();
 
@@ -76,6 +92,7 @@ public class RespondingServerStanzaHandler extends StanzaHandler {
                 LOG.debug("Both us and the remote server support the STARTTLS feature. Encrypt and authenticate the connection with TLS & SASL...");
                 LOG.debug("Indicating we want TLS and wait for response.");
                 connection.deliverRawText("<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>");
+                startedTLS = true;
                 return true;
             } else if (mustUseTls() && !connection.isEncrypted()) {
                 LOG.debug("I MUST use TLS but I have no StartTLS in features.");
@@ -97,6 +114,7 @@ public class RespondingServerStanzaHandler extends StanzaHandler {
                 sb.append(StringUtils.encodeBase64(domainPair.getLocal()));
                 sb.append("</auth>");
                 connection.deliverRawText(sb.toString());
+                startedSASL = true;
                 return true;
             } else if (ServerDialback.isEnabled() || ServerDialback.isEnabledForSelfSigned()) {
                 // Next, try dialback
@@ -259,9 +277,7 @@ public class RespondingServerStanzaHandler extends StanzaHandler {
         session = new LocalOutgoingServerSession(domainPair.getLocal(), connection, BasicStreamIDFactory.createStreamID(currentStreamId));
     }
 
-    @Override
-    protected String getAdditionalNamespaces() {
-        // TODO: We need to fix this - this is what causes the errors
-        return "";
-    }
+
+
+
 }

@@ -76,7 +76,7 @@ public abstract class StanzaHandler {
 
     // Flag that indicates that the client requested to use TLS and TLS has been negotiated. Once the
     // client sent a new initial stream header the value will return to false.
-    private boolean startedTLS = false;
+    protected boolean startedTLS = false;
     // Flag that indicates that the client requested to be authenticated. Once the
     // authentication process is over the value will return to false.
     protected boolean startedSASL = false;

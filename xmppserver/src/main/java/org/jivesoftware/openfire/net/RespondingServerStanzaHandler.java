@@ -262,5 +262,6 @@ public class RespondingServerStanzaHandler extends StanzaHandler {
     @Override
     protected String getAdditionalNamespaces() {
         // TODO: We need to fix this - this is what causes the errors
+        return "";
     }
 }

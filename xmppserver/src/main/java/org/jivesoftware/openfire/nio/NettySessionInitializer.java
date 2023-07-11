@@ -36,7 +36,6 @@ public class NettySessionInitializer {
     public NettySessionInitializer(DomainPair domainPair, int port) {
         this.domainPair = domainPair;
         this.port = port;
-        init();
     }
 
 

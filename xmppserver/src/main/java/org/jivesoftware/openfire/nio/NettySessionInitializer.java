@@ -30,7 +30,7 @@ public class NettySessionInitializer {
     
     private final DomainPair domainPair;
     private final int port;
-
+    private EventLoopGroup workerGroup;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     public NettySessionInitializer(DomainPair domainPair, int port) {
@@ -67,7 +67,7 @@ public class NettySessionInitializer {
 
 
     public Future<LocalSession> init() {
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        workerGroup = new NioEventLoopGroup();
         try {
             Bootstrap b = new Bootstrap();
             b.group(workerGroup);
@@ -112,6 +112,10 @@ public class NettySessionInitializer {
 //                workerGroup.shutdownGracefully();
         }
 
+    }
+
+    public void stop() {
+        workerGroup.shutdownGracefully();
     }
     private Future<LocalSession> waitForSession(Channel channel) {
         RespondingServerStanzaHandler stanzaHandler = (RespondingServerStanzaHandler) channel.attr(NettyConnectionHandler.HANDLER).get();

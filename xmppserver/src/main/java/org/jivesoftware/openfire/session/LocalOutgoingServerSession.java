@@ -262,10 +262,11 @@ public class LocalOutgoingServerSession extends LocalServerSession implements Ou
 
         final SocketAddress socketAddress = socket.getRemoteSocketAddress();
         log.debug( "Opening a new connection to {} {}.", socketAddress, directTLS ? "using directTLS" : "that is initially not encrypted" );
+        NettySessionInitializer sessionInitialiser = null;
         try {
 
             // Wait for the future to give us a session...
-            NettySessionInitializer sessionInitialiser = new NettySessionInitializer(domainPair, port);
+            sessionInitialiser = new NettySessionInitializer(domainPair, port);
             // Set a read timeout (of 5 seconds) so we don't keep waiting forever
             return (LocalOutgoingServerSession) sessionInitialiser.init().get(5000, TimeUnit.MILLISECONDS);
         }
@@ -273,6 +274,7 @@ public class LocalOutgoingServerSession extends LocalServerSession implements Ou
         {
             // This might be RFC3620, section 5.4.2.2 "Failure Case" or even an unrelated problem. Handle 'normally'.
             log.warn( "An exception occurred while creating an encrypted session. Closing connection.", e );
+            if (sessionInitialiser != null) { sessionInitialiser.stop(); }
         }
 
         if (ServerDialback.isEnabled())

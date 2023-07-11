@@ -325,7 +325,7 @@ public class NettyConnection implements Connection {
 
     @Override
     public boolean isEncrypted() {
-        return false; // TODO with netty
+        return channelHandlerContext.channel().pipeline().get(SSL_HANDLER_NAME) != null;
     }
 
     @Override

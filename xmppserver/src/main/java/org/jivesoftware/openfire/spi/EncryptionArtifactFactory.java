@@ -346,15 +346,25 @@ public class EncryptionArtifactFactory
         }
 
         builder.protocols(configuration.getEncryptionProtocols());
+        builder.ciphers(configuration.getEncryptionCipherSuites());
         builder.startTls(true);
 
         return builder.build();
     }
 
-    public SslContext createClientModeSslContext() throws SSLException {
+    public SslContext createClientModeSslContext() throws SSLException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException {
+        getKeyManagers();
+
+        // We will never send SSLV2 ClientHello messages
+        Set<String> protocols = new HashSet<>(configuration.getEncryptionProtocols());
+        protocols.remove("SSLv2Hello");
+
         return SslContextBuilder
             .forClient()
-            .protocols(configuration.getEncryptionProtocols())
+            .protocols(protocols)
+            .ciphers(configuration.getEncryptionCipherSuites())
+            .keyManager(keyManagerFactory)
+            .trustManager(getTrustManagers()[0])
             .startTls(false)
             .build();
     }

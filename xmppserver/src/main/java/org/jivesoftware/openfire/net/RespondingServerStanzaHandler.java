@@ -75,7 +75,7 @@ public class RespondingServerStanzaHandler extends StanzaHandler {
 
     @Override
     protected boolean isStartOfStream(String xml) {
-        // We initiate the stream so it is never the start of the stream when we see <stream:stream - instead, check if session has started
+        // We initiate the stream, so it is never the start of the stream when we see <stream:stream - instead, check if session has started
         return !sessionCreated;
     }
 

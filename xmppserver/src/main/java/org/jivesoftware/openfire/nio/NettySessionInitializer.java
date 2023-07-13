@@ -122,7 +122,7 @@ public class NettySessionInitializer {
 
         return executor.submit(() -> {
             while (!stanzaHandler.isSessionAuthenticated()) {
-                Thread.sleep(1000);
+                Thread.sleep(100);
             }
             return stanzaHandler.getSession();
         });

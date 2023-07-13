@@ -1,5 +1,6 @@
 package org.jivesoftware.openfire.net;
 
+import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
@@ -17,10 +18,11 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmpp.packet.JID;
 
-import java.io.StringReader;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class RespondingServerStanzaHandler extends StanzaHandler {
 
@@ -65,18 +67,36 @@ public class RespondingServerStanzaHandler extends StanzaHandler {
     }
 
     @Override
-    protected void processStanza(String stanza, XMPPPacketReader reader) throws Exception {
-        // We initiate the stream for a RespondingServerStanzaHandler, so we need to re-add the stream namespace
-        Set<Namespace> required_namespaces = new HashSet<Namespace>();
-        required_namespaces.add(DocumentHelper.createNamespace("stream", "http://etherx.jabber.org/streams" ));
-        connection.setAdditionalNamespaces(required_namespaces);
-        super.processStanza(stanza, reader);
+    protected boolean isStartOfStream(String xml) {
+        final boolean isStartOfStream = super.isStartOfStream(xml);
+        if (isStartOfStream) {
+            // We initiate the stream for a RespondingServerStanzaHandler, so we need to add the stream namespace
+            // Pull namespaces off of the stream:stream stanza and add them to the additional
+            List<Namespace> receivedNamespaces = null;
+            try {
+                receivedNamespaces = DocumentHelper.parseText(xml + "</stream:stream>").getRootElement().declaredNamespaces();
+                Set<Namespace> additionalNamespaces = receivedNamespaces
+                    .stream()
+                    .filter(RespondingServerStanzaHandler::isRelevantNamespace)
+                    .collect(Collectors.toSet());
+                connection.setAdditionalNamespaces(additionalNamespaces);
+            } catch (DocumentException e) {
+                LOG.error("Failed extract additional namespaces", e);
+            }
+        }
+
+        return isStartOfStream;
     }
 
     @Override
-    protected boolean isStartOfStream(String xml) {
-        // We initiate the stream, so it is never the start of the stream when we see <stream:stream - instead, check if session has started
-        return !sessionCreated;
+    protected void initiateSession(String stanza, XMPPPacketReader reader) throws Exception {
+        if (!sessionCreated) {
+            super.initiateSession(stanza, reader);
+        }
+    }
+
+    private static boolean isRelevantNamespace(Namespace ns) {
+        return !XMPPPacketReader.IGNORED_NAMESPACE_ON_STANZA.contains(ns.getURI());
     }
 
     @Override

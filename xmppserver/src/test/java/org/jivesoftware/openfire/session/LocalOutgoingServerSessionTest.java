@@ -157,14 +157,7 @@ public class LocalOutgoingServerSessionTest
 
         Fixtures.clearExistingProperties();
     }
-
-
-    @Test
-    void single() throws Exception {
-        ServerSettings localServerSettings = new ServerSettings(Connection.TLSPolicy.required, ServerSettings.CertificateState.MISSING, true, true);
-        ServerSettings remoteServerSettings = new ServerSettings(Connection.TLSPolicy.required, ServerSettings.CertificateState.MISSING, true, true);
-        outgoingTest(localServerSettings, remoteServerSettings);
-    }
+    
 
     /**
      * Unit test in which Openfire initiates an outgoing server-to-server connection.

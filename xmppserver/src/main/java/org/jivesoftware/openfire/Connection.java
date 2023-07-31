@@ -16,6 +16,8 @@
 
 package org.jivesoftware.openfire;
 
+import io.netty.channel.Channel;
+import io.netty.util.concurrent.Future;
 import org.dom4j.Namespace;
 import org.jivesoftware.openfire.auth.UnauthorizedException;
 import org.jivesoftware.openfire.session.LocalSession;
@@ -37,7 +39,7 @@ import java.util.Set;
  *
  * @author Iain Shigeoka
  */
-public interface Connection extends Closeable {
+public interface Connection<T> extends Closeable {
 /**
      * When a connection is used to transmit an XML data, the root element of that data can define XML namespaces other
      * than the ones that are default (eg: 'jabber:client', 'jabber:server', etc). For an XML parser to be able to parse
@@ -343,15 +345,16 @@ public interface Connection extends Closeable {
      * will be the server during the TLS negotiation. Therefore, the server requesting the TLS
      * negotiation must pass <code>true</code> in the {@code clientMode} parameter and the server
      * receiving the TLS request must pass <code>false</code> in the {@code clientMode} parameter.<p>
-     *
+     * <p>
      * In the case of client-2-server the XMPP server must pass <code>false</code> in the
      * {@code clientMode} parameter since it will behave as the server in the TLS negotiation.
      *
      * @param clientMode boolean indicating if this entity is a client or a server in the TLS negotiation.
-     * @param directTLS boolean indicating if the negotiation is directTLS (true) or startTLS (false).
+     * @param directTLS  boolean indicating if the negotiation is directTLS (true) or startTLS (false).
+     * @return a future that resolves once TLS handshake has completed
      * @throws Exception if an error occurred while encrypting the connection.
      */
-    void startTLS(boolean clientMode, boolean directTLS) throws Exception;
+    Future<T> startTLS(boolean clientMode, boolean directTLS) throws Exception;
 
     /**
      * Adds the compression filter to the connection but only filter incoming traffic. Do not filter

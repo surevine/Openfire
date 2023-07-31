@@ -21,6 +21,7 @@ import io.netty.handler.ssl.SslHandshakeCompletionEvent;
 import org.jivesoftware.openfire.Connection;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.net.RespondingServerStanzaHandler;
+import org.jivesoftware.openfire.net.SASLAuthentication;
 import org.jivesoftware.openfire.net.StanzaHandler;
 import org.jivesoftware.openfire.server.ServerDialback;
 import org.jivesoftware.openfire.session.ConnectionSettings;
@@ -31,7 +32,7 @@ import org.jivesoftware.util.JiveGlobals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.cert.CertificateException;
+import javax.net.ssl.SSLHandshakeException;
 
 /**
  * Outbound (S2S) specific ConnectionHandler that knows which subclass of {@link StanzaHandler} should be created
@@ -44,7 +45,6 @@ public class NettyOutboundConnectionHandler extends NettyConnectionHandler {
     private static final Logger Log = LoggerFactory.getLogger(NettyOutboundConnectionHandler.class);
     private final DomainPair domainPair;
     private final int port;
-    volatile boolean sslInitDone;
 
     public NettyOutboundConnectionHandler(ConnectionConfiguration configuration, DomainPair domainPair, int port) {
         super(configuration);
@@ -68,22 +68,8 @@ public class NettyOutboundConnectionHandler extends NettyConnectionHandler {
         return new RespondingServerStanzaHandler( XMPPServer.getInstance().getPacketRouter(), connection, domainPair );
     }
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        super.exceptionCaught(ctx, cause);
-
-        if (isCertificateException(cause) && configRequiresStrictCertificateValidation()) {
-            Log.warn("Aborting attempt to create outgoing session as TLS handshake failed, and strictCertificateValidation is enabled.");
-            throw new RuntimeException(cause);
-        }
-     }
-
     private static boolean configRequiresStrictCertificateValidation() {
         return JiveGlobals.getBooleanProperty(ConnectionSettings.Server.STRICT_CERTIFICATE_VALIDATION, true);
-    }
-
-    public boolean isCertificateException(Throwable cause) {
-        return cause instanceof CertificateException;
     }
 
     @Override
@@ -97,19 +83,68 @@ public class NettyOutboundConnectionHandler extends NettyConnectionHandler {
         super.handlerAdded(ctx);
     }
 
+    /**
+     * Called when SSL Handshake has been completed.
+     *
+     * If successful, attempts authentication via SASL, or dialback dependent on configuration and certificate validity.
+     * If not successful, either attempts dialback on a plain un-encrypted connection, or throws an exception dependent
+     * on configuration.
+     *
+     * @param ctx ChannelHandlerContext for the Netty channel
+     * @param evt Event that has been triggered - this implementation specifically identifies SslHandshakeCompletionEvent
+     * @throws Exception
+     */
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (!sslInitDone && evt instanceof SslHandshakeCompletionEvent) {
-            SslHandshakeCompletionEvent e = (SslHandshakeCompletionEvent) evt;
-            if (e.isSuccess()) {
+            SslHandshakeCompletionEvent event = (SslHandshakeCompletionEvent) evt;
+            RespondingServerStanzaHandler stanzaHandler = (RespondingServerStanzaHandler) ctx.channel().attr(NettyConnectionHandler.HANDLER).get();
+
+            if (event.isSuccess()) {
                 sslInitDone = true;
+
+                NettyConnection connection = ctx.channel().attr(NettyConnectionHandler.CONNECTION).get();
+                connection.setEncrypted(true);
+                Log.debug("TLS negotiation was successful. Connection encrypted. Proceeding with authentication...");
+
+                // If TLS cannot be used for authentication, it is permissible to use another authentication mechanism
+                // such as dialback. RFC 6120 does not explicitly allow this, as it does not take into account any other
+                // authentication mechanism other than TLS (it does mention dialback in an interoperability note. However,
+                // RFC 7590 Section 3.4 writes: "In particular for XMPP server-to-server interactions, it can be reasonable
+                // for XMPP server implementations to accept encrypted but unauthenticated connections when Server Dialback
+                // keys [XEP-0220] are used." In short: if Dialback is allowed, unauthenticated TLS is better than no TLS.
+                if (SASLAuthentication.verifyCertificates(connection.getPeerCertificates(), domainPair.getRemote(), true)) {
+                    Log.debug("SASL authentication will be attempted");
+                    Log.debug("Send the stream header and wait for response...");
+                    sendNewStreamHeader(connection);
+                } else if (JiveGlobals.getBooleanProperty(ConnectionSettings.Server.STRICT_CERTIFICATE_VALIDATION, true)) {
+                    Log.warn("Aborting attempt to create outgoing session as certificate verification failed, and strictCertificateValidation is enabled.");
+                    abandonSession(stanzaHandler);
+                } else if (ServerDialback.isEnabled() || ServerDialback.isEnabledForSelfSigned()) {
+                    Log.debug("Failed to verify certificates for SASL authentication. Will continue with dialback.");
+                    sendNewStreamHeader(connection);
+                } else {
+                    Log.warn("Unable to authenticate the connection: Failed to verify certificates for SASL authentication and dialback is not available.");
+                    abandonSession(stanzaHandler);
+                }
+
                 ctx.fireChannelActive();
             } else {
-                // SSL Handshake has failed, fall back to dialback
-                RespondingServerStanzaHandler stanzaHandler = (RespondingServerStanzaHandler) ctx.channel().attr(NettyConnectionHandler.HANDLER).get();
+                // SSL Handshake has failed
+                stanzaHandler.setSession(null);
 
+                if (isSSLHandshakeException(event) && isCausedByCertificateError(event)){
+                    if (configRequiresStrictCertificateValidation()) {
+                        Log.warn("Aborting attempt to create outgoing session as TLS handshake failed, and strictCertificateValidation is enabled.");
+                        throw new RuntimeException(event.cause());
+                    } else {
+                        Log.warn("TLS handshake failed due to a certificate validation error");
+                    }
+                }
+
+                // fall back to dialback
                 if (ServerDialback.isEnabled() && connectionConfigDoesNotRequireTls()) {
-                    Log.debug("Unable to create a new session. Going to try connecting using server dialback as a fallback.");
+                    Log.debug("Unable to create a new TLS session. Going to try connecting using server dialback as a fallback.");
 
                     // Use server dialback (pre XMPP 1.0) over a plain connection
                     final LocalOutgoingServerSession outgoingSession = new ServerDialback(domainPair).createOutgoingSession(port);
@@ -119,11 +154,9 @@ public class NettyOutboundConnectionHandler extends NettyConnectionHandler {
                         stanzaHandler.setSession(outgoingSession);
                     } else {
                         Log.warn("Unable to create a new session: Dialback (as a fallback) failed.");
-                        stanzaHandler.setSession(null);
                     }
                 } else {
                     Log.warn("Unable to create a new session: exhausted all options (not trying dialback as a fallback, as server dialback is disabled by configuration.");
-                    stanzaHandler.setSession(null);
                 }
 
                 stanzaHandler.setAttemptedAllAuthenticationMethods(true);
@@ -131,6 +164,33 @@ public class NettyOutboundConnectionHandler extends NettyConnectionHandler {
         }
 
         super.userEventTriggered(ctx, evt);
+    }
+
+    private static boolean isSSLHandshakeException(SslHandshakeCompletionEvent event) {
+        return event.cause() instanceof SSLHandshakeException;
+    }
+
+    private static boolean isCausedByCertificateError(SslHandshakeCompletionEvent event) {
+        return event.cause().getMessage().contains("java.security.cert.CertPathBuilderException");
+    }
+
+    private static void abandonSession(RespondingServerStanzaHandler stanzaHandler) {
+        stanzaHandler.setSession(null);
+        stanzaHandler.setAttemptedAllAuthenticationMethods(true);
+    }
+
+    private void sendNewStreamHeader(NettyConnection connection) {
+        StringBuilder openingStream = new StringBuilder();
+        openingStream.append("<stream:stream");
+        if (ServerDialback.isEnabled() || ServerDialback.isEnabledForSelfSigned()) {
+            openingStream.append(" xmlns:db=\"jabber:server:dialback\"");
+        }
+        openingStream.append(" xmlns:stream=\"http://etherx.jabber.org/streams\"");
+        openingStream.append(" xmlns=\"jabber:server\"");
+        openingStream.append(" from=\"").append(domainPair.getLocal()).append("\""); // OF-673
+        openingStream.append(" to=\"").append(domainPair.getRemote()).append("\"");
+        openingStream.append(" version=\"1.0\">");
+        connection.deliverRawText(openingStream.toString());
     }
 
     private boolean connectionConfigDoesNotRequireTls() {

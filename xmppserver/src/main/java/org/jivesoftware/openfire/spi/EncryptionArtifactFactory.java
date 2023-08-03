@@ -16,19 +16,34 @@
 
 package org.jivesoftware.openfire.spi;
 
-import io.netty.handler.ssl.ClientAuth;
-import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.ssl.*;
+import io.netty.util.CharsetUtil;
+import io.netty.util.internal.EmptyArrays;
+import org.bouncycastle.asn1.ocsp.OCSPResponseStatus;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.ocsp.*;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMParser;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.jivesoftware.openfire.keystore.OcspRequestBuilder;
+import org.jivesoftware.openfire.keystore.OcspUtils;
 import org.jivesoftware.openfire.keystore.OpenfireX509TrustManager;
 import org.jivesoftware.util.SystemProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.*;
+import java.io.*;
 import java.lang.reflect.Constructor;
+import java.math.BigInteger;
+import java.net.URI;
 import java.security.*;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.X509Certificate;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Instances of this class will be able to generate various encryption-related artifacts based on a specific connection
@@ -349,7 +364,7 @@ public class EncryptionArtifactFactory
      * @param directTLS if the first write request should be encrypted.
      * @return A secure socket protocol implementation which acts as a factory for {@link SSLContext} and {@link io.netty.handler.ssl.SslHandler}
      */
-    public SslContext createServerModeSslContext(boolean directTLS) throws UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, SSLException {
+    public SslHandler createServerModeSslHandler(ChannelHandlerContext ctx, boolean directTLS) throws UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, SSLException {
         getKeyManagers();
         SslContextBuilder builder = SslContextBuilder.forServer(keyManagerFactory);
 
@@ -370,9 +385,139 @@ public class EncryptionArtifactFactory
         builder.protocols(configuration.getEncryptionProtocols());
         builder.ciphers(configuration.getEncryptionCipherSuites());
         builder.startTls(!directTLS);
+        builder.enableOcsp(true);
 
-        return builder.build();
+        final SslContext sslContext = builder.build();
+
+        SslHandler sslHandler = sslContext.newHandler(ctx.alloc());
+
+        ReferenceCountedOpenSslEngine engine = (ReferenceCountedOpenSslEngine) sslHandler.engine();
+
+        engine.setOcspResponse(fetchOcspResponse().getEncoded());
+
+        return sslHandler;
     }
+
+    private static OCSPResp fetchOcspResponse() throws IOException, OCSPException, CertificateEncodingException {
+
+        // todo - finish im-lementation
+        //   see: https://github.com/netty/netty/blob/4.1/example/src/main/java/io/netty/example/ocsp/OcspServerExample.java
+
+        // We assume there's a private key.
+        PrivateKey privateKey = null;
+
+        // Step 1: Load the certificate chain for netty.io. We'll need the certificate
+        // and the issuer's certificate and we don't need any of the intermediate certs.
+        // The array is assumed to be a certain order to keep things simple.
+        X509Certificate[] keyCertChain = new X509Certificate[0];
+
+        X509Certificate certificate = keyCertChain[0];
+        X509Certificate issuer = keyCertChain[keyCertChain.length - 1];
+
+        // Step 2: We need the URL of the CA's OCSP responder server. It's somewhere encoded
+        // into the certificate! Notice that it's an HTTP URL.
+        URI uri = OcspUtils.ocspUri(certificate);
+        System.out.println("OCSP Responder URI: " + uri);
+
+        if (uri == null) {
+            throw new IllegalStateException("The CA/certificate doesn't have an OCSP responder");
+        }
+
+        // Step 3: Construct the OCSP request
+        OCSPReq request = new OcspRequestBuilder()
+                .certificate(certificate)
+                .issuer(issuer)
+                .build();
+
+        // Step 4: Do the request to the CA's OCSP responder
+        OCSPResp response = OcspUtils.request(uri, request, 5L, TimeUnit.SECONDS);
+        if (response.getStatus() != OCSPResponseStatus.SUCCESSFUL) {
+            throw new IllegalStateException("response-status=" + response.getStatus());
+        }
+
+        // Step 5: Is my certificate any good or has the CA revoked it?
+        BasicOCSPResp basicResponse = (BasicOCSPResp) response.getResponseObject();
+        SingleResp first = basicResponse.getResponses()[0];
+
+        CertificateStatus status = first.getCertStatus();
+        System.out.println("Status: " + (status == CertificateStatus.GOOD ? "Good" : status));
+        System.out.println("This Update: " + first.getThisUpdate());
+        System.out.println("Next Update: " + first.getNextUpdate());
+
+        if (status != null) {
+            throw new IllegalStateException("certificate-status=" + status);
+        }
+
+        BigInteger certSerial = certificate.getSerialNumber();
+        BigInteger ocspSerial = first.getCertID().getSerialNumber();
+        if (!certSerial.equals(ocspSerial)) {
+            throw new IllegalStateException("Bad Serials=" + certSerial + " vs. " + ocspSerial);
+        }
+
+        // Step 6: Cache the OCSP response and use it as long as it's not
+        // expired. The exact semantics are beyond the scope of this example.
+
+        if (!OpenSsl.isAvailable()) {
+            throw new IllegalStateException("OpenSSL is not available!");
+        }
+
+        if (!OpenSsl.isOcspSupported()) {
+            throw new IllegalStateException("OCSP is not supported!");
+        }
+
+        if (privateKey == null) {
+            throw new IllegalStateException("Because we don't have a PrivateKey we can't continue past this point.");
+        }
+
+        return response;
+    }
+
+
+
+    private static X509Certificate[] parseCertificates(Class<?> clazz, String name) throws Exception {
+        InputStream in = clazz.getResourceAsStream(name);
+        if (in == null) {
+            throw new FileNotFoundException("clazz=" + clazz + ", name=" + name);
+        }
+
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in, CharsetUtil.US_ASCII));
+            try {
+                return parseCertificates(reader);
+            } finally {
+                reader.close();
+            }
+        } finally {
+            in.close();
+        }
+    }
+
+    private static X509Certificate[] parseCertificates(Reader reader) throws Exception {
+
+        JcaX509CertificateConverter converter = new JcaX509CertificateConverter()
+                .setProvider(new BouncyCastleProvider());
+
+        List<X509Certificate> dst = new ArrayList<X509Certificate>();
+
+        PEMParser parser = new PEMParser(reader);
+        try {
+            X509CertificateHolder holder = null;
+
+            while ((holder = (X509CertificateHolder) parser.readObject()) != null) {
+                X509Certificate certificate = converter.getCertificate(holder);
+                if (certificate == null) {
+                    continue;
+                }
+
+                dst.add(certificate);
+            }
+        } finally {
+            parser.close();
+        }
+
+        return dst.toArray(EmptyArrays.EMPTY_X509_CERTIFICATES);
+    }
+
 
     /**
      * Create and configure a new SslContext instance for a Netty client.<p>
@@ -381,14 +526,14 @@ public class EncryptionArtifactFactory
      *
      * @return A secure socket protocol implementation which acts as a factory for {@link SSLContext} and {@link io.netty.handler.ssl.SslHandler}
      */
-    public SslContext createClientModeSslContext() throws SSLException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException {
+    public SslHandler createClientModeSslHandler(ChannelHandlerContext ctx) throws SSLException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException {
         getKeyManagers();
 
         // We will never send SSLV2 ClientHello messages
         Set<String> protocols = new HashSet<>(configuration.getEncryptionProtocols());
         protocols.remove("SSLv2Hello");
 
-        return SslContextBuilder
+        final SslContext sslContext = SslContextBuilder
             .forClient()
             .protocols(protocols)
             .ciphers(configuration.getEncryptionCipherSuites())
@@ -396,6 +541,8 @@ public class EncryptionArtifactFactory
             .trustManager(getTrustManagers()[0])
             .startTls(false)
             .build();
+
+        return sslContext.newHandler(ctx.alloc());
     }
 
     /**
@@ -457,5 +604,4 @@ public class EncryptionArtifactFactory
         context.init( null, null, null );
         return Arrays.asList( context.createSSLEngine().getEnabledCipherSuites() );
     }
-
 }

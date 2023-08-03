@@ -16,13 +16,12 @@
 
 package org.jivesoftware.openfire.nio;
 
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.compression.JZlibDecoder;
 import io.netty.handler.codec.compression.JZlibEncoder;
-import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.ReferenceCountedOpenSslEngine;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 import org.jivesoftware.openfire.Connection;
@@ -391,14 +390,13 @@ public class NettyConnection implements Connection {
 
         final EncryptionArtifactFactory factory = new EncryptionArtifactFactory( configuration );
 
-        final SslContext sslContext;
+        final SslHandler sslHandler;
         if ( clientMode ) {
-            sslContext= factory.createClientModeSslContext();
+            sslHandler= factory.createClientModeSslHandler(channelHandlerContext);
         } else {
-            sslContext = factory.createServerModeSslContext(directTLS);
+            sslHandler = factory.createServerModeSslHandler(channelHandlerContext, directTLS);
         }
 
-        final SslHandler sslHandler = sslContext.newHandler(channelHandlerContext.alloc());
         channelHandlerContext.pipeline().addFirst(SSL_HANDLER_NAME, sslHandler);
 
         if ( !clientMode && !directTLS ) {
